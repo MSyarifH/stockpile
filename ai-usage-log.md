@@ -124,6 +124,78 @@ being written up as if complete.
 
 ---
 
+## Session 2 — 2026-09-02 — Planning artefacts, environment hardening
+
+### AI-07 · Backlog decomposition
+- **Purpose:** Turn the brief's requirement IDs into an ordered, verifiable plan.
+- **Prompt (summary):** "Decompose every requirement into a checklist ordered by build
+  dependency rather than document order."
+- **Output used:** `docs/planning/backlog.md` — 194 items, phased, each Bukti tracked separately.
+- **Output reviewed:** I checked the decomposition back against §2 and §3 to confirm no
+  requirement ID was dropped. I moved the stock service ahead of the PO and SO phases myself,
+  since both are callers of it — building either first would embed stock logic in an order
+  service and require untangling later.
+- **Verification:** Every requirement ID in §2 and §3 appears at least once in the file.
+
+### AI-08 · Design artefacts (DESIGN-01)
+- **Purpose:** ERD, initial class diagram, user stories, scope, decision log — before code.
+- **Output used:** Five files under `docs/planning/`.
+- **Output reviewed / amended:** The AI's first class diagram had `StockService` receiving a
+  `PDO` directly. I rejected it: that violates ARCH-01 and would force unit tests to use a real
+  database. Replaced with an injected `TransactionManager` interface, so the service declares
+  atomicity without depending on PDO. I also had the AI rename `lockForUpdate()` to
+  `readBalanceForUpdate()` — the abstraction should hide the mechanism, not the contract.
+- **Verification (evidence):** All 5 Mermaid blocks parsed with the Mermaid parser under Node,
+  so the diagrams provably render rather than merely looking plausible.
+
+### AI-09 · Clean-clone environment test — **found a real defect**
+- **Purpose:** §5.1 requires the project to run from a clean folder, not just my machine.
+- **Method:** Cloned the repository to a separate directory, changed only the ports, and ran
+  `docker compose up -d --build` as a reviewer would.
+- **Result:** **Failed.** `container_name: ioms-db` / `ioms-app` were pinned in `compose.yaml`.
+  Container names are global to the Docker daemon, so a second copy of the stack cannot start
+  while another is running.
+- **Fix:** Removed both `container_name` keys, with a comment recording why. Compose derives
+  names from the project instead; every documented command addresses services, so nothing else
+  changed.
+- **Re-verified:** Clean clone boots, seed loads into the fresh volume (34 products, 30 orders,
+  0 ledger mismatches), and both stacks now run simultaneously.
+- **Note on method:** the first run reported exit code 0 while actually failing, because the
+  build output was piped through `tail`. I stopped piping output when the exit status matters.
+  Recorded because it nearly produced a false "verified" entry in this log.
+
+### AI-10 · Apache hardening — **found a second defect**
+- **Purpose:** Confirm nothing outside `public/` is reachable over HTTP.
+- **Result:** Directory listing was enabled; `/uploads/` returned a browsable index. With product
+  images stored under unguessable names (PRD-01), a listing would defeat that entirely.
+- **Fix:** `Options -Indexes`, `ServerTokens Prod`, `ServerSignature Off`, and
+  `php_admin_flag engine off` on `uploads/` so uploaded files can never be executed. Added
+  `public/.htaccess` routing all non-file requests to the front controller.
+- **AI output rejected:** The AI's first attempt put a `<Directory>` block inside `.htaccess`,
+  which Apache does not permit there — every request returned 500. I read the Apache error log
+  (`<Directory not allowed here`), and moved the block into the server config where it is legal,
+  using `php_admin_flag` so `.htaccess` cannot override it. Recorded as an example of AI output
+  that was confidently wrong and was caught by testing rather than by review.
+- **Verification:** `/uploads/` → 403; `/` → front controller; `.env` and `composer.json` return
+  the front controller's output, not file contents (confirmed by inspecting the response body,
+  not just the status code); `Server:` header no longer advertises a version.
+
+### AI-11 · Architecture Decision Records (DESIGN-02)
+- **Purpose:** Record decisions while the reasoning was fresh, not reconstructed at the end.
+- **Output used:** `adr-001-repository-interface.md`, `adr-002-oversell-prevention.md`,
+  `adr-003-signed-ledger.md`.
+- **Output reviewed:** Each ADR's "alternatives considered" section records options I actually
+  weighed in discussion — notably the conditional atomic `UPDATE` for ARCH-02, which I rejected
+  because a multi-line sales order must be validated in full before any line is written. The
+  deadlock-avoidance decision (sorting line items by `product_id` before locking) was added
+  after I asked what happens when two multi-line orders touch the same products in opposite
+  order.
+- **Verification:** ADR-002's claim about `REPEATABLE READ` was checked against the running
+  server (`@@transaction_isolation`) and the MySQL 8.0 manual. Still to be proven by test —
+  see the register below.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.
@@ -131,7 +203,7 @@ Each must move to verified, or be removed, before final release.
 
 | Ref | Claim awaiting proof | Proof required |
 |---|---|---|
-| AI-05 | `SELECT … FOR UPDATE` prevents oversell here | TEST-02 integration test, two connections, second issue rejected |
+| AI-05 / AI-11 | `SELECT … FOR UPDATE` prevents oversell here | TEST-02 integration test, two connections, second issue rejected |
 | AI-03 | Chosen indexes serve the real queries | `EXPLAIN` on dashboard/report queries, output filed in `docs/quality/` |
 
 ---
@@ -147,6 +219,12 @@ of AI contributions.
 - Rejection of hand-written stock seed data on critical-failure grounds (AI-04).
 - Build sequencing for the project (vertical slice order, risk-first on ARCH-02) — reviewed and
   adopted after discussion; recorded in `docs/planning/backlog.md`.
+- Rejection of a `PDO`-dependent `StockService` in favour of an injected transaction boundary
+  (AI-08), and the decision to keep interfaces only where a business rule depends on them.
+- Decision to run a clean-clone environment test at all (AI-09), which is what exposed the
+  `container_name` defect.
+- The eight ambiguity readings in `docs/planning/decisions.md`; D1, D2 and D3 are flagged to
+  confirm with the trainer rather than assumed silently.
 
 ---
 

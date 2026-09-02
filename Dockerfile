@@ -17,6 +17,25 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
     && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf \
     && a2enmod rewrite
 
+# Directory listing off: with autoindex enabled, /uploads/ would let anyone enumerate
+# every uploaded file, which defeats the unguessable-filename rule in PRD-01.
+# AllowOverride All lets public/.htaccess route everything to the front controller.
+RUN printf '%s\n' \
+      '<Directory ${APACHE_DOCUMENT_ROOT}>' \
+      '    Options -Indexes +FollowSymLinks' \
+      '    AllowOverride All' \
+      '    Require all granted' \
+      '</Directory>' \
+      '<Directory ${APACHE_DOCUMENT_ROOT}/uploads>' \
+      '    php_admin_flag engine off' \
+      '    Options -Indexes -ExecCGI' \
+      '    AllowOverride None' \
+      '</Directory>' \
+      'ServerTokens Prod' \
+      'ServerSignature Off' \
+      > /etc/apache2/conf-available/zz-app.conf \
+    && a2enconf zz-app
+
 # Do not leak PHP errors to the browser (ERR-01 + §8.2 critical failure).
 RUN { \
       echo 'display_errors=Off'; \

@@ -1,0 +1,141 @@
+# Inventory & Order Management System
+
+Web application for managing products, multi-warehouse stock, purchases from suppliers and
+sales to customers, with every stock movement traceable to a ledger entry.
+
+Built for the PT Neuronworks Intermediate Programmer final project. PHP 8.2 native (no
+framework), Vanilla JS, MySQL 8, Docker Compose.
+
+> **Project status: in progress.** The environment, database and design documentation are
+> complete. Application code begins at Phase 1. See
+> [`docs/planning/backlog.md`](docs/planning/backlog.md) for exact progress against every
+> requirement.
+
+## Requirements
+
+Docker and Docker Compose. Nothing else — there is no dependency on a locally installed PHP,
+Composer or MySQL.
+
+## Running it
+
+```bash
+cp .env.example .env          # adjust ports if 8080 / 3307 are taken
+docker compose up -d --build
+docker compose exec app composer install
+```
+
+The application is then at **http://localhost:8080**.
+
+The database schema and seed data load **automatically** the first time the MySQL volume is
+created, from `database/schema-and-seed.sql`.
+
+To reset the database to a clean seeded state:
+
+```bash
+docker compose down -v && docker compose up -d
+```
+
+> `down -v` deletes the volume. A plain `restart` will **not** re-run the schema — MySQL only
+> executes the init script when the data directory is empty.
+
+## Demo accounts
+
+All accounts use the password `Password123!`.
+
+| Email | Role | Purpose |
+|---|---|---|
+| `admin@ioms.test` | Admin | Full access; approves sales orders |
+| `sales1@ioms.test` | Sales | Creates and submits sales orders |
+| `sales2@ioms.test` | Sales | Second Sales user, to test order ownership |
+| `warehouse1@ioms.test` | Warehouse Staff | Goods receipt and goods issue |
+| `warehouse2@ioms.test` | Warehouse Staff | Second warehouse user |
+| `inactive@ioms.test` | Sales (inactive) | Demonstrates that inactive users cannot log in |
+
+These are demo credentials for assessment. Real values belong in `.env`, which is git-ignored.
+
+## Tests
+
+```bash
+docker compose exec app composer test              # unit + integration
+docker compose exec app composer test:unit         # no database needed
+docker compose exec app composer test:integration  # requires the db service
+```
+
+A single file or a single test:
+
+```bash
+docker compose exec app vendor/bin/phpunit tests/Unit/StockServiceTest.php
+docker compose exec app vendor/bin/phpunit --filter testRejectsIssueWhenStockInsufficient
+```
+
+Unit tests use in-memory repository fakes and touch no database at all; integration tests run
+against the real MySQL container. They are separate PHPUnit suites.
+
+## Static analysis
+
+```bash
+docker compose exec app composer stan    # PHPStan level 6
+docker compose exec app composer sniff   # PHP_CodeSniffer, PSR-12
+```
+
+## Scheduled job
+
+```bash
+docker compose exec app php scripts/check-low-stock.php
+```
+
+Reports products below their reorder point. Runs outside the web request cycle.
+
+## Architecture
+
+Three layers, dependencies pointing one way only:
+
+```
+public/index.php → Controller → Service → Repository (interface) → MySQL
+   (composition root)              ↳ in-memory fake, used by unit tests
+```
+
+- **Controller** — HTTP only. No SQL, no business rules.
+- **Service** — business rules and transaction boundaries. Never touches `$_SESSION`, `$_POST`
+  or PDO directly, which is what makes it testable without a database.
+- **Repository** — data access behind an interface, where a business rule depends on it.
+- **Entity** — plain data objects.
+
+Objects are wired by hand in `public/index.php`. There is no DI container, by choice.
+
+**Stock is written in exactly one place.** `StockService` is the only class permitted to modify
+`product_stocks` or `stock_ledger`; purchase and sales services call it rather than writing
+stock themselves. Both tables are updated inside a single transaction, so this always holds:
+
+```sql
+SUM(stock_ledger.quantity)  ==  product_stocks.quantity     -- per (product, warehouse)
+```
+
+Concurrent goods issues are made safe with a locking read (`SELECT … FOR UPDATE`) inside that
+transaction. The reasoning, and the alternative that was rejected, are in
+[`docs/architecture/adr-002-oversell-prevention.md`](docs/architecture/adr-002-oversell-prevention.md).
+
+## Documentation
+
+| Path | Contents |
+|---|---|
+| `docs/planning/` | ERD, initial class diagram, user stories, scope, backlog, decision log |
+| `docs/architecture/` | As-built class diagram, architecture decision records |
+| `docs/quality/` | Refactoring log, SRP audit, tech-debt register, critique, analysis reports |
+| `docs/testing/` | Test scenarios, results, known bugs |
+| `ai-usage-log.md` | Declaration of AI assistance, per §6.2 of the brief |
+
+## Known limitations
+
+Tracked honestly rather than hidden; see `docs/quality/tech-debt.md` once implementation starts.
+
+- Application routing is not yet implemented — unknown URLs currently return 200 from a
+  placeholder front controller instead of 404. Fixed in Phase 1.
+- Three requirement ambiguities are recorded as assumptions awaiting trainer confirmation
+  (D1, D2, D3 in `docs/planning/decisions.md`).
+
+## Attribution
+
+All source code is written by the author. AI assistance was used and is declared in full in
+[`ai-usage-log.md`](ai-usage-log.md). No third-party code snippets or assets are included; any
+that are added later will be credited at the point of use.

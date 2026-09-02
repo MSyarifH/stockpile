@@ -1,7 +1,11 @@
+# Container names are intentionally NOT pinned with `container_name:`. Those names are
+# global to the Docker daemon, so pinning them prevents two copies of this stack (or a
+# reviewer's checkout alongside a dev copy) from running at once. Compose derives names
+# from the project instead, and every command in the README addresses SERVICES
+# (`docker compose exec app ...`), which is unaffected.
 services:
   db:
     image: mysql:8.0
-    container_name: ioms-db
     command: --default-authentication-plugin=caching_sha2_password
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
@@ -24,7 +28,6 @@ services:
 
   app:
     build: .
-    container_name: ioms-app
     depends_on:
       db:
         condition: service_healthy

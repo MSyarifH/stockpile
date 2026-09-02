@@ -37,7 +37,11 @@ controller later.
 - [x] MySQL healthcheck; app waits via `depends_on: condition: service_healthy`
 - [x] `.env.example` committed; `.env` git-ignored
 - [x] Verified `docker compose up -d` from destroyed volume reaches healthy
-- [ ] Re-verify `docker compose up --build` from a **freshly cloned folder** (§5.1 final check)
+- [x] Verified `docker compose up --build` from a **freshly cloned folder** (§5.1)
+- [x] Fixed: pinned `container_name` prevented two stacks coexisting (found by clean-clone test)
+- [x] Apache hardened: `-Indexes`, `ServerTokens Prod`, no PHP execution under `uploads/`
+- [x] Confirmed `.env`, `composer.json`, `app/` unreachable over HTTP (checked response bodies)
+- [x] `public/.htaccess` front-controller rewrite; `public/index.php` placeholder
 
 ### Database schema (DB-01, partial)
 - [x] 12 tables per §1.3, all InnoDB
@@ -94,6 +98,7 @@ controller later.
 - [ ] `Env` — load `.env` / container environment
 - [ ] `Database` — PDO factory, `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, emulated prepares **off**
 - [ ] `Router` — method + path → controller action, with 404 fallback
+      *(placeholder front controller currently returns 200 for unknown routes — must become 404)*
 - [ ] `Request` / `Response` — wrap superglobals so services never touch them
 - [ ] `Session` — start, regenerate, flash messages
 - [ ] `View` — render templates, **escape by default**
@@ -282,10 +287,10 @@ controller later.
 - [ ] 2–3 sentences on what changed between initial and as-built, and why
 - [ ] Every class in the diagram traceable to real code (assessor will pick one)
 
-### DESIGN-02 — 2–3 ADRs (`docs/architecture/adr-*.md`, context/decision/consequences)
-- [ ] ADR-001 — Repository pattern + interface vs PDO directly in controllers
-- [ ] ADR-002 — Oversell prevention mechanism for ARCH-02 (and alternatives rejected)
-- [ ] ADR-003 — Signed ledger as the source of truth for stock
+### DESIGN-02 — 2–3 ADRs (`docs/architecture/adr-*.md`, context/decision/consequences) ✅
+- [x] ADR-001 — Repository interfaces on business boundaries, concrete elsewhere
+- [x] ADR-002 — Pessimistic row locking for ARCH-02 (3 alternatives recorded as rejected)
+- [x] ADR-003 — Signed ledger as source of truth, `product_stocks` as derived balance
 
 ### DESIGN-03
 - [ ] `docs/quality/refactor-log.md` — **≥3 entries**: smell name, technique, before/after
@@ -298,8 +303,7 @@ controller later.
       (written analysis only; implementation not required)
 
 ### Submission package (§7)
-- [ ] `README.md` — features, requirements, install, demo accounts, Docker/test commands,
-      known limitations
+- [x] `README.md` — features, install, demo accounts, Docker/test commands, known limitations
 - [ ] `composer.json` + `composer.lock`
 - [ ] `docs/testing/` — scenarios, results, screenshots, known bugs
 - [ ] `ai-usage-log.md` complete, outstanding-verification register cleared
