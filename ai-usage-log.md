@@ -268,14 +268,61 @@ being written up as if complete.
 
 ---
 
+## Session 4 — 2026-09-02 — Stock service and ARCH-02 (Phase 3)
+
+### AI-17 · StockService as the single writer of stock
+- **Purpose:** ARCH-02 — concurrency-safe goods receipt and goods issue.
+- **Output used:** `StockService` with `receive/issue/receiveAll/issueAll`, `MovementCommand`,
+  `MovementType`, `LedgerEntry`, `InsufficientStockException`, and `StockRepository` /
+  `StockLedgerRepository` each with a MySQL and an in-memory implementation.
+- **Design points I required beyond the AI's first sketch:**
+  1. **Two-phase apply.** Lock and validate *every* line before writing *any* line. The first
+     version validated and wrote line by line, which would half-ship a multi-line order.
+  2. **Accumulate per stock row.** Two lines of the same product in one order must be summed
+     before the check; comparing them individually lets 6 + 6 pass against a balance of 10.
+  3. **Deterministic lock order** (sort by product, then warehouse), so two multi-line orders
+     touching the same products in opposite order cannot deadlock.
+- **Verification:** 13 unit tests with the in-memory fakes, no database.
+
+### AI-18 · Proving ARCH-02 — and finding my own test was weak
+- **What I did:** wrote two integration tests against real MySQL, then deliberately deleted the
+  `FOR UPDATE` clause to check the tests would actually catch its absence.
+- **Result of that check:** only ONE of the two tests failed. The oversell test was written
+  sequentially — A commits, then B reads — so it passed even with the locking removed. It was
+  asserting the right outcome for the wrong reason and would have given false confidence.
+- **Correction:** rewrote it as a genuine interleaving (A locks → B reads a stale snapshot → B is
+  blocked attempting its own locking read → A commits → B retries and is refused on the committed
+  value). Re-ran the mutation check: **both** tests now fail without `FOR UPDATE`.
+- **Why this is recorded:** the test suite was green before and after the first version. Green
+  tests are not evidence that the mechanism works; deliberately breaking the mechanism and
+  watching the tests go red is.
+
+### AI-19 · Fabricated history in a code comment — caught in review
+- **What happened:** the AI's docblock on `MovementCommand` claimed "the previous draft passed
+  four loose ints and two in the wrong order silently moved the wrong stock", citing the
+  refactoring log. **No such draft ever existed** — the class was written as a DTO from the start.
+- **Action:** rewritten to state the actual reasoning (four same-typed parameters in a row are
+  swappable without any tool noticing) with no invented history, and the false cross-reference to
+  `refactor-log.md` removed.
+- **Why this matters:** DESIGN-03 is graded on a *real* refactoring history. A fabricated
+  before/after would be worse than having none, and §8.2 treats misrepresented evidence as a
+  critical failure. Recorded as a reminder to check narrative claims in generated comments, not
+  only the logic.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.
 Each must move to verified, or be removed, before final release.
 
+**Cleared 2026-09-02:** AI-05 / AI-11 — `SELECT … FOR UPDATE` prevents oversell. Now proven by
+`Tests\Integration\StockMovementTest::testConcurrentIssuesCannotOversell` and
+`::testASecondTransactionCannotReadTheSameStockRowWhileItIsLocked`, both of which were confirmed
+to fail when the `FOR UPDATE` clause is removed.
+
 | Ref | Claim awaiting proof | Proof required |
 |---|---|---|
-| AI-05 / AI-11 | `SELECT … FOR UPDATE` prevents oversell here | TEST-02 integration test, two connections, second issue rejected |
 | AI-03 | Chosen indexes serve the real queries | `EXPLAIN` on dashboard/report queries, output filed in `docs/quality/` |
 | AI-12 | `approved_by != created_by` enforced for every role | Unit test in Phase 5: Admin approving their own order is rejected |
 

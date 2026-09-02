@@ -6,9 +6,10 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0, 0.5, 1 and 2 complete. 24 unit tests across 3
-logic areas pass with the database stopped — TEST-01's minimum (≥6 tests, ≥3 areas) is met.
-Next: Phase 3 (stock service, ARCH-02).
+**Status at last update (2026-09-02):** Phases 0, 0.5, 1, 2 and 3 complete. 37 unit tests across
+4 logic areas (pass with the database stopped) plus 6 integration tests against real MySQL — both
+TEST-01 and TEST-02 minimums are met. ARCH-02 is proven, including a mutation check.
+Next: Phase 4 (purchase orders and goods receipt).
 
 ---
 
@@ -166,21 +167,28 @@ identical rules, kept in separate tables so a sales order cannot reference a sup
 
 ---
 
-## Phase 3 — Stock service ⚠ **HIGHEST RISK — ARCH-02**
+## Phase 3 — Stock service ✅ COMPLETE — ARCH-02 proven
 
-- [ ] `StockRepositoryInterface` + `MySqlStockRepository` + `InMemoryStockRepository`
+`StockService` is the only class that writes `product_stocks` or `stock_ledger`. Order services
+call it rather than touching stock. Both concurrency tests were verified to fail with
+`FOR UPDATE` removed, so they test the mechanism rather than passing vacuously.
+
+- [x] `StockRepositoryInterface` + `MySqlStockRepository` + `InMemoryStockRepository`
       *(this pair is what ARCH-01 explicitly asks for)*
-- [ ] `StockService::receive()` — one transaction: lock row → update stock → write ledger
-- [ ] `StockService::issue()` — one transaction: lock row → **check sufficiency** → update →
+- [x] `StockService::receive()` — one transaction: lock row → update stock → write ledger
+- [x] `StockService::issue()` — one transaction: lock row → **check sufficiency** → update →
       write ledger
-- [ ] Locking read `SELECT … FOR UPDATE` (plain SELECT is unsafe under REPEATABLE READ)
-- [ ] `rollBack()` on any failure; nothing partially written
-- [ ] Issue rejected with a domain exception when stock is insufficient
-- [ ] Ledger row records: product, warehouse, type, signed qty, reference, performed_by, time
-- [ ] Service takes dependencies via **constructor injection**; no `new PDO()` inside
-- [ ] Unit tests using the in-memory fake — **no database**
-- [ ] **Bukti:** written explanation of the chosen mechanism + test proving the second issue
-      is rejected when stock is exhausted
+- [x] Locking read `SELECT … FOR UPDATE` (plain SELECT is unsafe under REPEATABLE READ)
+- [x] `rollBack()` on any failure; nothing partially written
+- [x] Issue rejected with a domain exception when stock is insufficient
+- [x] Ledger row records: product, warehouse, type, signed qty, reference, performed_by, time
+- [x] Service takes dependencies via **constructor injection**; no `new PDO()` inside
+- [x] Unit tests using the in-memory fake — **no database**
+- [x] **Bukti:** ADR-002 explains the mechanism and the rejected alternatives; two integration
+      tests prove it, and both were verified to FAIL when `FOR UPDATE` is removed
+- [x] Deterministic lock ordering (sort by product, then warehouse) to prevent deadlock on
+      multi-line orders
+- [x] Multiple lines hitting the same stock row are summed before the sufficiency check
 
 ---
 
@@ -270,7 +278,11 @@ identical rules, kept in separate tables so a sales order cannot reference a sup
 ## Phase 8 — Testing & static analysis
 
 ### TEST-01 Unit (**≥6 cases across ≥3 logic areas**)
-- [ ] Area 1 — stock calculation / insufficient-stock rejection
+- [x] Area 4 — stock movement rules (13 tests: receipt/issue signs, ledger reconciliation,
+      insufficient stock rejected, rollback leaves nothing, exact-quantity allowed, multi-line
+      all-or-nothing, same-row lines summed, one lock per row, deterministic lock order,
+      per-warehouse isolation, non-positive quantity rejected, actor and reference recorded)
+- [ ] Area 1 — stock calculation / insufficient-stock rejection *(covered by Area 4)*
 - [ ] Area 2 — SO status transition legality
 - [x] Area 1b — authentication rules (6 tests: wrong password, unknown email, inactive
       account, identical failure messages, identity excludes password hash)
@@ -286,10 +298,10 @@ identical rules, kept in separate tables so a sales order cannot reference a sup
 - [ ] **Bukti:** results in `docs/testing/`, run by one README command
 
 ### TEST-02 Integration (**≥3 against real MySQL**)
-- [ ] Goods receipt increases stock end-to-end and writes the ledger row
-- [ ] ⚠ **Two concurrent connections: second goods issue rejected when stock exhausted**
-- [ ] Rollback leaves no partial write after a forced mid-transaction failure
-- [ ] Test database isolated / reset between tests (no order dependence)
+- [x] Goods receipt increases stock end-to-end and writes the ledger row
+- [x] ⚠ **Two concurrent connections: second goods issue rejected when stock exhausted**
+- [x] Rollback leaves no partial write after a forced mid-transaction failure
+- [x] Test database isolated / reset between tests (no order dependence)
 - [ ] **Bukti:** separate suite, documented run command
 
 ### TEST-03 Static analysis & FIRST
