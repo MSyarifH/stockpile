@@ -6,8 +6,8 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0 and 0.5 complete. Next: Phase 1 (support layer
-and authentication). No application code written yet.
+**Status at last update (2026-09-02):** Phases 0, 0.5 and 1 complete. 15 unit tests across 2 logic
+areas pass with the database stopped. Next: Phase 2 (master data).
 
 ---
 
@@ -87,46 +87,49 @@ controller later.
       drawn **before** writing PHP, with design-time assumptions recorded
 - [x] `docs/planning/user-stories.md` — per role, from §1.1/§1.2, each with a done-condition
 - [x] `docs/planning/scope.md` — in scope, §4.3 out of scope, and out-of-scope-by-choice
-- [x] `docs/planning/decisions.md` — 8 ambiguity readings; D1/D2/D3 flagged to confirm
+- [x] `docs/planning/decisions.md` — 9 entries; D1/D2/D3/D9 resolved with business reasoning
+- [x] `docs/planning/requirement-tensions.md` — 2 deliberate tensions, 3 textual conflicts
 - [x] D1, D2, D3 resolved by business-process reasoning and documented with rationale
 - [x] Second Admin account seeded so the D2 rule cannot deadlock a single-Admin system
 
 ---
 
-## Phase 1 — Plumbing + Authentication
+## Phase 1 — Plumbing + Authentication ✅ COMPLETE (verified over HTTP)
+
+Composition root wired by hand in `public/index.php`; no container.
+Central failure handler: 401 → redirect to login, 403/404/405 → error page, 500 → logged only.
 
 ### Support layer (`app/Support`)
-- [ ] `Env` — load `.env` / container environment
-- [ ] `Database` — PDO factory, `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, emulated prepares **off**
-- [ ] `Router` — method + path → controller action, with 404 fallback
-      *(placeholder front controller currently returns 200 for unknown routes — must become 404)*
-- [ ] `Request` / `Response` — wrap superglobals so services never touch them
-- [ ] `Session` — start, regenerate, flash messages
-- [ ] `View` — render templates, **escape by default**
-- [ ] `Validator` — reusable rules (required, email, int ≥ 0, enum, date, exists)
-- [ ] `Csrf` — token issue + verify on every state-changing POST
-- [ ] `Auth` guard + role guard used by controllers
+- [x] `Env` — load `.env` / container environment
+- [x] `Database` — PDO factory, `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, emulated prepares **off**
+- [x] `Router` — method + path → controller action; 404 unknown path, 405 wrong verb
+- [x] `Request` / `Response` — wrap superglobals so services never touch them
+- [x] `Session` — start, regenerate, flash messages
+- [x] `View` — render templates, **escape by default**
+- [x] `Validator` — reusable rules (required, email, int ≥ 0, enum, date, exists)
+- [x] `Csrf` — token issue + verify on every state-changing POST
+- [x] `Auth` guard + role guard used by controllers
 
 ### AUTH-01 Login & session
-- [ ] Login form; valid credentials → role-specific dashboard (3 roles)
-- [ ] Invalid credentials → generic message that does **not** reveal which field was wrong
-- [ ] Inactive user cannot log in
-- [ ] Protected pages unreachable without a session
-- [ ] `session_regenerate_id(true)` after successful login
-- [ ] `password_hash()` / `password_verify()` only
+- [x] Login form; valid credentials → role-specific dashboard (3 roles)
+- [x] Invalid credentials → generic message that does **not** reveal which field was wrong
+- [x] Inactive user cannot log in
+- [x] Protected pages unreachable without a session
+- [x] `session_regenerate_id(true)` after successful login
+- [x] `password_hash()` / `password_verify()` only
 - [ ] **Bukti:** demo of 3 role logins, a failed login, and a protected page without session
 
 ### AUTH-02 Logout
-- [ ] Logout clears auth data from session
-- [ ] Protected URL cannot be reopened after logout (back button / direct URL)
+- [x] Logout clears auth data from session
+- [x] Protected URL cannot be reopened after logout (back button / direct URL)
 - [ ] **Bukti:** demo of logout then re-opening a protected URL
 
 ### USR-01 User management
-- [ ] Admin: create / list / edit / activate / deactivate users
-- [ ] Email uniqueness enforced (DB constraint + friendly message)
-- [ ] Role restricted to `Admin` / `Sales` / `WarehouseStaff`
-- [ ] **No public registration page**
-- [ ] Sales and Warehouse Staff receive 403 on user admin pages **and** endpoints
+- [x] Admin: create / list / edit / activate / deactivate users
+- [x] Email uniqueness enforced (DB constraint + friendly message)
+- [x] Role restricted to `Admin` / `Sales` / `WarehouseStaff`
+- [x] **No public registration page**
+- [x] Sales and Warehouse Staff receive 403 on user admin pages **and** endpoints
 - [ ] **Bukti:** CRUD demo, duplicate-email validation, access test as Sales and as Warehouse
 
 ---
@@ -137,7 +140,7 @@ controller later.
 - [ ] Category CRUD
 - [ ] Product CRUD; SKU unique
 - [ ] Validation: prices, reorder point, quantities all ≥ 0; category FK must exist
-- [ ] Product used on an order can only be **deactivated**, never deleted
+- [ ] Nothing is ever hard-deleted — deactivation only, no delete endpoint at all (D9)
 - [ ] Image upload (optional field): validate MIME type **and** size
 - [ ] Uploaded file stored under an unguessable random name
 - [ ] **Bukti:** create/edit/deactivate demo, reorder-point validation, invalid-file upload
@@ -260,6 +263,10 @@ controller later.
 ### TEST-01 Unit (**≥6 cases across ≥3 logic areas**)
 - [ ] Area 1 — stock calculation / insufficient-stock rejection
 - [ ] Area 2 — SO status transition legality
+- [x] Area 1b — authentication rules (6 tests: wrong password, unknown email, inactive
+      account, identical failure messages, identity excludes password hash)
+- [x] Area 2b — user administration authorization (9 tests: non-Admin blocked, duplicate
+      email, weak password, invalid role, Admin cannot demote/disable self)
 - [ ] Area 3 — approval authorization (Sales cannot approve; creator ≠ approver)
 - [ ] Area 4 — low-stock / reorder-point calculation
 - [ ] Area 5 — PO partial receipt & outstanding quantity

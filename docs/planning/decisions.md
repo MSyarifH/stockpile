@@ -21,6 +21,7 @@ localised change.
 | D6 | Is `Adjustment` movement exposed in the UI? | [Assumption] | Not in the UI. Used by the seed for opening balances only. Exposing manual adjustment would create a stock-editing path that §1.3 warns against. |
 | D7 | Does "inventory value" use purchase price or selling price? | [Assumption] | Purchase price — inventory is valued at cost. Stated on the dashboard so the figure is unambiguous. |
 | D8 | Should the JSON API use session auth or a token? | [Assumption] | Session, per API-01: "Autentikasi diperiksa sama seperti halaman biasa." Returns 401 JSON, never an HTML redirect. |
+| D9 | May a product never used on an order be hard-deleted? | **[Decided]** | No. Nothing is ever hard-deleted; deactivation only. Resolves a textual conflict between §1.3 and PRD-01 — see reasoning below and `requirement-tensions.md` B2. |
 
 ---
 
@@ -88,7 +89,30 @@ locked transaction, where it is the only check that can actually be trusted unde
 will fail at issue. That is the correct behaviour for a system without allocation, and it
 matches how the brief describes the flow.
 
+## D9 — Nothing is hard-deleted, including products never used on an order
+
+§1.3 ("Keputusan data") states without condition that products, suppliers and customers are
+deactivated rather than permanently deleted. PRD-01 states the same rule but conditioned on the
+product having been used on an order — which implies an unused product *could* be deleted. The
+two passages cannot both be followed literally.
+
+**Decision: follow §1.3. No entity is ever hard-deleted; there is no delete endpoint.**
+
+**Business reasoning.** The two readings carry very different risk. Not offering a delete button
+where one was permitted is a trivial shortfall — a reviewer sees a missing convenience. Deleting
+a row that is still referenced by an order line or a ledger entry is unrecoverable, breaks the
+reconciliation invariant, and §8.2 lists ledger inconsistency as a critical failure. When two
+readings are both defensible, the one whose failure mode is recoverable wins.
+
+There is also a records argument: a product that ever appeared in the catalogue is part of the
+commercial history — of what was offered and at what price — even if nobody ordered it. That is
+why the foreign keys in the schema are `ON DELETE RESTRICT`: the database refuses the delete
+rather than cascading damage through the ledger.
+
+**Cost accepted.** Rows created by mistake accumulate. Mitigated by the active/inactive filter on
+every list, and recorded in the tech-debt register as a known limitation rather than hidden.
+
 ---
 
-**Status:** D1–D3 resolved and implemented. Remaining entries (D4–D8) are low-risk readings that
+**Status:** D1–D3 and D9 resolved and implemented. Remaining entries (D4–D8) are low-risk readings that
 do not change the shape of the design.

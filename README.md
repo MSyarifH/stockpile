@@ -120,7 +120,7 @@ transaction. The reasoning, and the alternative that was rejected, are in
 
 | Path | Contents |
 |---|---|
-| `docs/planning/` | ERD, initial class diagram, user stories, scope, backlog, decision log |
+| `docs/planning/` | ERD, initial class diagram, user stories, scope, backlog, decision log, requirement tensions |
 | `docs/architecture/` | As-built class diagram, architecture decision records |
 | `docs/quality/` | Refactoring log, SRP audit, tech-debt register, critique, analysis reports |
 | `docs/testing/` | Test scenarios, results, known bugs |

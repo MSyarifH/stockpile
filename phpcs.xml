@@ -7,6 +7,9 @@
     <arg name="colors"/>
     <arg value="p"/>
     <rule ref="PSR12"/>
+    <!-- strict_types is set per file and is decided by the CALLING file, so one
+         omission silently reopens coercive typing. Enforced rather than remembered. -->
+    <rule ref="Generic.PHP.RequireStrictTypes"/>
     <rule ref="Generic.Files.LineLength">
         <properties><property name="lineLimit" value="140"/><property name="absoluteLineLimit" value="0"/></properties>
     </rule>

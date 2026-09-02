@@ -1,6 +1,14 @@
 # ADR-001 — Repository interfaces on business boundaries, concrete classes elsewhere
 
-**Status:** Accepted · **Date:** 2026-09-02 · **Requirement:** ARCH-01, TEST-01
+**Status:** Accepted · **Date:** 2026-09-02 · **Amended:** 2026-09-02 · **Requirement:** ARCH-01, TEST-01
+
+> **Amendment (during Phase 1).** The original decision drew the line at *"master data versus
+> transactional data"* and placed `UserRepository` on the concrete side. Writing `AuthService`
+> proved that wrong: authentication carries real business rules (an inactive account may not
+> sign in; the password must verify) that TEST-01 requires to be testable without a database.
+> The criterion below has been restated in terms of **behaviour rather than table category**,
+> and `UserRepository` moved to the interface side. Recorded as an amendment rather than a
+> silent edit, because the original reasoning is the more instructive part.
 
 ## Context
 
@@ -19,20 +27,33 @@ test and no business rule benefits from.
 
 ## Decision
 
-Repositories are introduced behind an **interface only where a service's business rule depends
-on them**, and as plain concrete classes otherwise.
+A repository gets an interface when this question is answered "yes":
+
+> **Does a service contain a decision — a branch, a rule, a rejection — that depends on this
+> repository's data, and that TEST-01 requires to be proven without a database?**
+
+If yes, the repository is defined as an interface with a MySQL implementation and an in-memory
+fake. If no, it is a plain concrete class.
+
+Note that the criterion is about **behaviour, not table category**. The first version of this
+ADR used "master data versus transactional data" as the test and got `UserRepository` wrong:
+`users` is master data by any reasonable classification, yet `AuthService` branches on it to
+reject inactive accounts and bad passwords — exactly the kind of rule that must be unit-tested.
 
 Interface + MySQL + in-memory fake:
 
-- `StockRepository`, `StockLedgerRepository` — the oversell rule and ledger consistency
-- `SalesOrderRepository` — status transitions and approval authorization
-- `PurchaseOrderRepository` — partial receipt arithmetic
-- `ProductRepository` — low-stock / reorder-point calculation
+| Repository | The rule that earns it an interface |
+|---|---|
+| `UserRepository` | inactive account rejected; credentials must verify |
+| `StockRepository` | issue rejected when the balance is insufficient |
+| `StockLedgerRepository` | every movement writes exactly one ledger row |
+| `SalesOrderRepository` | legal status transitions; creator may not approve |
+| `PurchaseOrderRepository` | partial receipt arithmetic and outstanding quantity |
+| `ProductRepository` | low-stock / reorder-point calculation |
 
-Concrete class only, no interface:
-
-- `CategoryRepository`, `SupplierRepository`, `CustomerRepository`, `UserRepository` — pure CRUD
-  over master data. No business rule branches on them, so no unit test needs to fake them.
+Concrete class only, no interface — `CategoryRepository`, `SupplierRepository`,
+`CustomerRepository`. These are read and written but never *reasoned about*: no service branches
+on their contents, so no unit test needs to fake them.
 
 Services receive repositories through constructor injection. The only place that names a
 concrete MySQL implementation is the composition root in `public/index.php`.
@@ -48,6 +69,10 @@ Swapping the persistence of one aggregate touches one class.
 do not. This looks like an oversight unless explained, which is why it is written down here. A
 reader must check this ADR to know the rule.
 
+**Bad.** The criterion is a judgement call, and this ADR has already been wrong once. A
+repository can acquire a business rule later and need promoting to an interface — which is a
+cheap change (add the interface, extract the fake) but must actually be noticed.
+
 **Accepted cost.** Four extra fakes, roughly 100 lines total. They pay for themselves at the
 first unit test.
 
@@ -61,3 +86,8 @@ rule. §0 scores unjustified structure the same as messy code.
 
 **A generic `RepositoryInterface<T>` base.** Rejected: PHP has no generics, so it would degrade
 to `mixed` return types, weakening PHPStan level 6 exactly where type safety is most useful.
+
+**Splitting by table category (master data vs transactional).** This was the original decision
+and it is recorded here as rejected, because it classifies by what a table *holds* rather than
+by what the code *does* with it. `users` is master data that carries authentication rules;
+`categories` is master data that carries none. The category tells you nothing about testability.
