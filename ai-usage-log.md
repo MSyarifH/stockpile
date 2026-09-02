@@ -194,6 +194,29 @@ being written up as if complete.
   server (`@@transaction_isolation`) and the MySQL 8.0 manual. Still to be proven by test —
   see the register below.
 
+### AI-12 · Resolving three requirement ambiguities (D1–D3)
+- **Purpose:** Decide, rather than block on, the three ambiguities that change behaviour.
+- **My direction:** I chose to resolve these myself against business-process reasoning instead
+  of waiting for a trainer answer, on the basis that the assessment tests whether I can defend a
+  decision, not whether I can ask a question.
+- **How each was decided:** D1 by mapping to the real procurement split between a requisition
+  and a purchase order, placing the authority boundary at the point of financial commitment
+  (`Draft → Ordered`). D2 by taking the control objective in §1 literally — no single *person*
+  may create and approve the same transaction — which applies to Admins too. D3 by observing
+  that SO-01's required evidence ("uji goods issue saat stok tidak cukup") is unreachable if
+  approval reserves stock, so reservation is ruled out by the brief itself.
+- **Correction I made to the AI's proposal:** the AI's D2 rule would have deadlocked the system.
+  With a single seeded Admin, an order raised by that Admin could never be approved by anyone.
+  I required a second Admin account (`admin2@ioms.test`) before accepting the rule; §7.1 states
+  one Admin as a minimum, not a maximum. Recorded because the rule was correct but unusable as
+  first proposed, and the gap was operational rather than logical.
+- **Verification (evidence):** Seed regenerated and reloaded from an empty volume — 2 Admin
+  accounts, 2 distinct approvers across seeded orders, **0** orders where
+  `approved_by = created_by`, and the ledger/stock reconciliation still returns **0** mismatches.
+- **Still to verify:** that the rule is enforced in code. Currently it holds only in seed data;
+  it becomes real in Phase 5 and must be proven by a unit test asserting that an Admin cannot
+  approve an order they created.
+
 ---
 
 ## Outstanding verification register
@@ -205,6 +228,7 @@ Each must move to verified, or be removed, before final release.
 |---|---|---|
 | AI-05 / AI-11 | `SELECT … FOR UPDATE` prevents oversell here | TEST-02 integration test, two connections, second issue rejected |
 | AI-03 | Chosen indexes serve the real queries | `EXPLAIN` on dashboard/report queries, output filed in `docs/quality/` |
+| AI-12 | `approved_by != created_by` enforced for every role | Unit test in Phase 5: Admin approving their own order is rejected |
 
 ---
 

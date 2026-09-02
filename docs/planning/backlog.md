@@ -88,7 +88,8 @@ controller later.
 - [x] `docs/planning/user-stories.md` — per role, from §1.1/§1.2, each with a done-condition
 - [x] `docs/planning/scope.md` — in scope, §4.3 out of scope, and out-of-scope-by-choice
 - [x] `docs/planning/decisions.md` — 8 ambiguity readings; D1/D2/D3 flagged to confirm
-- [ ] Raise D1, D2, D3 with the trainer and record the answers
+- [x] D1, D2, D3 resolved by business-process reasoning and documented with rationale
+- [x] Second Admin account seeded so the D2 rule cannot deadlock a single-Admin system
 
 ---
 
@@ -180,7 +181,8 @@ controller later.
 - [ ] **Partial receipt** supported; outstanding quantity tracked per line
 - [ ] Status auto-derives: all lines full → `Received`, some → `PartiallyReceived`
 - [ ] Cannot receive more than ordered
-- [ ] Permissions: Admin + Warehouse Staff create/receive; Sales blocked
+- [ ] Permissions: Warehouse Staff may create a PO as `Draft`; only Admin may set `Ordered` (D1)
+- [ ] Permissions: Admin + Warehouse Staff receive goods; Sales blocked entirely
 - [ ] **Bukti:** create PO, full receipt, partial receipt, resulting ledger rows
 
 ---
@@ -191,6 +193,8 @@ controller later.
 - [ ] Submit: `Draft → PendingApproval`
 - [ ] **Approve/reject is Admin-only, enforced in the authorization layer, not the UI**
 - [ ] **A Sales user cannot approve any order, including their own** — server-side test
+- [ ] **No user may approve an order they created, Admin included** (D2) — unit test
+- [ ] Approval screen warns when current stock will not cover the order (D3, advisory only)
 - [ ] `approved_by` recorded and must differ from `created_by`
 - [ ] Cancel allowed at any stage before `Fulfilled`
 - [ ] Goods issue permitted **only** from `Approved`

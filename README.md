@@ -45,6 +45,7 @@ All accounts use the password `Password123!`.
 | Email | Role | Purpose |
 |---|---|---|
 | `admin@ioms.test` | Admin | Full access; approves sales orders |
+| `admin2@ioms.test` | Admin | Second Admin — an order's creator may never approve it, so an Admin-raised order needs a different Admin |
 | `sales1@ioms.test` | Sales | Creates and submits sales orders |
 | `sales2@ioms.test` | Sales | Second Sales user, to test order ownership |
 | `warehouse1@ioms.test` | Warehouse Staff | Goods receipt and goods issue |

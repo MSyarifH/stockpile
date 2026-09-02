@@ -37,6 +37,9 @@ USERS = [
  ("Wawan Gudang",     "warehouse1@ioms.test", "WarehouseStaff", 1),
  ("Dewi Gudang",      "warehouse2@ioms.test", "WarehouseStaff", 1),
  ("Nonaktif Sales",   "inactive@ioms.test",   "Sales",          0),  # proves AUTH-01 inactive-login rule
+ # Second Admin exists for a reason: approved_by must never equal created_by (D2).
+ # With a single Admin, any order an Admin raised could never be approved by anyone.
+ ("Putri Admin",      "admin2@ioms.test",     "Admin",          1),
 ]
 SUPPLIERS = [
  ("PT Sinar Elektronik","021-5550101","Jl. Gajah Mada 17, Jakarta"),
@@ -184,7 +187,7 @@ for status,count in SO_PLAN:
         wid=R.choice([1,2]); cust=R.randint(1,len(CUSTOMERS))
         creator=R.choice([2,3])                     # always a Sales user
         # approved_by must be an Admin and must differ from creator (§1.2)
-        approver = 1 if status in ("Approved","Fulfilled") else None
+        approver = R.choice([1, 7]) if status in ("Approved","Fulfilled") else None
         d += datetime.timedelta(days=R.randint(1,2))
         num=f"SO-2026-{so_id:04d}"
         appr = f"{approver}, {q(str(datetime.datetime.combine(d,datetime.time(9,30))))}" if approver else "NULL, NULL"
