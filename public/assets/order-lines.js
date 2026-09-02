@@ -31,7 +31,9 @@
     /** Prefills the unit price from the chosen product, still editable. */
     function wirePriceSuggestion(row) {
         var select = row.querySelector('select');
-        var price = row.querySelector('input[name="items[purchase_price][]"]');
+        // Matches items[purchase_price][] and items[selling_price][]: the same
+        // script drives both the purchase and the sales order form.
+        var price = row.querySelector('input[name$="_price][]"]');
         if (!select || !price) {
             return;
         }

@@ -6,9 +6,10 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0–4 complete. 50 unit tests across 5 logic areas
-(pass with the database stopped) plus 6 integration tests against real MySQL. ARCH-02 proven with
-a mutation check. Next: Phase 5 (sales orders, approval, goods issue).
+**Status at last update (2026-09-02):** Phases 0–5 complete — the whole core flow
+(login → master data → PO → SO → stock ledger) now works end to end. 68 unit tests across 6 logic
+areas (pass with the database stopped) plus 6 integration tests against real MySQL.
+Next: Phase 6 (search, filter, sort, pagination).
 
 ---
 
@@ -213,22 +214,31 @@ assumption in the initial class diagram.
 
 ---
 
-## Phase 5 — Sales Order (SO-01) ⚠ segregation of duties
+## Phase 5 — Sales Order (SO-01) ✅ COMPLETE (verified over HTTP)
 
-- [ ] SO create as Draft (Sales, own orders only)
-- [ ] Submit: `Draft → PendingApproval`
-- [ ] **Approve/reject is Admin-only, enforced in the authorization layer, not the UI**
-- [ ] **A Sales user cannot approve any order, including their own** — server-side test
-- [ ] **No user may approve an order they created, Admin included** (D2) — unit test
-- [ ] Approval screen warns when current stock will not cover the order (D3, advisory only)
-- [ ] `approved_by` recorded and must differ from `created_by`
-- [ ] Cancel allowed at any stage before `Fulfilled`
-- [ ] Goods issue permitted **only** from `Approved`
-- [ ] Goods issue rejected when available stock is insufficient
-- [ ] Goods issue calls `StockService::issue()`; order becomes `Fulfilled`
-- [ ] Sales sees only their own orders; Warehouse Staff cannot create SOs
-- [ ] **Bukti:** full Draft→Fulfilled demo, Sales attempting approval (403), issue with
-      insufficient stock
+Every rule lives in `SalesOrderService`, so a direct POST is refused exactly as the hidden
+button implies. Decision D3 confirmed in practice: an order for 99999 units was **approved**
+(approval reserves nothing) and then **refused at goods issue** — the scenario SO-01 requires
+to be demonstrable.
+
+- [x] SO create as Draft (Sales, own orders only)
+- [x] Submit: `Draft → PendingApproval`
+- [x] **Approve/reject is Admin-only, enforced in the authorization layer, not the UI**
+- [x] **A Sales user cannot approve any order, including their own** — server-side test
+- [x] **No user may approve an order they created, Admin included** (D2) — unit test
+- [x] Approval screen warns when current stock will not cover the order (D3, advisory only)
+- [x] `approved_by` recorded and must differ from `created_by`
+- [x] Cancel allowed at any stage before `Fulfilled`
+- [x] Goods issue permitted **only** from `Approved`
+- [x] Goods issue rejected when available stock is insufficient
+- [x] Goods issue calls `StockService::issue()`; order becomes `Fulfilled`
+- [x] Sales sees only their own orders; Warehouse Staff cannot create SOs
+- [x] **Bukti:** verified over HTTP — full Draft→PendingApproval→Approved→Fulfilled;
+      Sales approving own order **403**; Warehouse approving **403**; Admin approving an order
+      they raised themselves **403**, then a second Admin approving it successfully
+      (`created_by=1, approved_by=7`); Sales opening another seller's order **404**;
+      goods issue of 99999 against 110 refused with a clear message, order stayed `Approved`
+      and stock unchanged; 0 self-approved orders and 0 ledger mismatches across the database
 
 ---
 
@@ -289,7 +299,7 @@ assumption in the initial class diagram.
       all-or-nothing, same-row lines summed, one lock per row, deterministic lock order,
       per-warehouse isolation, non-positive quantity rejected, actor and reference recorded)
 - [ ] Area 1 — stock calculation / insufficient-stock rejection *(covered by Area 4)*
-- [ ] Area 2 — SO status transition legality
+- [x] Area 2 — SO status transition legality
 - [x] Area 1b — authentication rules (6 tests: wrong password, unknown email, inactive
       account, identical failure messages, identity excludes password hash)
 - [x] Area 2b — user administration authorization (9 tests: non-Admin blocked, duplicate
@@ -297,7 +307,7 @@ assumption in the initial class diagram.
 - [x] Area 3b — catalogue rules and low-stock calculation (9 tests: role checks, duplicate SKU
       case-insensitive, negative price/reorder point, SKU normalisation, atomic create,
       inclusive low-stock boundary, totals summed across warehouses, inactive excluded)
-- [ ] Area 3 — approval authorization (Sales cannot approve; creator ≠ approver)
+- [x] Area 3 — approval authorization (Sales cannot approve; creator ≠ approver)
 - [ ] Area 4 — low-stock / reorder-point calculation
 - [x] Area 5 — PO partial receipt & outstanding quantity
 - [ ] No session, no real PDO, no network; no trivial getter/setter tests

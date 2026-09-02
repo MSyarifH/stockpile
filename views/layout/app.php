@@ -32,6 +32,7 @@ $flashes = $flashes ?? [];
                 <?php if (!$user->is(\App\Entity\Role::Sales)) : ?>
                     <a href="/purchase-orders">Purchases</a>
                 <?php endif; ?>
+                <a href="/sales-orders">Sales</a>
                 <?php if ($user->isAdmin()) : ?>
                     <a href="/categories">Categories</a>
                     <a href="/warehouses">Warehouses</a>

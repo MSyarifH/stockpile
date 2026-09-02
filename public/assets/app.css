@@ -320,3 +320,4 @@ code {
 .badge--draft { background: var(--bg); color: var(--ink-soft); }
 .badge--info  { background: #e3edf9; color: #1a4b80; border-color: transparent; }
 .badge--warn  { background: var(--warn-bg); color: #7a5300; border-color: transparent; }
+.alert--warn { background: var(--warn-bg); color: #7a5300; }

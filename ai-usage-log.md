@@ -346,6 +346,40 @@ being written up as if complete.
 
 ---
 
+## Session 6 — 2026-09-02 — Sales orders, approval and goods issue (Phase 5)
+
+### AI-23 · SalesOrderService and segregation of duties
+- **Purpose:** SO-01 plus the §1.2 control that no one may raise and approve the same order.
+- **The rule as implemented:** `approve()` checks two independent conditions — the actor is an
+  Admin, **and** the actor is not the order's creator. Expressed once on the entity as
+  `SalesOrder::canBeApprovedBy()` and asserted in the service, never in the controller.
+- **Ownership handled as 404, not 403.** A Sales user opening another seller's order gets
+  "does not exist". Returning 403 would confirm the order exists, which is itself a disclosure.
+  This was my change to the AI's version, which returned 403.
+- **Verification (evidence over HTTP):** Sales approving their own order → 403; Warehouse
+  approving → 403; **Admin approving an order they raised themselves → 403**; a second Admin
+  approving that same order → success with `created_by=1, approved_by=7`; database-wide count of
+  self-approved orders: **0**.
+
+### AI-24 · Decision D3 confirmed in practice
+- A sales order for 99,999 units was **approved** without complaint — approval reserves no stock —
+  and then **refused at goods issue** with "Insufficient stock: 99999 requested but only 110
+  available". The order stayed `Approved` and stock was untouched.
+- This is the scenario SO-01 requires to be demonstrable, and it is only reachable *because*
+  approval does not reserve. Had D3 gone the other way, the required evidence could not exist.
+
+### AI-25 · Frontend stricter than backend — caught while reviewing a generated view
+- The sales order form was derived from the purchase order form and carried `max="today"` on the
+  date input, but `SalesOrderService::create()` had no date validation at all. The browser
+  enforced a rule the server did not, which inverts VAL-01: the backend must be the source of
+  truth, and a request bypassing the form would have been accepted.
+- **Fix:** the same date rule now lives in the service, with a unit test that calls it directly
+  rather than through the form.
+- Also fixed the shared line-item script, which selected `items[purchase_price][]` and therefore
+  silently did nothing on the sales form. Now matches both field names.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.

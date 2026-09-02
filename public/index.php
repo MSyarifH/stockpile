@@ -20,6 +20,7 @@ use App\Controller\CategoryController;
 use App\Controller\DashboardController;
 use App\Controller\ProductController;
 use App\Controller\PurchaseOrderController;
+use App\Controller\SalesOrderController;
 use App\Controller\UserController;
 use App\Controller\WarehouseController;
 use App\Entity\PartnerType;
@@ -28,6 +29,7 @@ use App\Repository\BusinessPartnerRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\MySqlProductRepository;
 use App\Repository\MySqlPurchaseOrderRepository;
+use App\Repository\MySqlSalesOrderRepository;
 use App\Repository\MySqlStockLedgerRepository;
 use App\Repository\MySqlStockRepository;
 use App\Repository\MySqlUserRepository;
@@ -38,6 +40,7 @@ use App\Service\CategoryService;
 use App\Service\Exception\AuthorizationException;
 use App\Service\ProductService;
 use App\Service\PurchaseOrderService;
+use App\Service\SalesOrderService;
 use App\Service\StockService;
 use App\Service\UserService;
 use App\Service\WarehouseService;
@@ -81,6 +84,7 @@ try {
     $stockRepository = new MySqlStockRepository($pdo);
     $ledgerRepository = new MySqlStockLedgerRepository($pdo);
     $purchaseOrderRepository = new MySqlPurchaseOrderRepository($pdo);
+    $salesOrderRepository = new MySqlSalesOrderRepository($pdo);
 
     // --- services --------------------------------------------------------
     $authService = new AuthService($userRepository);
@@ -92,6 +96,7 @@ try {
     // StockService is the single writer of stock; order services call it.
     $stockService = new StockService($stockRepository, $ledgerRepository, $transactions);
     $purchaseOrderService = new PurchaseOrderService($purchaseOrderRepository, $stockService, $transactions);
+    $salesOrderService = new SalesOrderService($salesOrderRepository, $stockService, $transactions);
 
     // --- controllers -----------------------------------------------------
     $authController = new AuthController($authService, $session, $view, $csrf);
@@ -102,6 +107,15 @@ try {
     $partnerController = new BusinessPartnerController($partnerService, $session, $view, $csrf);
     $purchaseOrderController = new PurchaseOrderController(
         $purchaseOrderService,
+        $productService,
+        $partnerService,
+        $warehouseService,
+        $session,
+        $view,
+        $csrf,
+    );
+    $salesOrderController = new SalesOrderController(
+        $salesOrderService,
         $productService,
         $partnerService,
         $warehouseService,
@@ -175,6 +189,20 @@ try {
     $router->post('/purchase-orders/{id}/place', $purchaseOrderController->place(...), $purchasing);
     $router->post('/purchase-orders/{id}/cancel', $purchaseOrderController->cancel(...), $purchasing);
     $router->post('/purchase-orders/{id}/receive', $purchaseOrderController->receive(...), $purchasing);
+
+    // Sales orders are visible to every signed-in role, but the SERVICE decides
+    // what each one may see and do: Sales sees only its own orders, only an
+    // Admin who did not raise the order may approve it (D2), and only Admin or
+    // Warehouse Staff may issue goods.
+    $router->get('/sales-orders', $salesOrderController->index(...), []);
+    $router->get('/sales-orders/create', $salesOrderController->create(...), [Role::Admin, Role::Sales]);
+    $router->post('/sales-orders', $salesOrderController->store(...), [Role::Admin, Role::Sales]);
+    $router->get('/sales-orders/{id}', $salesOrderController->show(...), []);
+    $router->post('/sales-orders/{id}/submit', $salesOrderController->submit(...), []);
+    $router->post('/sales-orders/{id}/approve', $salesOrderController->approve(...), []);
+    $router->post('/sales-orders/{id}/reject', $salesOrderController->reject(...), []);
+    $router->post('/sales-orders/{id}/cancel', $salesOrderController->cancel(...), []);
+    $router->post('/sales-orders/{id}/issue', $salesOrderController->issue(...), []);
 
     // Suppliers and customers share a controller. The type is bound HERE, from
     // the route, so it can never be influenced by request data.
