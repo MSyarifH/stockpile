@@ -14,11 +14,13 @@ declare(strict_types=1);
  * structure that solves no problem this project has (§0).
  */
 
+use App\Controller\ApiController;
 use App\Controller\AuthController;
 use App\Controller\BusinessPartnerController;
 use App\Controller\CategoryController;
 use App\Controller\DashboardController;
 use App\Controller\ProductController;
+use App\Controller\ReportController;
 use App\Controller\PurchaseOrderController;
 use App\Controller\SalesOrderController;
 use App\Controller\UserController;
@@ -27,6 +29,7 @@ use App\Entity\PartnerType;
 use App\Entity\Role;
 use App\Repository\BusinessPartnerRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\DashboardRepository;
 use App\Repository\MySqlProductRepository;
 use App\Repository\MySqlPurchaseOrderRepository;
 use App\Repository\MySqlSalesOrderRepository;
@@ -37,8 +40,10 @@ use App\Repository\WarehouseRepository;
 use App\Service\AuthService;
 use App\Service\BusinessPartnerService;
 use App\Service\CategoryService;
+use App\Service\DashboardService;
 use App\Service\Exception\AuthorizationException;
 use App\Service\ProductService;
+use App\Service\ReportService;
 use App\Service\PurchaseOrderService;
 use App\Service\SalesOrderService;
 use App\Service\StockService;
@@ -78,6 +83,7 @@ try {
     // --- repositories ----------------------------------------------------
     $userRepository = new MySqlUserRepository($pdo);
     $categoryRepository = new CategoryRepository($pdo);
+    $dashboardRepository = new DashboardRepository($pdo);
     $warehouseRepository = new WarehouseRepository($pdo);
     $partnerRepository = new BusinessPartnerRepository($pdo);
     $productRepository = new MySqlProductRepository($pdo);
@@ -97,10 +103,14 @@ try {
     $stockService = new StockService($stockRepository, $ledgerRepository, $transactions);
     $purchaseOrderService = new PurchaseOrderService($purchaseOrderRepository, $stockService, $transactions);
     $salesOrderService = new SalesOrderService($salesOrderRepository, $stockService, $transactions);
+    $dashboardService = new DashboardService($dashboardRepository, $productRepository);
+    $reportService = new ReportService($ledgerRepository, $salesOrderRepository);
 
     // --- controllers -----------------------------------------------------
     $authController = new AuthController($authService, $session, $view, $csrf);
-    $dashboardController = new DashboardController($session, $view);
+    $dashboardController = new DashboardController($dashboardService, $session, $view);
+    $reportController = new ReportController($reportService, $session, $view);
+    $apiController = new ApiController($productService, $session);
     $userController = new UserController($userService, $session, $view, $csrf);
     $categoryController = new CategoryController($categoryService, $session, $view, $csrf);
     $warehouseController = new WarehouseController($warehouseService, $session, $view, $csrf);
@@ -203,6 +213,17 @@ try {
     $router->post('/sales-orders/{id}/reject', $salesOrderController->reject(...), []);
     $router->post('/sales-orders/{id}/cancel', $salesOrderController->cancel(...), []);
     $router->post('/sales-orders/{id}/issue', $salesOrderController->issue(...), []);
+
+    // REPORT-01. Sales may export their own orders; stock movements are for
+    // Admin and Warehouse Staff, enforced inside ReportService.
+    $router->get('/reports', $reportController->index(...), []);
+    $router->get('/reports/stock-movements', $reportController->stockMovements(...), []);
+    $router->get('/reports/order-status', $reportController->orderStatus(...), []);
+
+    // API-01. A JSON contract, separate from the HTML pages. Authentication is
+    // checked inside the controller so an unauthenticated call receives 401
+    // JSON rather than the login redirect a page would get.
+    $router->get('/api/products/{sku}/availability', $apiController->productAvailability(...), null);
 
     // Suppliers and customers share a controller. The type is bound HERE, from
     // the route, so it can never be influenced by request data.

@@ -33,6 +33,7 @@ $flashes = $flashes ?? [];
                     <a href="/purchase-orders">Purchases</a>
                 <?php endif; ?>
                 <a href="/sales-orders">Sales</a>
+                <a href="/reports">Reports</a>
                 <?php if ($user->isAdmin()) : ?>
                     <a href="/categories">Categories</a>
                     <a href="/warehouses">Warehouses</a>

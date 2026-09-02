@@ -413,6 +413,58 @@ being written up as if complete.
 
 ---
 
+## Session 8 — 2026-09-02 — Dashboard, CSV, JSON API, scheduled job (Phase 7)
+
+### AI-29 · One definition of "low stock", three consumers
+- The product list filter, the dashboard tile and `scripts/check-low-stock.php` all resolve to
+  `Product::isLowStock()` and the same repository query. Verified they agree: all three report
+  the same 2 products.
+- This was deliberate. Three separate queries would drift, and then nobody could say which
+  number was right — the failure mode is not a crash but quiet disagreement.
+
+### AI-30 · API-01 — the endpoint reuses the layer rather than duplicating it
+- `ApiController` contains no SQL, no business rule and no second copy of the authorization
+  check. It calls the same `ProductService` the HTML controller uses and differs only in
+  rendering JSON instead of HTML. That is the concrete payoff of ARCH-01's layering.
+- **Verified:** unauthenticated → 401 JSON; authenticated → 200 with per-warehouse balances;
+  unknown SKU → 404 JSON. All with `Content-Type: application/json`.
+- The 401-versus-redirect distinction was already handled in Phase 1's central failure handler:
+  an `/api/` path receives JSON while a page receives a redirect to the login form.
+- **Why the endpoint has a real use, not just a graded one:** the sales order form calls it via
+  Fetch when a product is chosen, so the seller sees per-warehouse stock without reloading. It
+  is explicitly a display aid — the authoritative check stays inside the locked transaction at
+  goods issue, so a stale or spoofed reading cannot cause an oversell.
+
+### AI-31 · DASH-01 verified by comparison, not by inspection
+- Rather than reading the dashboard and judging it plausible, every tile was compared against
+  the same figure queried directly in SQL. All matched: inventory at cost Rp 678,033,000,
+  5,067 units, 2 below reorder point, 4 pending approval, receipt queue 6, issue queue 3.
+- DASH-01 requires figures to come from aggregation queries rather than static numbers, and a
+  side-by-side comparison is what actually demonstrates that.
+
+### AI-32 · A lossy test double found by a failing assertion
+- `ReportServiceTest` asserted that a CSV row names who performed the movement. It failed with
+  an empty string.
+- **Cause:** `InMemoryStockLedgerRepository::append()` rebuilt the entry from only its core
+  fields and silently dropped the display names that the MySQL implementation obtains by JOIN.
+  Code reading `entry->productName` therefore worked against the real database and returned
+  empty under test — the fake was **quietly lossy**.
+- **Fix:** the fake now carries every field, with a comment recording why.
+- **Lesson recorded:** a test double that is not faithful to its interface does not merely fail
+  to catch bugs, it can *create* the illusion of different behaviour between test and
+  production. This is the third time in this project that the flaw was in the test apparatus
+  rather than the code (see AI-18, AI-27).
+
+### AI-33 · CSV escaping proven by round-trip, not by eyeballing
+- The AI's first version asserted only that a quoted comma appeared in the output. I replaced it
+  with a round-trip: generate the CSV, parse it back with `fgetcsv`, and assert the parsed rows
+  equal the input — including a field containing an embedded newline, which must remain one
+  field of one row rather than becoming two rows.
+- This is why `fputcsv` is used rather than joining with commas: a product name containing a
+  comma would shift every following column, and the file would look valid while being wrong.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.

@@ -57,6 +57,12 @@ final class ProductService
         return $product;
     }
 
+    /** Used by the JSON availability endpoint (API-01). */
+    public function findBySku(string $sku): ?Product
+    {
+        return $this->products->findBySku(strtoupper(trim($sku)));
+    }
+
     /** @return list<StockLevel> */
     public function stockLevels(int $productId): array
     {

@@ -61,7 +61,9 @@
                     <select name="items[product_id][]">
                         <option value="">Choose a product…</option>
                         <?php foreach ($products as $product) : ?>
-                            <option value="<?= (int) $product->id ?>" data-price="<?= $e((string) $product->sellingPrice) ?>">
+                            <option value="<?= (int) $product->id ?>"
+                                    data-price="<?= $e((string) $product->sellingPrice) ?>"
+                                    data-sku="<?= $e($product->sku) ?>">
                                 <?= $e($product->sku) ?> — <?= $e($product->name) ?>
                             </option>
                         <?php endforeach; ?>
@@ -94,3 +96,5 @@
 </form>
 
 <script src="/assets/order-lines.js" defer></script>
+<script src="/assets/availability.js" defer></script>
+<script>document.body.classList.add('sales-form');</script>

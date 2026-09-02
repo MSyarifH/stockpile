@@ -16,6 +16,11 @@ final class InMemoryStockLedgerRepository implements StockLedgerRepository
     public function append(LedgerEntry $entry): int
     {
         $id = $this->nextId++;
+
+        // Every field is carried over, including the display names the MySQL
+        // implementation obtains by JOIN. An earlier version dropped them, which
+        // made this fake quietly lossy: code that read entry->productName worked
+        // against the database and returned an empty string under test.
         $this->entries[] = new LedgerEntry(
             $id,
             $entry->productId,
@@ -25,6 +30,11 @@ final class InMemoryStockLedgerRepository implements StockLedgerRepository
             $entry->referenceType,
             $entry->referenceId,
             $entry->performedBy,
+            $entry->createdAt,
+            $entry->productName,
+            $entry->productSku,
+            $entry->warehouseName,
+            $entry->performedByName,
         );
 
         return $id;

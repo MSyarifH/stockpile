@@ -351,3 +351,26 @@ code {
 .pager__status { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
 .pager__list { display: flex; flex-wrap: wrap; gap: 0.3rem; list-style: none; margin: 0; padding: 0; }
 .btn--disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* --- dashboard tiles ----------------------------------------------------- */
+
+.tiles {
+    display: grid;
+    gap: var(--space);
+    grid-template-columns: 1fr;
+    margin: var(--space) 0;
+}
+@media (min-width: 560px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+
+.tile {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--brand);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+}
+.tile--warn { border-left-color: #c98a00; }
+.tile__label { margin: 0; font-size: 0.82rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+.tile__value { margin: 0.25rem 0; font-size: 1.6rem; font-weight: 700; line-height: 1.15; }
+.tile__note { margin: 0; font-size: 0.82rem; color: var(--ink-soft); }

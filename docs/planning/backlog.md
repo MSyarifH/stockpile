@@ -6,9 +6,10 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0–6 complete. 82 unit tests across 7 logic areas
-(pass with the database stopped) plus 6 integration tests against real MySQL.
-Next: Phase 7 (dashboard, CSV export, JSON endpoint, scheduled job).
+**Status at last update (2026-09-02):** Phases 0–7 complete — every §2 functional requirement is
+implemented and verified over HTTP. 92 unit tests across 8 logic areas (pass with the database
+stopped) plus 6 integration tests against real MySQL.
+Next: Phase 8–9 (as-built diagram, refactor log, tech-debt, critique, screenshots).
 
 ---
 
@@ -265,35 +266,47 @@ rule and the filter-preserving links are defined once.
 
 ---
 
-## Phase 7 — Read-only surface
+## Phase 7 — Read-only surface ✅ COMPLETE (verified over HTTP)
 
-### DASH-01
-- [ ] Admin: inventory value, products below reorder point, pending orders by status
-- [ ] Sales: own orders summarised by status
-- [ ] Warehouse: goods receipt/issue queue + low-stock products
-- [ ] **All figures from aggregation queries — no hardcoded numbers**
-- [ ] **Bukti:** the aggregation queries + dashboard demo for all three roles
+The JSON endpoint calls the same `ProductService` the HTML pages use and differs only in how it
+renders the answer — there is no second copy of the query or the authorization rule. The
+scheduled job likewise reuses the same repository and the same low-stock definition.
 
-### REPORT-01
-- [ ] CSV export of stock movements (ledger) for a date range
-- [ ] CSV export of order status for a date range
-- [ ] Exports reuse the **same** aggregation logic as the dashboard
-- [ ] Correct headers (`Content-Type`, `Content-Disposition`)
-- [ ] **Bukti:** exported CSVs for two different date ranges
+### DASH-01 ✅
+- [x] Admin: inventory value, products below reorder point, pending orders by status
+- [x] Sales: own orders summarised by status
+- [x] Warehouse: goods receipt/issue queue + low-stock products
+- [x] **All figures from aggregation queries — no hardcoded numbers**
+- [x] **Bukti:** every tile verified against the same figure queried directly in SQL —
+      inventory at cost Rp 678,033,000, 5,067 units, 2 below reorder point, 4 pending approval,
+      receipt queue 6, issue queue 3 — all identical, proving the numbers are computed
 
-### API-01
-- [ ] `GET /api/products/{sku}/availability` → stock per warehouse
-- [ ] Authentication checked exactly as for HTML pages
-- [ ] `Content-Type: application/json`
-- [ ] Correct status codes: 200 / 401 / 404 — **JSON body, never an HTML error page**
-- [ ] Consumed from the frontend via Fetch API
-- [ ] **Bukti:** calls with auth, without auth, and with an unknown SKU
+### REPORT-01 ✅
+- [x] CSV export of stock movements (ledger) for a date range
+- [x] CSV export of order status for a date range
+- [x] Exports reuse the **same** aggregation logic as the dashboard
+- [x] Correct headers (`Content-Type`, `Content-Disposition`)
+- [x] **Bukti:** June 2026 export → 110 rows, September 2026 → 4 rows from the same endpoint;
+      Sales export restricted to their own 7 orders vs the Admin's 16; Sales blocked from the
+      stock movement export (403); reversed date range rejected (422)
 
-### JOB-01
-- [ ] `scripts/check-low-stock.php` — standalone, outside the web request cycle
-- [ ] Reuses the same service/repository layer as the web app
-- [ ] Runs via `docker compose exec app php scripts/check-low-stock.php`
-- [ ] **Bukti:** run output showing the low-stock summary
+### API-01 ✅
+- [x] `GET /api/products/{sku}/availability` → stock per warehouse
+- [x] Authentication checked exactly as for HTML pages
+- [x] `Content-Type: application/json`
+- [x] Correct status codes: 200 / 401 / 404 — **JSON body, never an HTML error page**
+- [x] Consumed from the frontend via Fetch API
+- [x] **Bukti:** unauthenticated → **401** JSON; authenticated → **200** with total 234 across
+      3 warehouses; unknown SKU → **404** JSON. All three carry
+      `Content-Type: application/json`, never an HTML page
+
+### JOB-01 ✅
+- [x] `scripts/check-low-stock.php` — standalone, outside the web request cycle
+- [x] Reuses the same service/repository layer as the web app
+- [x] Runs via `docker compose exec app php scripts/check-low-stock.php`
+- [x] **Bukti:** run output lists the same 2 products as `/products?stock=low` and the
+      dashboard tile — one definition, three consumers. Exits non-zero when action is needed so
+      a cron wrapper can alert without parsing the text
 
 ---
 
@@ -314,7 +327,7 @@ rule and the filter-preserving links are defined once.
       case-insensitive, negative price/reorder point, SKU normalisation, atomic create,
       inclusive low-stock boundary, totals summed across warehouses, inactive excluded)
 - [x] Area 3 — approval authorization (Sales cannot approve; creator ≠ approver)
-- [ ] Area 4 — low-stock / reorder-point calculation
+- [x] Area 4 — low-stock / reorder-point calculation
 - [x] Area 5 — PO partial receipt & outstanding quantity
 - [ ] No session, no real PDO, no network; no trivial getter/setter tests
 - [ ] **Bukti:** results in `docs/testing/`, run by one README command
