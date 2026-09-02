@@ -1,0 +1,46 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: ioms-db
+    command: --default-authentication-plugin=caching_sha2_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT_HOST}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Files here run automatically the FIRST time the volume is created.
+      - ./database/schema-and-seed.sql:/docker-entrypoint-initdb.d/01-schema-and-seed.sql:ro
+    healthcheck:
+      # The app must not boot before MySQL can actually answer queries.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  app:
+    build: .
+    container_name: ioms-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_ENV: ${APP_ENV}
+    ports:
+      - "${APP_PORT}:80"
+    volumes:
+      - .:/var/www/html
+      - uploads:/var/www/html/public/uploads
+
+volumes:
+  db_data:
+  uploads:

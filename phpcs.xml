@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<ruleset name="IOMS">
+    <description>PSR-12 for application code.</description>
+    <file>app</file>
+    <file>tests</file>
+    <file>scripts</file>
+    <arg name="colors"/>
+    <arg value="p"/>
+    <rule ref="PSR12"/>
+    <rule ref="Generic.Files.LineLength">
+        <properties><property name="lineLimit" value="140"/><property name="absoluteLineLimit" value="0"/></properties>
+    </rule>
+</ruleset>
