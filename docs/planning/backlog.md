@@ -6,8 +6,9 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0, 0.5 and 1 complete. 15 unit tests across 2 logic
-areas pass with the database stopped. Next: Phase 2 (master data).
+**Status at last update (2026-09-02):** Phases 0, 0.5, 1 and 2 complete. 24 unit tests across 3
+logic areas pass with the database stopped — TEST-01's minimum (≥6 tests, ≥3 areas) is met.
+Next: Phase 3 (stock service, ARCH-02).
 
 ---
 
@@ -134,26 +135,34 @@ Central failure handler: 401 → redirect to login, 403/404/405 → error page, 
 
 ---
 
-## Phase 2 — Master data
+## Phase 2 — Master data ✅ COMPLETE (verified over HTTP)
+
+Catalogue readable by every signed-in role; only Admin may change it. Suppliers and customers
+share one controller/service/repository driven by a `PartnerType` enum — identical fields and
+identical rules, kept in separate tables so a sales order cannot reference a supplier.
 
 ### PRD-01 Products, categories, reorder point
-- [ ] Category CRUD
-- [ ] Product CRUD; SKU unique
-- [ ] Validation: prices, reorder point, quantities all ≥ 0; category FK must exist
-- [ ] Nothing is ever hard-deleted — deactivation only, no delete endpoint at all (D9)
-- [ ] Image upload (optional field): validate MIME type **and** size
-- [ ] Uploaded file stored under an unguessable random name
-- [ ] **Bukti:** create/edit/deactivate demo, reorder-point validation, invalid-file upload
+- [x] Category CRUD
+- [x] Product CRUD; SKU unique
+- [x] Validation: prices, reorder point, quantities all ≥ 0; category FK must exist
+- [x] Nothing is ever hard-deleted — deactivation only, no delete endpoint at all (D9)
+- [x] Image upload (optional field): validate MIME type **and** size
+- [x] Uploaded file stored under an unguessable random name
+- [x] **Bukti:** verified over HTTP — duplicate SKU, negative price, negative reorder point,
+      non-numeric price, blank name, missing category all rejected 422; a text file renamed
+      `.jpg` rejected; a real PNG accepted and stored as a random 32-hex filename
+- [x] Upload hardening verified: `/uploads/` listing → 403, a `.php` file there is served as
+      text and not executed
 
 ### WH-01 Warehouses & multi-location stock
-- [ ] Warehouse CRUD (Admin)
-- [ ] Every product has a stock row per warehouse
-- [ ] Stock view shows **total and per-warehouse breakdown**
+- [x] Warehouse CRUD (Admin)
+- [x] Every product has a stock row per warehouse
+- [x] Stock view shows **total and per-warehouse breakdown**
 - [ ] **Bukti:** one product showing different stock in two warehouses
 
 ### Supplier / Customer
-- [ ] Supplier CRUD, deactivate not delete
-- [ ] Customer CRUD, deactivate not delete
+- [x] Supplier CRUD, deactivate not delete
+- [x] Customer CRUD, deactivate not delete
 
 ---
 
@@ -267,6 +276,9 @@ Central failure handler: 401 → redirect to login, 403/404/405 → error page, 
       account, identical failure messages, identity excludes password hash)
 - [x] Area 2b — user administration authorization (9 tests: non-Admin blocked, duplicate
       email, weak password, invalid role, Admin cannot demote/disable self)
+- [x] Area 3b — catalogue rules and low-stock calculation (9 tests: role checks, duplicate SKU
+      case-insensitive, negative price/reorder point, SKU normalisation, atomic create,
+      inclusive low-stock boundary, totals summed across warehouses, inactive excluded)
 - [ ] Area 3 — approval authorization (Sales cannot approve; creator ≠ approver)
 - [ ] Area 4 — low-stock / reorder-point calculation
 - [ ] Area 5 — PO partial receipt & outstanding quantity

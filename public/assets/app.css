@@ -280,3 +280,26 @@ body {
         letter-spacing: 0.03em;
     }
 }
+
+/* --- detail lists ------------------------------------------------------- */
+
+.detail { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1rem; }
+.detail dt { color: var(--ink-soft); font-size: 0.9rem; }
+.detail dd { margin: 0; }
+
+.product-image {
+    display: block;
+    margin-top: var(--space);
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+}
+
+code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9em;
+    background: var(--bg);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+}

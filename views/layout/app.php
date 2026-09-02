@@ -28,7 +28,12 @@ $flashes = $flashes ?? [];
         <?php if ($user !== null) : ?>
             <nav class="nav" aria-label="Main">
                 <a href="/dashboard">Dashboard</a>
+                <a href="/products">Products</a>
                 <?php if ($user->isAdmin()) : ?>
+                    <a href="/categories">Categories</a>
+                    <a href="/warehouses">Warehouses</a>
+                    <a href="/suppliers">Suppliers</a>
+                    <a href="/customers">Customers</a>
                     <a href="/users">Users</a>
                 <?php endif; ?>
             </nav>

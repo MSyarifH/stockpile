@@ -45,4 +45,11 @@ RUN { \
       echo 'post_max_size=8M'; \
     } > /usr/local/etc/php/conf.d/zz-app.ini
 
+# Apache workers run as www-data, so the upload target must be writable by it.
+# Creating the directory here (not just in the repo) matters because Docker
+# initialises the named volume from the image, ownership included -- otherwise a
+# fresh volume is created as root:root and every upload fails at move_uploaded_file.
+RUN mkdir -p /var/www/html/public/uploads \
+    && chown -R www-data:www-data /var/www/html/public/uploads
+
 WORKDIR /var/www/html

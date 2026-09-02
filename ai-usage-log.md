@@ -219,6 +219,55 @@ being written up as if complete.
 
 ---
 
+## Session 3 — 2026-09-02 — Master data (Phase 2)
+
+### AI-13 · Suppliers and customers sharing one implementation
+- **Purpose:** Avoid writing the same CRUD twice for two entities with identical fields.
+- **My decision:** §1.3 lists Supplier and Customer on a single row with the same fields and the
+  same rule (deactivate, never delete). I had the AI implement one controller, one service and
+  one repository driven by a `PartnerType` enum, but keep **separate tables** — a purchase order
+  must reference a supplier and a sales order a customer, and merging the tables would remove
+  the foreign key that currently prevents mixing them.
+- **Output reviewed:** The repository interpolates a table name into SQL, which normally I would
+  reject outright. I accepted it only after confirming the name comes from a `match()` over an
+  enum, so exactly two literal strings can ever appear and no request data reaches it. Every
+  value is still bound. The reasoning is written in the class docblock so a reviewer does not
+  have to reconstruct it.
+
+### AI-14 · Upload directory permissions — **defect found by testing, not review**
+- **Symptom:** A valid PNG was rejected with "The image could not be saved" while an invalid file
+  was correctly rejected earlier — so the validation path looked fine and only the *success*
+  path was broken.
+- **Cause:** the `uploads` named volume is created as `root:root`, but Apache workers run as
+  `www-data`, so `move_uploaded_file()` failed. Neither PHPStan, PHPCS nor any unit test could
+  have caught this: it only exists in the running container.
+- **Fix:** the Dockerfile now creates `public/uploads` owned by `www-data`. Docker initialises a
+  named volume from the image, ownership included, so a clean clone gets it right.
+- **Verified:** volume recreated from scratch; `www-data` can write; a real PNG uploads and is
+  served; a text file renamed `.jpg` is still rejected.
+- **Why it matters:** this would have failed live during the PRD-01 upload demo.
+
+### AI-15 · PHPStan memory limit — **second defect found by running the tool**
+- **Symptom:** `phpstan analyse` reported "Found 1 error" with no file or line.
+- **Cause:** not a code problem — the analysis exceeded PHP's 128M limit and the worker crashed.
+  Read carelessly, this looks like a static-analysis failure, which TEST-03 grades.
+- **Fix:** `--memory-limit=512M` in the composer `stan` script, so the documented command works.
+- **Verified:** 50 files analysed, zero errors.
+
+### AI-16 · Unit tests for the catalogue (logic area 3)
+- **Output reviewed / amended:** The AI's first version used `@phpstan-ignore-next-line` in three
+  places to silence a shape mismatch on the test data helper. I rejected that: suppressing the
+  analyser in tests hides exactly the kind of mistake it exists to catch. Replaced with a proper
+  array-shape annotation; there are now zero ignore comments in the codebase.
+- **Test I asked for specifically:** the low-stock boundary. The brief says "di bawah reorder
+  point", which leaves stock *equal* to the reorder point ambiguous. Business reading: reaching
+  the reorder point is precisely when you reorder, so the boundary is inclusive. Pinned in a
+  test so the product list, dashboard and scheduled job cannot drift apart on the definition.
+- **Verification:** 24 unit tests across 3 logic areas pass **with the database container
+  stopped**, which is the evidence TEST-01 actually asks for.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.

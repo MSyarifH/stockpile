@@ -15,16 +15,30 @@ declare(strict_types=1);
  */
 
 use App\Controller\AuthController;
+use App\Controller\BusinessPartnerController;
+use App\Controller\CategoryController;
 use App\Controller\DashboardController;
+use App\Controller\ProductController;
 use App\Controller\UserController;
+use App\Controller\WarehouseController;
+use App\Entity\PartnerType;
 use App\Entity\Role;
+use App\Repository\BusinessPartnerRepository;
+use App\Repository\CategoryRepository;
+use App\Repository\MySqlProductRepository;
 use App\Repository\MySqlUserRepository;
+use App\Repository\WarehouseRepository;
 use App\Service\AuthService;
+use App\Service\BusinessPartnerService;
+use App\Service\CategoryService;
 use App\Service\Exception\AuthorizationException;
+use App\Service\ProductService;
 use App\Service\UserService;
+use App\Service\WarehouseService;
 use App\Support\Csrf;
 use App\Support\Database;
 use App\Support\Exception\HttpException;
+use App\Support\ImageUploader;
 use App\Support\PdoTransactionManager;
 use App\Support\Request;
 use App\Support\Response;
@@ -48,17 +62,40 @@ try {
     $pdo = Database::connect($config['db']);
     $transactions = new PdoTransactionManager($pdo);
 
+    /** @var array{path:string,max_bytes:int,allowed_mime:list<string>} $uploads */
+    $uploads = $config['uploads'];
+    $imageUploader = new ImageUploader($uploads['path'], $uploads['max_bytes'], $uploads['allowed_mime']);
+
     // --- repositories ----------------------------------------------------
     $userRepository = new MySqlUserRepository($pdo);
+    $categoryRepository = new CategoryRepository($pdo);
+    $warehouseRepository = new WarehouseRepository($pdo);
+    $partnerRepository = new BusinessPartnerRepository($pdo);
+    $productRepository = new MySqlProductRepository($pdo);
 
     // --- services --------------------------------------------------------
     $authService = new AuthService($userRepository);
     $userService = new UserService($userRepository);
+    $categoryService = new CategoryService($categoryRepository);
+    $warehouseService = new WarehouseService($warehouseRepository, $transactions);
+    $partnerService = new BusinessPartnerService($partnerRepository);
+    $productService = new ProductService($productRepository, $transactions);
 
     // --- controllers -----------------------------------------------------
     $authController = new AuthController($authService, $session, $view, $csrf);
     $dashboardController = new DashboardController($session, $view);
     $userController = new UserController($userService, $session, $view, $csrf);
+    $categoryController = new CategoryController($categoryService, $session, $view, $csrf);
+    $warehouseController = new WarehouseController($warehouseService, $session, $view, $csrf);
+    $partnerController = new BusinessPartnerController($partnerService, $session, $view, $csrf);
+    $productController = new ProductController(
+        $productService,
+        $categoryService,
+        $imageUploader,
+        $session,
+        $view,
+        $csrf,
+    );
 
     // Values every layout needs. Flash messages are read once per request.
     $view->share('csrfToken', $csrf->token());
@@ -83,6 +120,48 @@ try {
     $router->get('/users/{id}/edit', $userController->edit(...), [Role::Admin]);
     $router->post('/users/{id}', $userController->update(...), [Role::Admin]);
     $router->post('/users/{id}/active', $userController->toggleActive(...), [Role::Admin]);
+
+    // Catalogue is readable by every signed-in role (§1.2: Sales sees the
+    // catalogue, Warehouse sees products and stock); only Admin may change it.
+    $router->get('/products', $productController->index(...), []);
+    $router->get('/products/create', $productController->create(...), [Role::Admin]);
+    $router->post('/products', $productController->store(...), [Role::Admin]);
+    $router->get('/products/{id}', $productController->show(...), []);
+    $router->get('/products/{id}/edit', $productController->edit(...), [Role::Admin]);
+    $router->post('/products/{id}', $productController->update(...), [Role::Admin]);
+    $router->post('/products/{id}/active', $productController->toggleActive(...), [Role::Admin]);
+
+    $router->get('/categories', $categoryController->index(...), [Role::Admin]);
+    $router->get('/categories/create', $categoryController->create(...), [Role::Admin]);
+    $router->post('/categories', $categoryController->store(...), [Role::Admin]);
+    $router->get('/categories/{id}/edit', $categoryController->edit(...), [Role::Admin]);
+    $router->post('/categories/{id}', $categoryController->update(...), [Role::Admin]);
+
+    $router->get('/warehouses', $warehouseController->index(...), [Role::Admin]);
+    $router->get('/warehouses/create', $warehouseController->create(...), [Role::Admin]);
+    $router->post('/warehouses', $warehouseController->store(...), [Role::Admin]);
+    $router->get('/warehouses/{id}/edit', $warehouseController->edit(...), [Role::Admin]);
+    $router->post('/warehouses/{id}', $warehouseController->update(...), [Role::Admin]);
+    $router->post('/warehouses/{id}/active', $warehouseController->toggleActive(...), [Role::Admin]);
+
+    // Suppliers and customers share a controller. The type is bound HERE, from
+    // the route, so it can never be influenced by request data.
+    foreach ([PartnerType::Supplier, PartnerType::Customer] as $partnerType) {
+        $base = '/' . $partnerType->urlSegment();
+
+        $router->get($base, static fn (): Response
+            => $partnerController->index($partnerType), [Role::Admin]);
+        $router->get($base . '/create', static fn (): Response
+            => $partnerController->create($partnerType), [Role::Admin]);
+        $router->post($base, static fn (Request $r): Response
+            => $partnerController->store($r, $partnerType), [Role::Admin]);
+        $router->get($base . '/{id}/edit', static fn (Request $r, string $id): Response
+            => $partnerController->edit($partnerType, $id), [Role::Admin]);
+        $router->post($base . '/{id}', static fn (Request $r, string $id): Response
+            => $partnerController->update($r, $partnerType, $id), [Role::Admin]);
+        $router->post($base . '/{id}/active', static fn (Request $r, string $id): Response
+            => $partnerController->toggleActive($r, $partnerType, $id), [Role::Admin]);
+    }
 
     $router->dispatch($request)->send();
 } catch (Throwable $exception) {

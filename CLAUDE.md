@@ -78,7 +78,7 @@ docker compose exec app composer install    # required once; vendor/ is git-igno
 docker compose exec app composer test              # unit + integration
 docker compose exec app composer test:unit         # no database required
 docker compose exec app composer test:integration  # requires the db service
-docker compose exec app composer stan              # PHPStan level 6
+docker compose exec app composer stan              # PHPStan level 6 (needs --memory-limit, in the script)
 docker compose exec app composer sniff             # PHP_CodeSniffer, PSR-12
 
 # single test file / single test
