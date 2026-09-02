@@ -13,10 +13,14 @@ use App\Service\Exception\AuthorizationException;
 use App\Support\Exception\ValidationException;
 
 /**
- * REPORT-01. CSV export of stock movements and order status for a date range.
+ * REPORT-01. Assembles report data for a date range.
  *
  * The rows come from the SAME repositories the dashboards read, so an export can
  * never disagree with what the screen showed.
+ *
+ * This service produces plain tabular data and knows nothing about CSV. Turning
+ * rows into a file is CsvWriter's job — see the SRP audit in
+ * docs/quality/refactor-log.md.
  */
 final class ReportService
 {
@@ -118,36 +122,5 @@ final class ReportService
         }
 
         return [$start->format('Y-m-d'), $end->format('Y-m-d')];
-    }
-
-    /**
-     * Renders rows as CSV text.
-     *
-     * Built through fputcsv rather than by joining with commas: a product name
-     * containing a comma, a quote or a newline would otherwise silently shift
-     * every following column.
-     *
-     * @param list<list<string>> $rows
-     */
-    public function toCsv(array $rows): string
-    {
-        $handle = fopen('php://temp', 'r+');
-        if ($handle === false) {
-            throw new \RuntimeException('Could not open a buffer for the CSV export.');
-        }
-
-        // BOM so Excel opens UTF-8 correctly; without it, accented names appear
-        // mangled and the file looks broken to whoever asked for the report.
-        fwrite($handle, "\xEF\xBB\xBF");
-
-        foreach ($rows as $row) {
-            fputcsv($handle, $row);
-        }
-
-        rewind($handle);
-        $csv = (string) stream_get_contents($handle);
-        fclose($handle);
-
-        return $csv;
     }
 }

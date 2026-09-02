@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Entity\AuthenticatedUser;
 use App\Entity\Role;
+use App\Support\Exception\HttpException;
 
 /**
  * Session wrapper. The only place that touches $_SESSION.
@@ -73,6 +74,25 @@ class Session
     public function isAuthenticated(): bool
     {
         return $this->user() !== null;
+    }
+
+    /**
+     * The signed-in user, or a 401 if there is none.
+     *
+     * Extracted from eight identical private helpers in the controllers
+     * (see docs/quality/refactor-log.md). It belongs here because Session is
+     * already the only class that knows how identity is stored; asking each
+     * controller to translate "no session" into an HTTP status was duplication
+     * with nothing to gain.
+     */
+    public function requireUser(): AuthenticatedUser
+    {
+        $user = $this->user();
+        if ($user === null) {
+            throw HttpException::unauthorised();
+        }
+
+        return $user;
     }
 
     public function get(string $key, mixed $default = null): mixed

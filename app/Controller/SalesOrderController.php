@@ -18,6 +18,7 @@ use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
 use App\Support\Request;
 use App\Support\Response;
+use App\Support\OrderLineInput;
 use App\Support\QueryString;
 use App\Support\Session;
 use App\Support\View;
@@ -41,7 +42,7 @@ final class SalesOrderController
 
     public function index(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $status = SalesOrderStatus::tryFrom($request->string('status'));
         $filter = new OrderFilter(
             $request->string('q'),
@@ -60,7 +61,7 @@ final class SalesOrderController
 
     public function show(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('sales.show', [
             'title' => 'Sales order',
@@ -70,7 +71,7 @@ final class SalesOrderController
 
     public function create(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('sales.form', [
             'title' => 'New sales order',
@@ -85,7 +86,7 @@ final class SalesOrderController
 
     public function store(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -168,7 +169,7 @@ final class SalesOrderController
      */
     private function transition(Request $request, int $id, callable $action): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -188,37 +189,13 @@ final class SalesOrderController
      */
     private function linesFrom(Request $request): array
     {
-        $raw = $request->input('items', []);
-        if (!is_array($raw)) {
-            return [];
-        }
-
-        $productIds = is_array($raw['product_id'] ?? null) ? $raw['product_id'] : [];
-        $quantities = is_array($raw['quantity'] ?? null) ? $raw['quantity'] : [];
-        $prices = is_array($raw['selling_price'] ?? null) ? $raw['selling_price'] : [];
-
-        $lines = [];
-        foreach ($productIds as $index => $productId) {
-            if (!is_numeric($productId) || (int) $productId <= 0) {
-                continue;
-            }
-            $lines[] = [
-                'product_id' => (int) $productId,
-                'quantity' => (int) ($quantities[$index] ?? 0),
-                'selling_price' => (float) ($prices[$index] ?? 0),
-            ];
-        }
-
-        return $lines;
-    }
-
-    private function requireUser(): AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-
-        return $user;
+        return array_map(
+            static fn (array $line): array => [
+                'product_id' => $line['product_id'],
+                'quantity' => $line['quantity'],
+                'selling_price' => $line['price'],
+            ],
+            OrderLineInput::parse($request, 'selling_price'),
+        );
     }
 }

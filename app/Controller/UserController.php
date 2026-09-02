@@ -31,7 +31,7 @@ final class UserController
 
     public function index(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('user.index', [
             'title' => 'Users',
@@ -42,7 +42,7 @@ final class UserController
 
     public function create(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('user.form', [
             'title' => 'Add user',
@@ -57,7 +57,7 @@ final class UserController
 
     public function store(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -85,7 +85,7 @@ final class UserController
 
     public function edit(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $existing = $this->users->find($actor, (int) $id);
 
         return Response::html($this->view->renderInLayout('user.form', [
@@ -106,7 +106,7 @@ final class UserController
 
     public function update(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -137,7 +137,7 @@ final class UserController
 
     public function toggleActive(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         $activate = $request->string('activate') === '1';
@@ -171,14 +171,5 @@ final class UserController
             'errors' => $errors,
             'roles' => Role::all(),
         ]), 422);
-    }
-
-    private function requireUser(): \App\Entity\AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-        return $user;
     }
 }

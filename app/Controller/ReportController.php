@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\AuthenticatedUser;
 use App\Entity\Role;
 use App\Service\ReportService;
+use App\Support\CsvWriter;
 use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
 use App\Support\Request;
@@ -21,6 +22,7 @@ final class ReportController
 {
     public function __construct(
         private readonly ReportService $reports,
+        private readonly CsvWriter $csv,
         private readonly Session $session,
         private readonly View $view,
     ) {
@@ -28,7 +30,7 @@ final class ReportController
 
     public function index(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('report.index', [
             'title' => 'Reports',
@@ -62,7 +64,7 @@ final class ReportController
      */
     private function download(Request $request, callable $build): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $from = $request->string('from', date('Y-m-01'));
         $to = $request->string('to', date('Y-m-d'));
 
@@ -78,22 +80,12 @@ final class ReportController
             ]), 422);
         }
 
-        return Response::raw($this->reports->toCsv($rows), 200, [
+        return Response::raw($this->csv->write($rows), 200, [
             'Content-Type' => 'text/csv; charset=utf-8',
             // The filename carries the date range, so two exports never
             // overwrite each other in the downloads folder.
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             'Cache-Control' => 'no-store',
         ]);
-    }
-
-    private function requireUser(): AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-
-        return $user;
     }
 }

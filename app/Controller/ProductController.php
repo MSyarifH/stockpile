@@ -37,7 +37,7 @@ final class ProductController
 
     public function index(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         $filter = new ProductFilter(
             $request->string('q'),
@@ -60,7 +60,7 @@ final class ProductController
 
     public function show(Request $request, string $id): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
         $product = $this->products->find((int) $id);
 
         return Response::html($this->view->renderInLayout('product.show', [
@@ -73,7 +73,7 @@ final class ProductController
 
     public function create(Request $request): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('product.form', [
             'title' => 'Add product',
@@ -87,7 +87,7 @@ final class ProductController
 
     public function store(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -106,7 +106,7 @@ final class ProductController
 
     public function edit(Request $request, string $id): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
         $product = $this->products->find((int) $id);
 
         return Response::html($this->view->renderInLayout('product.form', [
@@ -130,7 +130,7 @@ final class ProductController
 
     public function update(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
         $product = $this->products->find((int) $id);
 
@@ -157,7 +157,7 @@ final class ProductController
 
     public function toggleActive(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         $activate = $request->string('activate') === '1';
@@ -233,15 +233,5 @@ final class ProductController
             'reorder_point' => '0',
             'is_active' => true,
         ];
-    }
-
-    private function requireUser(): AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-
-        return $user;
     }
 }

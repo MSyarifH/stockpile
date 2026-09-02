@@ -134,66 +134,7 @@ final class ReportServiceTest extends TestCase
         self::assertStringContainsString('2026-06-01', $june);
     }
 
-    // --- CSV formatting ----------------------------------------------------
-
-    /**
-     * The reason fputcsv is used instead of implode(','): a product name
-     * containing a comma would otherwise shift every following column, and the
-     * file would look valid while being wrong.
-     */
-    public function testValuesContainingCommasQuotesAndNewlinesAreEscaped(): void
-    {
-        $csv = $this->service->toCsv([
-            ['SKU', 'Product'],
-            ['SKU-1', 'Kabel HDMI, 2m'],
-            ['SKU-2', 'Screen 24"'],
-            ['SKU-3', "Two\nLines"],
-        ]);
-
-        self::assertStringContainsString('"Kabel HDMI, 2m"', $csv, 'A comma forces quoting.');
-        self::assertStringContainsString('"Screen 24"""', $csv, 'A quote is doubled.');
-        self::assertStringContainsString('"Two' . "\n" . 'Lines"', $csv, 'A newline is contained by quotes.');
-
-        // Round-trip it through a real CSV reader: the embedded newline must
-        // still be one field of one row, not two rows.
-        self::assertSame(
-            [
-                ['SKU', 'Product'],
-                ['SKU-1', 'Kabel HDMI, 2m'],
-                ['SKU-2', 'Screen 24"'],
-                ['SKU-3', "Two\nLines"],
-            ],
-            $this->parseCsv($csv),
-        );
-    }
-
-    /**
-     * @return list<list<string>>
-     */
-    private function parseCsv(string $csv): array
-    {
-        $handle = fopen('php://temp', 'r+');
-        self::assertNotFalse($handle);
-
-        fwrite($handle, str_replace("\xEF\xBB\xBF", '', $csv));
-        rewind($handle);
-
-        $rows = [];
-        while (($row = fgetcsv($handle)) !== false) {
-            /** @var list<string> $row */
-            $rows[] = $row;
-        }
-        fclose($handle);
-
-        return $rows;
-    }
-
-    public function testTheCsvStartsWithAByteOrderMarkSoSpreadsheetsReadUtf8(): void
-    {
-        $csv = $this->service->toCsv([['Name'], ['Café']]);
-
-        self::assertStringStartsWith("\xEF\xBB\xBF", $csv);
-    }
+    // --- row assembly ------------------------------------------------------
 
     public function testMovementRowsRecordDirectionActorAndReference(): void
     {

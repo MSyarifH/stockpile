@@ -28,7 +28,7 @@ final class WarehouseController
 
     public function index(Request $request): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('warehouse.index', [
             'title' => 'Warehouses',
@@ -38,7 +38,7 @@ final class WarehouseController
 
     public function create(Request $request): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('warehouse.form', [
             'title' => 'Add warehouse',
@@ -51,7 +51,7 @@ final class WarehouseController
 
     public function store(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -75,7 +75,7 @@ final class WarehouseController
 
     public function edit(Request $request, string $id): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
         $warehouse = $this->warehouses->find((int) $id);
 
         return Response::html($this->view->renderInLayout('warehouse.form', [
@@ -93,7 +93,7 @@ final class WarehouseController
 
     public function update(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
         $warehouse = $this->warehouses->find((int) $id);
 
@@ -119,7 +119,7 @@ final class WarehouseController
 
     public function toggleActive(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         $activate = $request->string('activate') === '1';
@@ -143,15 +143,5 @@ final class WarehouseController
             ],
             'errors' => $errors,
         ]), 422);
-    }
-
-    private function requireUser(): AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-
-        return $user;
     }
 }

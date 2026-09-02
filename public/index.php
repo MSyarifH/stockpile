@@ -50,6 +50,7 @@ use App\Service\StockService;
 use App\Service\UserService;
 use App\Service\WarehouseService;
 use App\Support\Csrf;
+use App\Support\CsvWriter;
 use App\Support\Database;
 use App\Support\Exception\HttpException;
 use App\Support\ImageUploader;
@@ -109,7 +110,7 @@ try {
     // --- controllers -----------------------------------------------------
     $authController = new AuthController($authService, $session, $view, $csrf);
     $dashboardController = new DashboardController($dashboardService, $session, $view);
-    $reportController = new ReportController($reportService, $session, $view);
+    $reportController = new ReportController($reportService, new CsvWriter(), $session, $view);
     $apiController = new ApiController($productService, $session);
     $userController = new UserController($userService, $session, $view, $csrf);
     $categoryController = new CategoryController($categoryService, $session, $view, $csrf);

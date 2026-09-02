@@ -27,7 +27,7 @@ final class CategoryController
 
     public function index(Request $request): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('category.index', [
             'title' => 'Categories',
@@ -37,7 +37,7 @@ final class CategoryController
 
     public function create(Request $request): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('category.form', [
             'title' => 'Add category',
@@ -50,7 +50,7 @@ final class CategoryController
 
     public function store(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -69,7 +69,7 @@ final class CategoryController
 
     public function edit(Request $request, string $id): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
         $category = $this->categories->find((int) $id);
 
         return Response::html($this->view->renderInLayout('category.form', [
@@ -83,7 +83,7 @@ final class CategoryController
 
     public function update(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
         $category = $this->categories->find((int) $id);
 
@@ -114,15 +114,5 @@ final class CategoryController
             ],
             'errors' => $errors,
         ]), 422);
-    }
-
-    private function requireUser(): AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-
-        return $user;
     }
 }

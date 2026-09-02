@@ -34,7 +34,7 @@ final class BusinessPartnerController
 
     public function index(PartnerType $type): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('partner.index', [
             'title' => $type->pluralLabel(),
@@ -45,7 +45,7 @@ final class BusinessPartnerController
 
     public function create(PartnerType $type): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('partner.form', [
             'title' => 'Add ' . strtolower($type->label()),
@@ -59,7 +59,7 @@ final class BusinessPartnerController
 
     public function store(Request $request, PartnerType $type): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -74,7 +74,7 @@ final class BusinessPartnerController
 
     public function edit(PartnerType $type, string $id): Response
     {
-        $this->requireUser();
+        $this->session->requireUser();
         $partner = $this->partners->find($type, (int) $id);
 
         return Response::html($this->view->renderInLayout('partner.form', [
@@ -94,7 +94,7 @@ final class BusinessPartnerController
 
     public function update(Request $request, PartnerType $type, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
         $partner = $this->partners->find($type, (int) $id);
 
@@ -110,7 +110,7 @@ final class BusinessPartnerController
 
     public function toggleActive(Request $request, PartnerType $type, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         $activate = $request->string('activate') === '1';
@@ -157,15 +157,5 @@ final class BusinessPartnerController
             ],
             'errors' => $errors,
         ]), 422);
-    }
-
-    private function requireUser(): AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-
-        return $user;
     }
 }

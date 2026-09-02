@@ -17,6 +17,7 @@ use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
 use App\Support\Request;
 use App\Support\Response;
+use App\Support\OrderLineInput;
 use App\Support\QueryString;
 use App\Support\Session;
 use App\Support\View;
@@ -39,7 +40,7 @@ final class PurchaseOrderController
 
     public function index(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $filter = $this->filterFrom($request);
 
         return Response::html($this->view->renderInLayout('purchase.index', [
@@ -68,7 +69,7 @@ final class PurchaseOrderController
 
     public function show(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('purchase.show', [
             'title' => 'Purchase order',
@@ -78,7 +79,7 @@ final class PurchaseOrderController
 
     public function create(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('purchase.form', [
             'title' => 'New purchase order',
@@ -93,7 +94,7 @@ final class PurchaseOrderController
 
     public function store(Request $request): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         try {
@@ -126,7 +127,7 @@ final class PurchaseOrderController
 
     public function place(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         $this->orders->place($actor, (int) $id);
@@ -137,7 +138,7 @@ final class PurchaseOrderController
 
     public function cancel(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         $this->orders->cancel($actor, (int) $id);
@@ -148,7 +149,7 @@ final class PurchaseOrderController
 
     public function receive(Request $request, string $id): Response
     {
-        $actor = $this->requireUser();
+        $actor = $this->session->requireUser();
         $this->csrf->assertValid($request);
 
         /** @var array<int,int> $quantities */
@@ -174,45 +175,17 @@ final class PurchaseOrderController
     }
 
     /**
-     * Line arrays arrive as parallel inputs (items[product_id][], items[quantity][]).
-     * Rows where no product was chosen are dropped rather than rejected, because
-     * the form always renders one blank row.
-     *
      * @return list<array{product_id:int,quantity:int,purchase_price:float}>
      */
     private function linesFrom(Request $request): array
     {
-        $raw = $request->input('items', []);
-        if (!is_array($raw)) {
-            return [];
-        }
-
-        $productIds = is_array($raw['product_id'] ?? null) ? $raw['product_id'] : [];
-        $quantities = is_array($raw['quantity'] ?? null) ? $raw['quantity'] : [];
-        $prices = is_array($raw['purchase_price'] ?? null) ? $raw['purchase_price'] : [];
-
-        $lines = [];
-        foreach ($productIds as $index => $productId) {
-            if (!is_numeric($productId) || (int) $productId <= 0) {
-                continue;
-            }
-            $lines[] = [
-                'product_id' => (int) $productId,
-                'quantity' => (int) ($quantities[$index] ?? 0),
-                'purchase_price' => (float) ($prices[$index] ?? 0),
-            ];
-        }
-
-        return $lines;
-    }
-
-    private function requireUser(): AuthenticatedUser
-    {
-        $user = $this->session->user();
-        if ($user === null) {
-            throw HttpException::unauthorised();
-        }
-
-        return $user;
+        return array_map(
+            static fn (array $line): array => [
+                'product_id' => $line['product_id'],
+                'quantity' => $line['quantity'],
+                'purchase_price' => $line['price'],
+            ],
+            OrderLineInput::parse($request, 'purchase_price'),
+        );
     }
 }
