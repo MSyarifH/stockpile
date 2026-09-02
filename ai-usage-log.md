@@ -311,6 +311,41 @@ being written up as if complete.
 
 ---
 
+## Session 5 — 2026-09-02 — Purchase orders and goods receipt (Phase 4)
+
+### AI-20 · PurchaseOrderService and the D1 authority split
+- **Purpose:** PO-01, and the first real consumer of `StockService`.
+- **Decision enforced:** D1 — Warehouse Staff may raise a purchase order as a `Draft`, but only
+  an Admin may move it to `Ordered`. The service, not the route, holds that rule, so a direct
+  POST is refused the same way the button being hidden would suggest.
+- **Design point I required:** the order status is **derived** from the received quantities
+  (`statusFromReceipt`), and re-read from the repository after the receipt is written rather than
+  computed from what the service believes it just wrote. A status flag maintained by hand would
+  eventually disagree with the lines.
+- **Verification (evidence over HTTP):** Warehouse Staff created a draft → `Draft`; Warehouse
+  Staff placing it → **403**; Admin placing it → `Ordered`; receiving 6 of 15 → `PartiallyReceived`
+  with 9 outstanding and one `Receipt` ledger row; receiving the remainder → `Received`;
+  attempting to receive more than ordered left stock unchanged; ledger/stock mismatch 0.
+
+### AI-21 · Nested transactions confirmed the initial diagram's assumption
+- `PurchaseOrderService::receiveGoods()` opens a transaction and then calls
+  `StockService::receiveAll()`, which opens one too. MySQL has no nested transactions, so without
+  the re-entrancy counter in `PdoTransactionManager` the inner commit would end the transaction
+  early and an outer failure would have nothing left to roll back.
+- This was written down as assumption 2 in `docs/planning/class-diagram-initial.md` before any
+  code existed, and Phase 4 is where it actually bit. Recorded because it is exactly the kind of
+  initial-vs-as-built difference DESIGN-01 asks to be explained.
+
+### AI-22 · Unit tests for the purchase lifecycle (logic area 5)
+- 13 tests covering the D1 split, illegal transitions (receipt against a draft, placing a
+  cancelled order), a future order date, an empty order, full and partial receipt, over-receipt,
+  a multi-line order staying partial until every line completes, and ledger traceability.
+- **Test I asked for specifically:** the multi-line case. The obvious implementation marks an
+  order `Received` as soon as *a* line completes, which would report goods as fully delivered
+  while stock is still owed.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.

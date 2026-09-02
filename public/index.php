@@ -19,6 +19,7 @@ use App\Controller\BusinessPartnerController;
 use App\Controller\CategoryController;
 use App\Controller\DashboardController;
 use App\Controller\ProductController;
+use App\Controller\PurchaseOrderController;
 use App\Controller\UserController;
 use App\Controller\WarehouseController;
 use App\Entity\PartnerType;
@@ -26,6 +27,9 @@ use App\Entity\Role;
 use App\Repository\BusinessPartnerRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\MySqlProductRepository;
+use App\Repository\MySqlPurchaseOrderRepository;
+use App\Repository\MySqlStockLedgerRepository;
+use App\Repository\MySqlStockRepository;
 use App\Repository\MySqlUserRepository;
 use App\Repository\WarehouseRepository;
 use App\Service\AuthService;
@@ -33,6 +37,8 @@ use App\Service\BusinessPartnerService;
 use App\Service\CategoryService;
 use App\Service\Exception\AuthorizationException;
 use App\Service\ProductService;
+use App\Service\PurchaseOrderService;
+use App\Service\StockService;
 use App\Service\UserService;
 use App\Service\WarehouseService;
 use App\Support\Csrf;
@@ -72,6 +78,9 @@ try {
     $warehouseRepository = new WarehouseRepository($pdo);
     $partnerRepository = new BusinessPartnerRepository($pdo);
     $productRepository = new MySqlProductRepository($pdo);
+    $stockRepository = new MySqlStockRepository($pdo);
+    $ledgerRepository = new MySqlStockLedgerRepository($pdo);
+    $purchaseOrderRepository = new MySqlPurchaseOrderRepository($pdo);
 
     // --- services --------------------------------------------------------
     $authService = new AuthService($userRepository);
@@ -80,6 +89,9 @@ try {
     $warehouseService = new WarehouseService($warehouseRepository, $transactions);
     $partnerService = new BusinessPartnerService($partnerRepository);
     $productService = new ProductService($productRepository, $transactions);
+    // StockService is the single writer of stock; order services call it.
+    $stockService = new StockService($stockRepository, $ledgerRepository, $transactions);
+    $purchaseOrderService = new PurchaseOrderService($purchaseOrderRepository, $stockService, $transactions);
 
     // --- controllers -----------------------------------------------------
     $authController = new AuthController($authService, $session, $view, $csrf);
@@ -88,6 +100,15 @@ try {
     $categoryController = new CategoryController($categoryService, $session, $view, $csrf);
     $warehouseController = new WarehouseController($warehouseService, $session, $view, $csrf);
     $partnerController = new BusinessPartnerController($partnerService, $session, $view, $csrf);
+    $purchaseOrderController = new PurchaseOrderController(
+        $purchaseOrderService,
+        $productService,
+        $partnerService,
+        $warehouseService,
+        $session,
+        $view,
+        $csrf,
+    );
     $productController = new ProductController(
         $productService,
         $categoryService,
@@ -143,6 +164,17 @@ try {
     $router->get('/warehouses/{id}/edit', $warehouseController->edit(...), [Role::Admin]);
     $router->post('/warehouses/{id}', $warehouseController->update(...), [Role::Admin]);
     $router->post('/warehouses/{id}/active', $warehouseController->toggleActive(...), [Role::Admin]);
+
+    // Purchase orders: Sales has no part in purchasing (§1.2). The finer rule —
+    // only an Admin may PLACE an order with the supplier (D1) — is in the service.
+    $purchasing = [Role::Admin, Role::WarehouseStaff];
+    $router->get('/purchase-orders', $purchaseOrderController->index(...), $purchasing);
+    $router->get('/purchase-orders/create', $purchaseOrderController->create(...), $purchasing);
+    $router->post('/purchase-orders', $purchaseOrderController->store(...), $purchasing);
+    $router->get('/purchase-orders/{id}', $purchaseOrderController->show(...), $purchasing);
+    $router->post('/purchase-orders/{id}/place', $purchaseOrderController->place(...), $purchasing);
+    $router->post('/purchase-orders/{id}/cancel', $purchaseOrderController->cancel(...), $purchasing);
+    $router->post('/purchase-orders/{id}/receive', $purchaseOrderController->receive(...), $purchasing);
 
     // Suppliers and customers share a controller. The type is bound HERE, from
     // the route, so it can never be influenced by request data.

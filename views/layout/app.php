@@ -29,6 +29,9 @@ $flashes = $flashes ?? [];
             <nav class="nav" aria-label="Main">
                 <a href="/dashboard">Dashboard</a>
                 <a href="/products">Products</a>
+                <?php if (!$user->is(\App\Entity\Role::Sales)) : ?>
+                    <a href="/purchase-orders">Purchases</a>
+                <?php endif; ?>
                 <?php if ($user->isAdmin()) : ?>
                     <a href="/categories">Categories</a>
                     <a href="/warehouses">Warehouses</a>

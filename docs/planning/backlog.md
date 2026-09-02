@@ -6,10 +6,9 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0, 0.5, 1, 2 and 3 complete. 37 unit tests across
-4 logic areas (pass with the database stopped) plus 6 integration tests against real MySQL — both
-TEST-01 and TEST-02 minimums are met. ARCH-02 is proven, including a mutation check.
-Next: Phase 4 (purchase orders and goods receipt).
+**Status at last update (2026-09-02):** Phases 0–4 complete. 50 unit tests across 5 logic areas
+(pass with the database stopped) plus 6 integration tests against real MySQL. ARCH-02 proven with
+a mutation check. Next: Phase 5 (sales orders, approval, goods issue).
 
 ---
 
@@ -192,18 +191,25 @@ call it rather than touching stock. Both concurrency tests were verified to fail
 
 ---
 
-## Phase 4 — Purchase Order (PO-01)
+## Phase 4 — Purchase Order (PO-01) ✅ COMPLETE (verified over HTTP)
 
-- [ ] PO create: supplier, destination warehouse, order date, line items
-- [ ] Status flow `Draft → Ordered → PartiallyReceived / Received → Cancelled`
-- [ ] Illegal transitions rejected server-side
-- [ ] Goods receipt calls `StockService::receive()` — stock + ledger in one transaction
-- [ ] **Partial receipt** supported; outstanding quantity tracked per line
-- [ ] Status auto-derives: all lines full → `Received`, some → `PartiallyReceived`
-- [ ] Cannot receive more than ordered
-- [ ] Permissions: Warehouse Staff may create a PO as `Draft`; only Admin may set `Ordered` (D1)
-- [ ] Permissions: Admin + Warehouse Staff receive goods; Sales blocked entirely
-- [ ] **Bukti:** create PO, full receipt, partial receipt, resulting ledger rows
+First consumer of `StockService`. `PurchaseOrderService` opens a transaction and `StockService`
+opens another inside it — exercising the re-entrant transaction manager predicted as an
+assumption in the initial class diagram.
+
+- [x] PO create: supplier, destination warehouse, order date, line items
+- [x] Status flow `Draft → Ordered → PartiallyReceived / Received → Cancelled`
+- [x] Illegal transitions rejected server-side
+- [x] Goods receipt calls `StockService::receive()` — stock + ledger in one transaction
+- [x] **Partial receipt** supported; outstanding quantity tracked per line
+- [x] Status auto-derives: all lines full → `Received`, some → `PartiallyReceived`
+- [x] Cannot receive more than ordered
+- [x] Permissions: Warehouse Staff may create a PO as `Draft`; only Admin may set `Ordered` (D1)
+- [x] Permissions: Admin + Warehouse Staff receive goods; Sales blocked entirely
+- [x] **Bukti:** verified over HTTP — Warehouse Staff raised a draft, was refused when placing
+      it (403), Admin placed it; partial receipt of 6/15 produced `PartiallyReceived` with 9
+      outstanding and one `Receipt` ledger row; the remainder closed it as `Received`; an
+      over-receipt left stock unchanged; ledger/stock mismatch stayed at 0
 
 ---
 
@@ -293,7 +299,7 @@ call it rather than touching stock. Both concurrency tests were verified to fail
       inclusive low-stock boundary, totals summed across warehouses, inactive excluded)
 - [ ] Area 3 — approval authorization (Sales cannot approve; creator ≠ approver)
 - [ ] Area 4 — low-stock / reorder-point calculation
-- [ ] Area 5 — PO partial receipt & outstanding quantity
+- [x] Area 5 — PO partial receipt & outstanding quantity
 - [ ] No session, no real PDO, no network; no trivial getter/setter tests
 - [ ] **Bukti:** results in `docs/testing/`, run by one README command
 

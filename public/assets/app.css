@@ -303,3 +303,20 @@ code {
     padding: 0.1rem 0.35rem;
     border-radius: 4px;
 }
+
+/* --- orders -------------------------------------------------------------- */
+
+.actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: var(--space);
+}
+.qty-input { width: 100%; max-width: 8rem; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: var(--radius); font: inherit; }
+.table td select { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: var(--radius); font: inherit; }
+.table tfoot td { border-top: 2px solid var(--line); }
+
+.badge--draft { background: var(--bg); color: var(--ink-soft); }
+.badge--info  { background: #e3edf9; color: #1a4b80; border-color: transparent; }
+.badge--warn  { background: var(--warn-bg); color: #7a5300; border-color: transparent; }
