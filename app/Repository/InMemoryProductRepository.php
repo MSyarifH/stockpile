@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Product;
 use App\Entity\StockLevel;
+use App\Support\Page;
 
 /**
  * Test double. Holds products in an array and per-warehouse balances in a map,
@@ -72,6 +73,42 @@ final class InMemoryProductRepository implements ProductRepository
         }
 
         return array_map(fn (Product $p): Product => $this->withTotals($p), $products);
+    }
+
+    public function paginate(ProductFilter $filter, int $page): Page
+    {
+        $matching = array_values(array_filter(
+            $this->all($filter->activeOnly),
+            function (Product $product) use ($filter): bool {
+                if ($filter->search !== '') {
+                    $needle = mb_strtolower($filter->search);
+                    $haystack = mb_strtolower($product->name . ' ' . $product->sku);
+                    if (!str_contains($haystack, $needle)) {
+                        return false;
+                    }
+                }
+
+                if ($filter->categoryId !== null && $product->categoryId !== $filter->categoryId) {
+                    return false;
+                }
+
+                return match ($filter->stockStatus) {
+                    ProductFilter::STOCK_LOW => $product->isLowStock(),
+                    ProductFilter::STOCK_NORMAL => !$product->isLowStock(),
+                    default => true,
+                };
+            },
+        ));
+
+        usort($matching, static fn (Product $a, Product $b): int => strcmp($a->name, $b->name));
+
+        $current = Page::normalisePage($page);
+
+        return new Page(
+            array_values(array_slice($matching, Page::offsetFor($current), Page::PER_PAGE)),
+            count($matching),
+            $current,
+        );
     }
 
     public function findById(int $id): ?Product

@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Product;
 use App\Entity\StockLevel;
+use App\Support\Page;
 use PDO;
 
 final class MySqlProductRepository implements ProductRepository
@@ -39,6 +40,87 @@ final class MySqlProductRepository implements ProductRepository
         $rows = $statement === false ? [] : $statement->fetchAll();
 
         return array_map(static fn (array $row): Product => Product::fromRow($row), $rows);
+    }
+
+    public function paginate(ProductFilter $filter, int $page): Page
+    {
+        [$where, $having, $parameters] = $this->conditionsFor($filter);
+
+        // Counted with the same conditions as the page itself, so the pager can
+        // never claim a page that the list will not fill.
+        // reorder_point must be in the inner SELECT: MySQL cannot resolve a
+        // column in HAVING that the grouped query does not project.
+        $countSql = '
+            SELECT COUNT(*) FROM (
+                SELECT p.id, p.reorder_point
+                  FROM products p
+                  LEFT JOIN product_stocks ps ON ps.product_id = p.id
+                  ' . $where . '
+                 GROUP BY p.id, p.reorder_point
+                  ' . $having . '
+            ) counted';
+        $countStatement = $this->pdo->prepare($countSql);
+        $countStatement->execute($parameters);
+        $total = (int) $countStatement->fetchColumn();
+
+        $sql = self::SELECT . ' ' . $where . ' GROUP BY p.id ' . $having
+            . ' ORDER BY p.name LIMIT ? OFFSET ?';
+        $statement = $this->pdo->prepare($sql);
+
+        $position = 1;
+        foreach ($parameters as $value) {
+            $statement->bindValue($position++, $value);
+        }
+        // LIMIT/OFFSET must be bound as integers: with emulated prepares off,
+        // MySQL rejects them as quoted strings.
+        $statement->bindValue($position++, Page::PER_PAGE, PDO::PARAM_INT);
+        $statement->bindValue($position, Page::offsetFor($page), PDO::PARAM_INT);
+        $statement->execute();
+
+        $items = array_map(
+            static fn (array $row): Product => Product::fromRow($row),
+            $statement->fetchAll(),
+        );
+
+        return new Page($items, $total, Page::normalisePage($page));
+    }
+
+    /**
+     * @return array{0:string,1:string,2:list<mixed>} WHERE clause, HAVING clause, bound values
+     */
+    private function conditionsFor(ProductFilter $filter): array
+    {
+        $conditions = [];
+        $parameters = [];
+
+        if ($filter->activeOnly) {
+            $conditions[] = 'p.is_active = 1';
+        }
+
+        if ($filter->search !== '') {
+            // Wildcards are added around the BOUND value, never concatenated
+            // into the SQL text.
+            $conditions[] = '(p.name LIKE ? OR p.sku LIKE ?)';
+            $parameters[] = '%' . $filter->search . '%';
+            $parameters[] = '%' . $filter->search . '%';
+        }
+
+        if ($filter->categoryId !== null) {
+            $conditions[] = 'p.category_id = ?';
+            $parameters[] = $filter->categoryId;
+        }
+
+        $where = $conditions === [] ? '' : 'WHERE ' . implode(' AND ', $conditions);
+
+        // Stock status compares against an aggregate, so it belongs in HAVING:
+        // the total does not exist yet when WHERE is evaluated.
+        $having = match ($filter->stockStatus) {
+            ProductFilter::STOCK_LOW => 'HAVING COALESCE(SUM(ps.quantity), 0) <= p.reorder_point',
+            ProductFilter::STOCK_NORMAL => 'HAVING COALESCE(SUM(ps.quantity), 0) > p.reorder_point',
+            default => '',
+        };
+
+        return [$where, $having, $parameters];
     }
 
     public function findById(int $id): ?Product

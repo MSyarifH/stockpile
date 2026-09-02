@@ -11,10 +11,12 @@ use App\Entity\Role;
 use App\Entity\SalesOrder;
 use App\Entity\SalesOrderItem;
 use App\Entity\SalesOrderStatus;
+use App\Repository\OrderFilter;
 use App\Repository\SalesOrderRepository;
 use App\Service\Exception\AuthorizationException;
 use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
+use App\Support\Page;
 use App\Support\TransactionManager;
 
 /**
@@ -45,6 +47,21 @@ final class SalesOrderService
     public function list(AuthenticatedUser $actor): array
     {
         return $this->orders->all($actor->role === Role::Sales ? $actor->id : null);
+    }
+
+    /**
+     * The ownership restriction from list() applies here too: a filtered,
+     * paginated list must not become a way around it.
+     *
+     * @return Page<SalesOrder>
+     */
+    public function search(AuthenticatedUser $actor, OrderFilter $filter, int $page): Page
+    {
+        return $this->orders->paginate(
+            $filter,
+            $page,
+            $actor->role === Role::Sales ? $actor->id : null,
+        );
     }
 
     public function find(AuthenticatedUser $actor, int $id): SalesOrder

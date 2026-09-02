@@ -380,6 +380,39 @@ being written up as if complete.
 
 ---
 
+## Session 7 — 2026-09-02 — Search, filter, sort, pagination (Phase 6)
+
+### AI-26 · One pagination helper rather than three
+- `Page` fixes the page size at 10 as a constant, and `QueryString` rebuilds the current URL with
+  one parameter changed. All three list pages use both, so FIND-01's "10 per page" and "filters
+  survive a page change" are each defined in exactly one place.
+- **Filters live in the query string, not the session.** A session-held filter makes the list
+  unlinkable, breaks the back button, and lets two browser tabs fight over one stored value.
+
+### AI-27 · A broken filter that looked like an empty result — my test method was at fault
+- **Symptom:** `?stock=low` and `?stock=normal` both returned "0 rows".
+- **Actual cause:** the page was returning **HTTP 500**. The COUNT subquery selected only `p.id`
+  while its HAVING clause referenced `p.reorder_point`, which MySQL cannot resolve. My check
+  counted table rows in the HTML and never looked at the status code, so an error page and an
+  empty result were indistinguishable.
+- **Fix:** project `reorder_point` in the inner query. Verified afterwards that low (2) and
+  normal (32) sum to the full catalogue (34) — a partition check, not just "it returns rows".
+- **Method changed:** every HTTP check now reports the status code alongside the row count. This
+  is the second time a weak check nearly produced a false "verified" entry in this log (see
+  AI-18), and both times the flaw was in what I measured rather than in the code.
+
+### AI-28 · Injection surface reviewed in the new query code
+- `LIKE` wildcards are concatenated onto the **bound value**, never into the SQL text.
+- `ORDER BY` cannot take a parameter, so `OrderFilter::sqlDirection()` maps the input to one of
+  exactly two literals (`ASC`/`DESC`) rather than interpolating it.
+- A status supplied in the URL is passed through `tryFrom()` on the enum first; anything else
+  becomes `null` and the filter is simply not applied. Verified `?status=BUKAN_STATUS` returns
+  the unfiltered list rather than an error or an empty page.
+- `LIMIT`/`OFFSET` are bound with `PARAM_INT`: with emulated prepares off, MySQL rejects them
+  as quoted strings.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.

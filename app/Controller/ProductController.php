@@ -6,12 +6,14 @@ namespace App\Controller;
 
 use App\Entity\AuthenticatedUser;
 use App\Entity\Product;
+use App\Repository\ProductFilter;
 use App\Service\CategoryService;
 use App\Service\ProductService;
 use App\Support\Csrf;
 use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
 use App\Support\ImageUploader;
+use App\Support\QueryString;
 use App\Support\Request;
 use App\Support\Response;
 use App\Support\Session;
@@ -37,9 +39,22 @@ final class ProductController
     {
         $actor = $this->requireUser();
 
+        $filter = new ProductFilter(
+            $request->string('q'),
+            $request->integer('category') ?: null,
+            in_array($request->string('stock'), [ProductFilter::STOCK_LOW, ProductFilter::STOCK_NORMAL], true)
+                ? $request->string('stock')
+                : null,
+        );
+
         return Response::html($this->view->renderInLayout('product.index', [
             'title' => 'Products',
-            'products' => $this->products->list($actor),
+            'page' => $this->products->search($actor, $filter, $request->integer('page', 1)),
+            'categories' => $this->categories->list(),
+            'filter' => $filter,
+            // Carries the active filters into every pagination link, so they
+            // survive a page change (FIND-01).
+            'query' => new QueryString($request->all()),
         ]));
     }
 

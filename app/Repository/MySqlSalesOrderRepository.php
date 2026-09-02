@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\SalesOrder;
 use App\Entity\SalesOrderItem;
 use App\Entity\SalesOrderStatus;
+use App\Support\Page;
 use PDO;
 
 final class MySqlSalesOrderRepository implements SalesOrderRepository
@@ -44,6 +45,58 @@ final class MySqlSalesOrderRepository implements SalesOrderRepository
             static fn (array $row): SalesOrder => SalesOrder::fromRow($row),
             $statement->fetchAll(),
         );
+    }
+
+    public function paginate(OrderFilter $filter, int $page, ?int $createdBy = null): Page
+    {
+        $conditions = [];
+        $parameters = [];
+
+        // The ownership restriction is part of the QUERY, so another seller's
+        // order is never loaded — not loaded and then filtered out in PHP.
+        if ($createdBy !== null) {
+            $conditions[] = 'so.created_by = ?';
+            $parameters[] = $createdBy;
+        }
+
+        if ($filter->search !== '') {
+            $conditions[] = '(so.so_number LIKE ? OR c.name LIKE ?)';
+            $parameters[] = '%' . $filter->search . '%';
+            $parameters[] = '%' . $filter->search . '%';
+        }
+
+        if ($filter->status !== null) {
+            $conditions[] = 'so.status = ?';
+            $parameters[] = $filter->status;
+        }
+
+        $where = $conditions === [] ? '' : ' WHERE ' . implode(' AND ', $conditions);
+
+        $countStatement = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM sales_orders so JOIN customers c ON c.id = so.customer_id' . $where
+        );
+        $countStatement->execute($parameters);
+        $total = (int) $countStatement->fetchColumn();
+
+        $sql = self::SELECT . $where
+            . ' ORDER BY so.order_date ' . $filter->sqlDirection() . ', so.id ' . $filter->sqlDirection()
+            . ' LIMIT ? OFFSET ?';
+        $statement = $this->pdo->prepare($sql);
+
+        $position = 1;
+        foreach ($parameters as $value) {
+            $statement->bindValue($position++, $value);
+        }
+        $statement->bindValue($position++, Page::PER_PAGE, PDO::PARAM_INT);
+        $statement->bindValue($position, Page::offsetFor($page), PDO::PARAM_INT);
+        $statement->execute();
+
+        $items = array_map(
+            static fn (array $row): SalesOrder => SalesOrder::fromRow($row),
+            $statement->fetchAll(),
+        );
+
+        return new Page($items, $total, Page::normalisePage($page));
     }
 
     public function findById(int $id): ?SalesOrder

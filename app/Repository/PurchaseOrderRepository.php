@@ -6,11 +6,15 @@ namespace App\Repository;
 
 use App\Entity\PurchaseOrder;
 use App\Entity\PurchaseOrderStatus;
+use App\Support\Page;
 
 interface PurchaseOrderRepository
 {
     /** @return list<PurchaseOrder> without items, for list pages */
     public function all(): array;
+
+    /** @return Page<PurchaseOrder> */
+    public function paginate(OrderFilter $filter, int $page): Page;
 
     /** With items loaded. */
     public function findById(int $id): ?PurchaseOrder;

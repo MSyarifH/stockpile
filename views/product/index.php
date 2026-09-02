@@ -1,5 +1,9 @@
 <?php
-/** @var callable $e @var list<\App\Entity\Product> $products @var string $csrfToken @var \App\Entity\AuthenticatedUser|null $user */
+/** @var callable $e @var \App\Support\Page<\App\Entity\Product> $page
+ *  @var list<\App\Entity\Category> $categories @var \App\Repository\ProductFilter $filter
+ *  @var \App\Support\QueryString $query @var string $csrfToken
+ *  @var \App\Entity\AuthenticatedUser|null $user @var \App\Support\View $view */
+$products = $page->items;
 ?>
 <div class="page-header">
     <h1 class="page-title">Products</h1>
@@ -8,8 +12,44 @@
     <?php endif; ?>
 </div>
 
+<form class="filters" method="get" action="/products">
+    <div class="field">
+        <label for="q">Search name or SKU</label>
+        <input id="q" name="q" type="search" value="<?= $e($filter->search) ?>" placeholder="e.g. keyboard or SKU-ELK">
+    </div>
+    <div class="field">
+        <label for="category">Category</label>
+        <select id="category" name="category">
+            <option value="">All categories</option>
+            <?php foreach ($categories as $category) : ?>
+                <option value="<?= (int) $category->id ?>" <?= $filter->categoryId === $category->id ? 'selected' : '' ?>>
+                    <?= $e($category->name) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="field">
+        <label for="stock">Stock status</label>
+        <select id="stock" name="stock">
+            <option value="">Any</option>
+            <option value="low" <?= $filter->stockStatus === 'low' ? 'selected' : '' ?>>Low stock</option>
+            <option value="normal" <?= $filter->stockStatus === 'normal' ? 'selected' : '' ?>>Normal</option>
+        </select>
+    </div>
+    <div class="filters__actions">
+        <button class="btn btn--primary" type="submit">Apply</button>
+        <?php if ($filter->isActive()) : ?>
+            <a class="btn btn--ghost" href="/products">Clear</a>
+        <?php endif; ?>
+    </div>
+</form>
+
 <?php if ($products === []) : ?>
-    <p class="empty">No products yet. Add the first one to start building the catalogue.</p>
+    <p class="empty">
+        <?= $filter->isActive()
+            ? 'No products match those filters. Try widening the search.'
+            : 'No products yet. Add the first one to start building the catalogue.' ?>
+    </p>
 <?php else : ?>
     <div class="table-wrap">
         <table class="table">
@@ -63,3 +103,5 @@
         </table>
     </div>
 <?php endif; ?>
+
+<?= $view->render('partial.pagination', ['page' => $page, 'query' => $query]) ?>

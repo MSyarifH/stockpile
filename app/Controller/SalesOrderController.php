@@ -6,6 +6,8 @@ namespace App\Controller;
 
 use App\Entity\AuthenticatedUser;
 use App\Entity\PartnerType;
+use App\Entity\SalesOrderStatus;
+use App\Repository\OrderFilter;
 use App\Service\BusinessPartnerService;
 use App\Service\Exception\InsufficientStockException;
 use App\Service\ProductService;
@@ -16,6 +18,7 @@ use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
 use App\Support\Request;
 use App\Support\Response;
+use App\Support\QueryString;
 use App\Support\Session;
 use App\Support\View;
 
@@ -39,10 +42,19 @@ final class SalesOrderController
     public function index(Request $request): Response
     {
         $actor = $this->requireUser();
+        $status = SalesOrderStatus::tryFrom($request->string('status'));
+        $filter = new OrderFilter(
+            $request->string('q'),
+            $status?->value,
+            $request->string('sort') === OrderFilter::SORT_ASC ? OrderFilter::SORT_ASC : OrderFilter::SORT_DESC,
+        );
 
         return Response::html($this->view->renderInLayout('sales.index', [
             'title' => 'Sales orders',
-            'orders' => $this->orders->list($actor),
+            'page' => $this->orders->search($actor, $filter, $request->integer('page', 1)),
+            'filter' => $filter,
+            'statuses' => SalesOrderStatus::cases(),
+            'query' => new QueryString($request->all()),
         ]));
     }
 

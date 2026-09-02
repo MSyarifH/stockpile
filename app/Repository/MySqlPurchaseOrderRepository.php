@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\PurchaseOrder;
 use App\Entity\PurchaseOrderItem;
 use App\Entity\PurchaseOrderStatus;
+use App\Support\Page;
 use PDO;
 
 final class MySqlPurchaseOrderRepository implements PurchaseOrderRepository
@@ -30,6 +31,52 @@ final class MySqlPurchaseOrderRepository implements PurchaseOrderRepository
         $rows = $statement === false ? [] : $statement->fetchAll();
 
         return array_map(static fn (array $row): PurchaseOrder => PurchaseOrder::fromRow($row), $rows);
+    }
+
+    public function paginate(OrderFilter $filter, int $page): Page
+    {
+        $conditions = [];
+        $parameters = [];
+
+        if ($filter->search !== '') {
+            $conditions[] = '(po.po_number LIKE ? OR s.name LIKE ?)';
+            $parameters[] = '%' . $filter->search . '%';
+            $parameters[] = '%' . $filter->search . '%';
+        }
+
+        if ($filter->status !== null) {
+            $conditions[] = 'po.status = ?';
+            $parameters[] = $filter->status;
+        }
+
+        $where = $conditions === [] ? '' : ' WHERE ' . implode(' AND ', $conditions);
+
+        $countStatement = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM purchase_orders po JOIN suppliers s ON s.id = po.supplier_id' . $where
+        );
+        $countStatement->execute($parameters);
+        $total = (int) $countStatement->fetchColumn();
+
+        // sqlDirection() returns one of two literals, so this cannot carry user input.
+        $sql = self::SELECT . $where
+            . ' ORDER BY po.order_date ' . $filter->sqlDirection() . ', po.id ' . $filter->sqlDirection()
+            . ' LIMIT ? OFFSET ?';
+        $statement = $this->pdo->prepare($sql);
+
+        $position = 1;
+        foreach ($parameters as $value) {
+            $statement->bindValue($position++, $value);
+        }
+        $statement->bindValue($position++, Page::PER_PAGE, PDO::PARAM_INT);
+        $statement->bindValue($position, Page::offsetFor($page), PDO::PARAM_INT);
+        $statement->execute();
+
+        $items = array_map(
+            static fn (array $row): PurchaseOrder => PurchaseOrder::fromRow($row),
+            $statement->fetchAll(),
+        );
+
+        return new Page($items, $total, Page::normalisePage($page));
     }
 
     public function findById(int $id): ?PurchaseOrder

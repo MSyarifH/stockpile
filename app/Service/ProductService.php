@@ -8,10 +8,12 @@ use App\Entity\AuthenticatedUser;
 use App\Entity\Product;
 use App\Entity\Role;
 use App\Entity\StockLevel;
+use App\Repository\ProductFilter;
 use App\Repository\ProductRepository;
 use App\Service\Exception\AuthorizationException;
 use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
+use App\Support\Page;
 use App\Support\TransactionManager;
 
 /**
@@ -33,6 +35,16 @@ final class ProductService
     public function list(AuthenticatedUser $actor, bool $activeOnly = false): array
     {
         return $this->products->all($activeOnly);
+    }
+
+    /**
+     * Search, filter and paginate the catalogue (FIND-01).
+     *
+     * @return Page<Product>
+     */
+    public function search(AuthenticatedUser $actor, ProductFilter $filter, int $page): Page
+    {
+        return $this->products->paginate($filter, $page);
     }
 
     public function find(int $id): Product

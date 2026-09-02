@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\SalesOrder;
 use App\Entity\SalesOrderStatus;
+use App\Support\Page;
 
 interface SalesOrderRepository
 {
@@ -17,6 +18,12 @@ interface SalesOrderRepository
      * @return list<SalesOrder>
      */
     public function all(?int $createdBy = null): array;
+
+    /**
+     * @param int|null $createdBy same ownership restriction as all()
+     * @return Page<SalesOrder>
+     */
+    public function paginate(OrderFilter $filter, int $page, ?int $createdBy = null): Page;
 
     public function findById(int $id): ?SalesOrder;
 

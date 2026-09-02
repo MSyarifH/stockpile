@@ -11,10 +11,12 @@ use App\Entity\PurchaseOrderItem;
 use App\Entity\PurchaseOrderStatus;
 use App\Entity\ReferenceType;
 use App\Entity\Role;
+use App\Repository\OrderFilter;
 use App\Repository\PurchaseOrderRepository;
 use App\Service\Exception\AuthorizationException;
 use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
+use App\Support\Page;
 use App\Support\TransactionManager;
 
 /**
@@ -43,6 +45,14 @@ final class PurchaseOrderService
         $this->assertCanHandlePurchasing($actor);
 
         return $this->orders->all();
+    }
+
+    /** @return Page<PurchaseOrder> */
+    public function search(AuthenticatedUser $actor, OrderFilter $filter, int $page): Page
+    {
+        $this->assertCanHandlePurchasing($actor);
+
+        return $this->orders->paginate($filter, $page);
     }
 
     public function find(AuthenticatedUser $actor, int $id): PurchaseOrder

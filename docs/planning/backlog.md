@@ -6,10 +6,9 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0–5 complete — the whole core flow
-(login → master data → PO → SO → stock ledger) now works end to end. 68 unit tests across 6 logic
-areas (pass with the database stopped) plus 6 integration tests against real MySQL.
-Next: Phase 6 (search, filter, sort, pagination).
+**Status at last update (2026-09-02):** Phases 0–6 complete. 82 unit tests across 7 logic areas
+(pass with the database stopped) plus 6 integration tests against real MySQL.
+Next: Phase 7 (dashboard, CSV export, JSON endpoint, scheduled job).
 
 ---
 
@@ -242,20 +241,27 @@ to be demonstrable.
 
 ---
 
-## Phase 6 — Lists, search, pagination
+## Phase 6 — Lists, search, pagination ✅ COMPLETE (verified over HTTP)
+
+One `Page` value object and one `QueryString` helper serve all three lists, so the 10-per-page
+rule and the filter-preserving links are defined once.
 
 ### VIEW-01
-- [ ] List + detail pages for products, POs, SOs, scoped by role
-- [ ] Informative empty states
+- [x] List + detail pages for products, POs, SOs, scoped by role
+- [x] Informative empty states
+- [x] Empty states distinguish "nothing yet" from "nothing matches those filters"
 - [ ] **Bukti:** screenshots with data and with no data
 
 ### FIND-01
-- [ ] Products: search by name/SKU; filter by category; filter by stock status (low/normal)
-- [ ] Orders: search by number/counterparty; filter by status; sort by date asc/desc
-- [ ] **Pagination exactly 10 rows per page**
-- [ ] Filters persist across page changes (query string, not session)
-- [ ] Pagination implemented once as a shared helper, not three times
-- [ ] **Bukti:** demo combining search + filter + sort across at least two pages
+- [x] Products: search by name/SKU; filter by category; filter by stock status (low/normal)
+- [x] Orders: search by number/counterparty; filter by status; sort by date asc/desc
+- [x] **Pagination exactly 10 rows per page**
+- [x] Filters persist across page changes (query string, not session)
+- [x] Pagination implemented once as a shared helper, not three times
+- [x] **Bukti:** verified over HTTP — `?q=a&stock=normal` gives 25 matches over 3 pages
+      (1–10, 11–20, 21–25); the Next link carries `q` and `stock` forward and the form on
+      page 2 still shows both; `?page=999` returns an empty page and `?page=-5` clamps to 1;
+      an unknown status value is discarded rather than queried
 
 ---
 

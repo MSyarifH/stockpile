@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Product;
 use App\Entity\StockLevel;
+use App\Support\Page;
 
 /**
  * Interface + fake, because ProductService branches on this data: the low-stock
@@ -16,6 +17,13 @@ interface ProductRepository
 {
     /** @return list<Product> */
     public function all(bool $activeOnly = false): array;
+
+    /**
+     * Search, filter and paginate (FIND-01).
+     *
+     * @return Page<Product>
+     */
+    public function paginate(ProductFilter $filter, int $page): Page;
 
     public function findById(int $id): ?Product;
 

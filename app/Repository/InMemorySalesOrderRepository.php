@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\SalesOrder;
 use App\Entity\SalesOrderItem;
 use App\Entity\SalesOrderStatus;
+use App\Support\Page;
 
 final class InMemorySalesOrderRepository implements SalesOrderRepository
 {
@@ -35,6 +36,39 @@ final class InMemorySalesOrderRepository implements SalesOrderRepository
             $orders,
             static fn (SalesOrder $order): bool => $order->createdBy === $createdBy,
         ));
+    }
+
+    public function paginate(OrderFilter $filter, int $page, ?int $createdBy = null): Page
+    {
+        $matching = array_values(array_filter(
+            $this->all($createdBy),
+            static function (SalesOrder $order) use ($filter): bool {
+                if ($filter->status !== null && $order->status->value !== $filter->status) {
+                    return false;
+                }
+                if ($filter->search === '') {
+                    return true;
+                }
+
+                $haystack = mb_strtolower($order->soNumber . ' ' . ($order->customerName ?? ''));
+
+                return str_contains($haystack, mb_strtolower($filter->search));
+            },
+        ));
+
+        usort($matching, static function (SalesOrder $a, SalesOrder $b) use ($filter): int {
+            $comparison = strcmp($a->orderDate, $b->orderDate);
+
+            return $filter->sortDirection === OrderFilter::SORT_ASC ? $comparison : -$comparison;
+        });
+
+        $current = Page::normalisePage($page);
+
+        return new Page(
+            array_values(array_slice($matching, Page::offsetFor($current), Page::PER_PAGE)),
+            count($matching),
+            $current,
+        );
     }
 
     public function findById(int $id): ?SalesOrder

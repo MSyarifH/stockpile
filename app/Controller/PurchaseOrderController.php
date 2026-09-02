@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\AuthenticatedUser;
+use App\Entity\PurchaseOrderStatus;
+use App\Repository\OrderFilter;
 use App\Service\BusinessPartnerService;
 use App\Entity\PartnerType;
 use App\Service\ProductService;
@@ -15,6 +17,7 @@ use App\Support\Exception\HttpException;
 use App\Support\Exception\ValidationException;
 use App\Support\Request;
 use App\Support\Response;
+use App\Support\QueryString;
 use App\Support\Session;
 use App\Support\View;
 
@@ -37,11 +40,30 @@ final class PurchaseOrderController
     public function index(Request $request): Response
     {
         $actor = $this->requireUser();
+        $filter = $this->filterFrom($request);
 
         return Response::html($this->view->renderInLayout('purchase.index', [
             'title' => 'Purchase orders',
-            'orders' => $this->orders->list($actor),
+            'page' => $this->orders->search($actor, $filter, $request->integer('page', 1)),
+            'filter' => $filter,
+            'statuses' => PurchaseOrderStatus::cases(),
+            'query' => new QueryString($request->all()),
         ]));
+    }
+
+    /**
+     * A status that is not one of the enum's values is discarded rather than
+     * passed to the query — the filter can only ever hold a legal value.
+     */
+    private function filterFrom(Request $request): OrderFilter
+    {
+        $status = PurchaseOrderStatus::tryFrom($request->string('status'));
+
+        return new OrderFilter(
+            $request->string('q'),
+            $status?->value,
+            $request->string('sort') === OrderFilter::SORT_ASC ? OrderFilter::SORT_ASC : OrderFilter::SORT_DESC,
+        );
     }
 
     public function show(Request $request, string $id): Response

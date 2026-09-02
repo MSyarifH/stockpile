@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\PurchaseOrder;
 use App\Entity\PurchaseOrderItem;
 use App\Entity\PurchaseOrderStatus;
+use App\Support\Page;
 
 final class InMemoryPurchaseOrderRepository implements PurchaseOrderRepository
 {
@@ -27,6 +28,39 @@ final class InMemoryPurchaseOrderRepository implements PurchaseOrderRepository
     public function all(): array
     {
         return array_values($this->orders);
+    }
+
+    public function paginate(OrderFilter $filter, int $page): Page
+    {
+        $matching = array_values(array_filter(
+            $this->all(),
+            static function (PurchaseOrder $order) use ($filter): bool {
+                if ($filter->status !== null && $order->status->value !== $filter->status) {
+                    return false;
+                }
+                if ($filter->search === '') {
+                    return true;
+                }
+
+                $haystack = mb_strtolower($order->poNumber . ' ' . ($order->supplierName ?? ''));
+
+                return str_contains($haystack, mb_strtolower($filter->search));
+            },
+        ));
+
+        usort($matching, static function (PurchaseOrder $a, PurchaseOrder $b) use ($filter): int {
+            $comparison = strcmp($a->orderDate, $b->orderDate);
+
+            return $filter->sortDirection === OrderFilter::SORT_ASC ? $comparison : -$comparison;
+        });
+
+        $current = Page::normalisePage($page);
+
+        return new Page(
+            array_values(array_slice($matching, Page::offsetFor($current), Page::PER_PAGE)),
+            count($matching),
+            $current,
+        );
     }
 
     public function findById(int $id): ?PurchaseOrder
