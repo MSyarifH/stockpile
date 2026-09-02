@@ -6,7 +6,8 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phase 0 complete. No application code written yet.
+**Status at last update (2026-09-02):** Phases 0 and 0.5 complete. Next: Phase 1 (support layer
+and authentication). No application code written yet.
 
 ---
 
@@ -68,19 +69,22 @@ controller later.
 - [x] `phpstan.neon` (level 6; brief requires 5+), `phpcs.xml` (PSR-12)
 - [x] `.gitignore` excludes `.env`, `vendor/`, uploads
 - [x] `CLAUDE.md`, `ai-usage-log.md`
-- [ ] `composer install` run; `composer.lock` committed
-- [ ] **First git commit** — history currently empty
+- [x] `composer install` run; `composer.lock` committed
+- [x] Toolchain verified in-container: PHP 8.2.33, PHPUnit 10.5, PHPStan 1.12, PHPCS 3.13
+- [x] Verified app container reaches MySQL via PDO with a prepared statement
+- [x] **First git commit**
 
 ---
 
-## Phase 0.5 — Initial design (DESIGN-01, must predate code) ⚠
+## Phase 0.5 — Initial design (DESIGN-01, must predate code) ✅ COMPLETE
 
-- [ ] `docs/planning/erd.md` — entity relationship diagram
-- [ ] `docs/planning/class-diagram-initial.md` — Controller / Service / Repository / Entity
-      and their relations, drawn **before** writing PHP
-- [ ] `docs/planning/user-stories.md` — per role, from §1.1/§1.2
-- [ ] `docs/planning/scope.md` — in scope vs §4.3 out of scope
-- [ ] `docs/planning/decisions.md` — trainer answers to ambiguous requirements (FAQ 12)
+- [x] `docs/planning/erd.md` — entity relationship diagram (Mermaid)
+- [x] `docs/planning/class-diagram-initial.md` — Controller / Service / Repository / Entity,
+      drawn **before** writing PHP, with design-time assumptions recorded
+- [x] `docs/planning/user-stories.md` — per role, from §1.1/§1.2, each with a done-condition
+- [x] `docs/planning/scope.md` — in scope, §4.3 out of scope, and out-of-scope-by-choice
+- [x] `docs/planning/decisions.md` — 8 ambiguity readings; D1/D2/D3 flagged to confirm
+- [ ] Raise D1, D2, D3 with the trainer and record the answers
 
 ---
 
