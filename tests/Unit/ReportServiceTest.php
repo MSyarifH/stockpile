@@ -76,6 +76,16 @@ final class ReportServiceTest extends TestCase
         $this->service->stockMovements($this->sales(), '2026-01-01', '2026-12-31');
     }
 
+    /**
+     * §1.2 grants Warehouse Staff "Laporan stok" only. The order export carries
+     * customer names and order values, which their role has no claim on.
+     */
+    public function testWarehouseStaffCannotExportOrderStatus(): void
+    {
+        $this->expectException(AuthorizationException::class);
+        $this->service->orderStatus($this->warehouse(), '2026-01-01', '2026-12-31');
+    }
+
     public function testWarehouseStaffCanExportStockMovements(): void
     {
         [$filename, $rows] = $this->service->stockMovements($this->warehouse(), '2026-01-01', '2026-12-31');

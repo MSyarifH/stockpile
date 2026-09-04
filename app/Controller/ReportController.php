@@ -37,6 +37,7 @@ final class ReportController
             'from' => $request->string('from', date('Y-m-01')),
             'to' => $request->string('to', date('Y-m-d')),
             'canExportStock' => $actor->is(Role::Admin, Role::WarehouseStaff),
+            'canExportOrders' => $actor->is(Role::Admin, Role::Sales),
             'error' => null,
         ]));
     }
@@ -80,6 +81,7 @@ final class ReportController
                 'from' => $from,
                 'to' => $to,
                 'canExportStock' => $actor->is(Role::Admin, Role::WarehouseStaff),
+                'canExportOrders' => $actor->is(Role::Admin, Role::Sales),
                 'error' => implode(' ', $e->errors()),
             ]), 422);
         }

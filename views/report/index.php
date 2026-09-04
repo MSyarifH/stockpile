@@ -1,5 +1,6 @@
 <?php
-/** @var callable $e @var string $from @var string $to @var bool $canExportStock @var string|null $error */
+/** @var callable $e @var string $from @var string $to
+ *  @var bool $canExportStock @var bool $canExportOrders @var string|null $error */
 ?>
 <h1 class="page-title">Reports</h1>
 <p class="muted">
@@ -30,6 +31,7 @@
         </section>
     <?php endif; ?>
 
+    <?php if ($canExportOrders) : ?>
     <section class="card">
         <h2 class="card__title">Order status</h2>
         <p>Sales orders in the range with their status, approver and total.</p>
@@ -45,4 +47,5 @@
             <button class="btn btn--primary" type="submit">Download CSV</button>
         </form>
     </section>
+    <?php endif; ?>
 </div>

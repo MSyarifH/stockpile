@@ -58,6 +58,14 @@ final class ReportService
      */
     public function orderStatus(AuthenticatedUser $actor, string $from, string $to): array
     {
+        // §1.2 grants the order report to Admin ("Boleh") and Sales ("Order
+        // miliknya"). Warehouse Staff are granted "Laporan stok" only — the
+        // order export carries customer names and order values, which is
+        // commercial information their role has no claim on.
+        if (!$actor->is(Role::Admin, Role::Sales)) {
+            throw new AuthorizationException('Only Admin and Sales can export order status.');
+        }
+
         [$from, $to] = $this->validateRange($from, $to);
 
         // A Sales user's export is restricted at the QUERY, exactly as their
