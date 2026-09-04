@@ -16,7 +16,13 @@ final class MySqlSalesOrderRepository implements SalesOrderRepository
         SELECT so.id, so.so_number, so.customer_id, so.warehouse_id, so.status,
                so.order_date, so.created_by, so.approved_by, so.approved_at,
                c.name AS customer_name, w.name AS warehouse_name,
-               cu.name AS created_by_name, au.name AS approved_by_name
+               cu.name AS created_by_name, au.name AS approved_by_name,
+               -- Correlated subquery rather than a JOIN + GROUP BY: the outer
+               -- query already joins four tables, and grouping them all to
+               -- aggregate one column would force a temporary table.
+               (SELECT COALESCE(SUM(i.quantity * i.selling_price), 0)
+                  FROM sales_order_items i
+                 WHERE i.sales_order_id = so.id) AS order_total
           FROM sales_orders so
           JOIN customers c ON c.id = so.customer_id
           JOIN warehouses w ON w.id = so.warehouse_id

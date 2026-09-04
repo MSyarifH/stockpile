@@ -22,15 +22,33 @@ final class SalesOrder
         public readonly ?string $warehouseName = null,
         public readonly ?string $createdByName = null,
         public readonly ?string $approvedByName = null,
+        /**
+         * Order value computed by the list query. List pages do not load line
+         * items, so without this the total was silently 0.00 — which is what
+         * made every row of the order-status CSV report zero.
+         */
+        public readonly ?float $totalFromQuery = null,
     ) {
     }
 
+    /**
+     * Total order value.
+     *
+     * Uses the loaded line items when they are present (the detail page) and
+     * falls back to the value the list query computed. Returning 0 for an order
+     * whose items simply were not loaded is worse than useless: it looks like a
+     * real figure.
+     */
     public function total(): float
     {
-        return array_sum(array_map(
-            static fn (SalesOrderItem $item): float => $item->lineTotal(),
-            $this->items,
-        ));
+        if ($this->items !== []) {
+            return array_sum(array_map(
+                static fn (SalesOrderItem $item): float => $item->lineTotal(),
+                $this->items,
+            ));
+        }
+
+        return $this->totalFromQuery ?? 0.0;
     }
 
     public function isOwnedBy(AuthenticatedUser $user): bool
@@ -84,6 +102,7 @@ final class SalesOrder
             isset($row['warehouse_name']) ? (string) $row['warehouse_name'] : null,
             isset($row['created_by_name']) ? (string) $row['created_by_name'] : null,
             isset($row['approved_by_name']) ? (string) $row['approved_by_name'] : null,
+            isset($row['order_total']) ? (float) $row['order_total'] : null,
         );
     }
 }
