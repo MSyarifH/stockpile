@@ -192,7 +192,10 @@ CREATE TABLE sales_orders (
     UNIQUE KEY uq_so_number (so_number),
     KEY idx_so_status (status),
     KEY idx_so_order_date (order_date),
-    KEY idx_so_created_by (created_by),
+    -- (created_by, order_date) serves the Sales list query, which filters by
+    -- seller and orders by date. A separate KEY on created_by alone would be
+    -- redundant: it is the leftmost prefix of this index, and this index also
+    -- satisfies the fk_so_creator foreign key, so MySQL needs no other.
     KEY idx_so_seller_date (created_by, order_date),
     CONSTRAINT fk_so_customer  FOREIGN KEY (customer_id)  REFERENCES customers (id)  ON DELETE RESTRICT,
     CONSTRAINT fk_so_warehouse FOREIGN KEY (warehouse_id) REFERENCES warehouses (id) ON DELETE RESTRICT,

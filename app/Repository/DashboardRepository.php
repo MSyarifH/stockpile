@@ -26,6 +26,13 @@ final class DashboardRepository
     /**
      * Inventory valued at PURCHASE price, i.e. at cost (decision D7).
      * Selling price would report unrealised margin as if it were an asset.
+     *
+     * Counts stock of DEACTIVATED products too, deliberately: a discontinued
+     * line still physically occupies the warehouse and is still an asset. That
+     * differs from productsBelowReorderPoint(), which excludes them because a
+     * discontinued line is not reordered. The two figures therefore cover
+     * different populations on purpose, and the dashboard labels say so
+     * (decision D10).
      */
     public function inventoryValueAtCost(): float
     {

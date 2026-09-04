@@ -12,17 +12,17 @@
     <div class="tile">
         <p class="tile__label">Inventory value (at cost)</p>
         <p class="tile__value">Rp <?= number_format($inventory_value, 0, ',', '.') ?></p>
-        <p class="tile__note">Valued at purchase price, not selling price</p>
+        <p class="tile__note">At purchase price, all stock including discontinued lines</p>
     </div>
     <div class="tile">
         <p class="tile__label">Units in stock</p>
         <p class="tile__value"><?= number_format($total_units, 0, ',', '.') ?></p>
-        <p class="tile__note">Across all warehouses</p>
+        <p class="tile__note">All warehouses, all products</p>
     </div>
     <div class="tile <?= $low_stock_count > 0 ? 'tile--warn' : '' ?>">
         <p class="tile__label">Below reorder point</p>
         <p class="tile__value"><?= (int) $low_stock_count ?></p>
-        <p class="tile__note">of <?= (int) $active_products ?> active products</p>
+        <p class="tile__note">of <?= (int) $active_products ?> active products (discontinued lines are not reordered)</p>
     </div>
     <div class="tile <?= $pending_approval > 0 ? 'tile--warn' : '' ?>">
         <p class="tile__label">Awaiting your approval</p>
