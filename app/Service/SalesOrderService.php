@@ -265,7 +265,7 @@ final class SalesOrderService
         // The form already sets max=today, but the frontend is only a
         // convenience: a request that bypasses it must be refused here too,
         // because the backend is the source of truth (VAL-01).
-        if ($parsed > new \DateTimeImmutable('today +1 day')) {
+        if ($parsed > new \DateTimeImmutable('today 23:59:59')) {
             throw new ValidationException(['order_date' => 'The order date cannot be in the future.']);
         }
     }

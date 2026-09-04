@@ -19,17 +19,54 @@ Composer or MySQL.
 ## Running it
 
 ```bash
-cp .env.example .env          # adjust ports if 8080 / 3307 are taken
+cp .env.example .env
 docker compose up -d --build
 docker compose exec app composer install
 ```
 
-The application is then at **http://localhost:8080**.
+### → Open **http://localhost:8080**
 
-The database schema and seed data load **automatically** the first time the MySQL volume is
-created, from `database/schema-and-seed.sql`.
+Sign in with `admin@ioms.test` / `Password123!` (all demo accounts are listed below).
 
-To reset the database to a clean seeded state:
+### Ports
+
+| Service | Host port | Container port | Set by |
+|---|---|---|---|
+| Application (Apache + PHP 8.2) | **8080** | 80 | `APP_PORT` in `.env` |
+| MySQL 8 | **3307** | 3306 | `DB_PORT_HOST` in `.env` |
+
+MySQL is published on **3307**, not 3306, so it cannot collide with a MySQL already installed on
+the host. Connect a client with:
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u ioms -p ioms
+```
+
+If either port is already taken, change it in `.env` and run `docker compose up -d` again —
+nothing in the source refers to a port number:
+
+```bash
+APP_PORT=9090
+DB_PORT_HOST=3399
+```
+
+Container names are intentionally not pinned, so a second copy of this stack can run alongside
+the first with different ports.
+
+### Verifying it is up
+
+```bash
+docker compose ps                                  # both services, db "healthy"
+curl -I http://localhost:8080/login                # 200
+curl http://localhost:8080/api/products/SKU-ELK-0001/availability   # 401 without a session
+```
+
+### Database
+
+Schema and seed data load **automatically** the first time the MySQL volume is created, from
+`database/schema-and-seed.sql`.
+
+To reset to a clean seeded state:
 
 ```bash
 docker compose down -v && docker compose up -d
@@ -37,6 +74,13 @@ docker compose down -v && docker compose up -d
 
 > `down -v` deletes the volume. A plain `restart` will **not** re-run the schema — MySQL only
 > executes the init script when the data directory is empty.
+
+### Stopping
+
+```bash
+docker compose down       # stop, keep the data
+docker compose down -v    # stop and delete the database
+```
 
 ## Demo accounts
 

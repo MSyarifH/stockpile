@@ -266,4 +266,25 @@ final class MySqlProductRepository implements ProductRepository
 
         return array_map(static fn (array $row): Product => Product::fromRow($row), $rows);
     }
+
+    public function forSelect(): array
+    {
+        // No LEFT JOIN product_stocks, no GROUP BY, no SUM — just the product
+        // columns the dropdown needs.  total_stock is hardcoded to 0 because
+        // Product::fromRow expects the column but the form never displays it.
+        $statement = $this->pdo->query(
+            'SELECT p.id, p.sku, p.name, p.category_id, p.unit,
+                    p.purchase_price, p.selling_price,
+                    p.reorder_point, p.image_path, p.is_active,
+                    c.name AS category_name,
+                    0 AS total_stock
+               FROM products p
+               JOIN categories c ON c.id = p.category_id
+              WHERE p.is_active = 1
+              ORDER BY p.name'
+        );
+        $rows = $statement === false ? [] : $statement->fetchAll();
+
+        return array_map(static fn (array $row): Product => Product::fromRow($row), $rows);
+    }
 }

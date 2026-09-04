@@ -47,6 +47,28 @@ final class MySqlSalesOrderRepository implements SalesOrderRepository
         );
     }
 
+    public function between(string $from, string $to, ?int $createdBy = null): array
+    {
+        $conditions = ['so.order_date >= ?', 'so.order_date <= ?'];
+        $parameters = [$from, $to];
+
+        if ($createdBy !== null) {
+            $conditions[] = 'so.created_by = ?';
+            $parameters[] = $createdBy;
+        }
+
+        $sql = self::SELECT . ' WHERE ' . implode(' AND ', $conditions)
+            . ' ORDER BY so.order_date DESC, so.id DESC';
+
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute($parameters);
+
+        return array_map(
+            static fn (array $row): SalesOrder => SalesOrder::fromRow($row),
+            $statement->fetchAll(),
+        );
+    }
+
     public function paginate(OrderFilter $filter, int $page, ?int $createdBy = null): Page
     {
         $conditions = [];

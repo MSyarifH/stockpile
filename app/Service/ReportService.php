@@ -68,11 +68,7 @@ final class ReportService
             'Order number', 'Date', 'Customer', 'Warehouse', 'Status', 'Raised by', 'Approved by', 'Total',
         ]];
 
-        foreach ($this->salesOrders->all($createdBy) as $order) {
-            if ($order->orderDate < $from || $order->orderDate > $to) {
-                continue;
-            }
-
+        foreach ($this->salesOrders->between($from, $to, $createdBy) as $order) {
             $rows[] = [
                 $order->soNumber,
                 $order->orderDate,

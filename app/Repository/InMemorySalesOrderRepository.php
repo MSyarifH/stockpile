@@ -38,6 +38,14 @@ final class InMemorySalesOrderRepository implements SalesOrderRepository
         ));
     }
 
+    public function between(string $from, string $to, ?int $createdBy = null): array
+    {
+        return array_values(array_filter(
+            $this->all($createdBy),
+            static fn (SalesOrder $order): bool => $order->orderDate >= $from && $order->orderDate <= $to,
+        ));
+    }
+
     public function paginate(OrderFilter $filter, int $page, ?int $createdBy = null): Page
     {
         $matching = array_values(array_filter(

@@ -4,14 +4,30 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Closure;
+
+/**
+ * An HTTP response that the front controller sends after the route handler returns.
+ *
+ * Two flavours exist:
+ *  1. Buffered (the default) — body is a string held in memory.
+ *  2. Streamed — body is a callback that writes directly to php://output.
+ *     Used by CSV exports so the file is flushed row-by-row and never
+ *     buffered as a single multi-megabyte string (OOM prevention).
+ */
 final class Response
 {
+    /** @var (Closure():void)|null */
+    private ?Closure $streamCallback;
+
     /** @param array<string,string> $headers */
     private function __construct(
         private readonly string $body,
         private readonly int $status,
         private readonly array $headers,
+        ?Closure $streamCallback = null,
     ) {
+        $this->streamCallback = $streamCallback;
     }
 
     /** @param array<string,string> $headers */
@@ -40,6 +56,18 @@ final class Response
         return new self($body, $status, $headers);
     }
 
+    /**
+     * A response whose body is produced by a callback writing directly to
+     * php://output, so no intermediate string is ever held in memory.
+     *
+     * @param callable():void       $callback  writes the body bytes
+     * @param array<string,string>  $headers
+     */
+    public static function streamed(callable $callback, int $status, array $headers): self
+    {
+        return new self('', $status, $headers, Closure::fromCallable($callback));
+    }
+
     public function status(): int
     {
         return $this->status;
@@ -56,6 +84,11 @@ final class Response
         foreach ($this->headers as $name => $value) {
             header($name . ': ' . $value);
         }
-        echo $this->body;
+
+        if ($this->streamCallback !== null) {
+            ($this->streamCallback)();
+        } else {
+            echo $this->body;
+        }
     }
 }

@@ -50,4 +50,15 @@ interface ProductRepository
 
     /** @return list<Product> products at or below their reorder point (JOB-01, DASH-01) */
     public function lowStock(): array;
+
+    /**
+     * Active products without stock aggregation, for dropdown/select elements.
+     *
+     * Order forms only need id, sku, name, and prices — not the SUM across all
+     * warehouses that all() computes.  Skipping the LEFT JOIN + GROUP BY on
+     * product_stocks avoids an expensive aggregate scan on every form load.
+     *
+     * @return list<Product>
+     */
+    public function forSelect(): array;
 }

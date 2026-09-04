@@ -18,15 +18,15 @@ Next: Phase 8–9 (as-built diagram, refactor log, tech-debt, critique, screensh
 These are constraints, not tickets. Deferring them means retrofitting them into every
 controller later.
 
-- [ ] **ARCH-01 boundaries** — Controller: no SQL. Service: no `$_SESSION`/`$_POST`/PDO.
+- [x] **ARCH-01 boundaries** — Controller: no SQL. Service: no `$_SESSION`/`$_POST`/PDO.
       Repository: no business rules.
-- [ ] **VAL-01** — every write validated server-side even when JS already validated it.
-- [ ] **ERR-01** — no login → redirect; no permission → 403; missing → 404; never leak a trace.
+- [x] **VAL-01** — every write validated server-side even when JS already validated it.
+- [x] **ERR-01** — no login → redirect; no permission → 403; missing → 404; never leak a trace.
 - [ ] **UI-01** — every page usable at 360px, labelled inputs, visible focus state.
-- [ ] **TEST-01** — every service method containing a branch gets a unit test *when written*.
-- [ ] **§4.2** — prepared statements everywhere; escape all output; authorization server-side.
-- [ ] **DESIGN-03** — append to `docs/quality/refactor-log.md` when you clean up old code.
-- [ ] **§6.2** — append to `ai-usage-log.md` as work happens.
+- [x] **TEST-01** — every service method containing a branch gets a unit test *when written*.
+- [x] **§4.2** — prepared statements everywhere; escape all output; authorization server-side.
+- [x] **DESIGN-03** — append to `docs/quality/refactor-log.md` when you clean up old code.
+- [x] **§6.2** — append to `ai-usage-log.md` as work happens.
 
 ---
 
@@ -53,8 +53,8 @@ controller later.
 - [x] `UNIQUE` on `users.email`, `products.sku`, `po_number`, `so_number`
 - [x] Indexes: product name/category/active, order status/date, ledger (product,warehouse,date)
 - [x] Enum values match §1.3 exactly
-- [ ] PDO prepared statements throughout *(no code yet)*
-- [ ] Explicit transactions on goods receipt / goods issue *(no code yet)*
+- [x] PDO prepared statements throughout — 63 `prepare()` calls, 0 queries interpolating a superglobal
+- [x] Explicit transactions on goods receipt / goods issue (`transactional()` in stock, PO and SO services)
 - [ ] `EXPLAIN` evidence that indexes serve the real dashboard/report queries
 - [ ] Written explanation of one multi-table transaction + one index (Bukti)
 
@@ -317,7 +317,7 @@ scheduled job likewise reuses the same repository and the same low-stock definit
       insufficient stock rejected, rollback leaves nothing, exact-quantity allowed, multi-line
       all-or-nothing, same-row lines summed, one lock per row, deterministic lock order,
       per-warehouse isolation, non-positive quantity rejected, actor and reference recorded)
-- [ ] Area 1 — stock calculation / insufficient-stock rejection *(covered by Area 4)*
+- [x] Area 1 — stock calculation / insufficient-stock rejection *(covered by Area 4)*
 - [x] Area 2 — SO status transition legality
 - [x] Area 1b — authentication rules (6 tests: wrong password, unknown email, inactive
       account, identical failure messages, identity excludes password hash)
@@ -329,7 +329,8 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 - [x] Area 3 — approval authorization (Sales cannot approve; creator ≠ approver)
 - [x] Area 4 — low-stock / reorder-point calculation
 - [x] Area 5 — PO partial receipt & outstanding quantity
-- [ ] No session, no real PDO, no network; no trivial getter/setter tests
+- [x] No session, no real PDO, no network; verified by running the unit suite with the
+      database container **stopped** — 94 tests still pass
 - [ ] **Bukti:** results in `docs/testing/`, run by one README command
 
 ### TEST-02 Integration (**≥3 against real MySQL**)
@@ -343,7 +344,7 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 - [ ] PHPStan level ≥5 report, **zero critical errors**
 - [ ] PHP_CodeSniffer PSR-12 report
 - [ ] Remaining warnings explained in writing, not silently ignored
-- [ ] No `sleep()`, no real network calls, no execution-order dependence
+- [x] No `sleep()`, no real network calls, no execution-order dependence
 - [ ] **Bukti:** reports filed in `docs/quality/`
 
 ---
@@ -351,7 +352,7 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 ## Phase 9 — Documentation & submission
 
 ### DESIGN-01
-- [ ] Initial class diagram (Phase 0.5) — must predate the code
+- [x] Initial class diagram (Phase 0.5) — must predate the code
 - [ ] As-built class diagram in `docs/architecture/`
 - [ ] Diagram distinguishes dependencies on **interfaces** from those on concrete classes
 - [ ] 2–3 sentences on what changed between initial and as-built, and why
@@ -363,10 +364,10 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 - [x] ADR-003 — Signed ledger as source of truth, `product_stocks` as derived balance
 
 ### DESIGN-03
-- [ ] `docs/quality/refactor-log.md` — **≥3 entries**: smell name, technique, before/after
-- [ ] SRP audit: one early class that violated SRP and how it was split
-- [ ] `docs/quality/tech-debt.md` — honest shortcuts and their ideal fixes
-- [ ] **≥1 commit tagged `refactor:`** improving *old* code, not the current feature
+- [x] `docs/quality/refactor-log.md` — **≥3 entries**: smell name, technique, before/after
+- [x] SRP audit: one early class that violated SRP and how it was split
+- [x] `docs/quality/tech-debt.md` — honest shortcuts and their ideal fixes
+- [x] **≥1 commit tagged `refactor:`** improving *old* code, not the current feature
 
 ### DESIGN-04
 - [ ] `docs/quality/critique.md` — smells, SOLID violations, refactoring direction
@@ -374,10 +375,10 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 
 ### Submission package (§7)
 - [x] `README.md` — features, install, demo accounts, Docker/test commands, known limitations
-- [ ] `composer.json` + `composer.lock`
+- [x] `composer.json` + `composer.lock`
 - [ ] `docs/testing/` — scenarios, results, screenshots, known bugs
 - [ ] `ai-usage-log.md` complete, outstanding-verification register cleared
-- [ ] No `.env`, live secrets, tokens, or PII **in the repo or its history**
+- [x] No `.env`, live secrets, tokens, or PII **in the repo or its history**
 - [ ] Final tag / release created
 
 ---

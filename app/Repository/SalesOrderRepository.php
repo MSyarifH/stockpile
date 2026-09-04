@@ -21,6 +21,12 @@ interface SalesOrderRepository
 
     /**
      * @param int|null $createdBy same ownership restriction as all()
+     * @return list<SalesOrder>
+     */
+    public function between(string $from, string $to, ?int $createdBy = null): array;
+
+    /**
+     * @param int|null $createdBy same ownership restriction as all()
      * @return Page<SalesOrder>
      */
     public function paginate(OrderFilter $filter, int $page, ?int $createdBy = null): Page;

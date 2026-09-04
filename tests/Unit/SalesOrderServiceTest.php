@@ -198,6 +198,14 @@ final class SalesOrderServiceTest extends TestCase
         ]);
     }
 
+    public function testTomorrowOrderDateIsRejectedByTheService(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->service->create($this->sales(), 1, 1, date('Y-m-d', strtotime('+1 day')), [
+            ['product_id' => 1, 'quantity' => 1, 'selling_price' => 10.0],
+        ]);
+    }
+
     public function testWarehouseStaffCannotRaiseASalesOrder(): void
     {
         $this->expectException(AuthorizationException::class);

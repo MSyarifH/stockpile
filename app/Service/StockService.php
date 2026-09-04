@@ -88,15 +88,18 @@ final class StockService
             // by line — otherwise 2 lines of 6 against a balance of 10 would
             // both pass while together they overdraw it.
             $projected = [];
+            $initialBalances = [];
             foreach ($ordered as $command) {
                 $key = $command->stockKey();
 
                 if (!array_key_exists($key, $projected)) {
                     $this->stock->ensureRow($command->productId, $command->warehouseId);
-                    $projected[$key] = $this->stock->readBalanceForUpdate(
+                    $balance = $this->stock->readBalanceForUpdate(
                         $command->productId,
                         $command->warehouseId,
                     );
+                    $projected[$key] = $balance;
+                    $initialBalances[$key] = $balance;
                 }
 
                 $projected[$key] += $type->signedDelta($command->quantity);
@@ -108,7 +111,7 @@ final class StockService
                         $command->productId,
                         $command->warehouseId,
                         $command->quantity,
-                        $projected[$key] + $command->quantity,
+                        $initialBalances[$key],
                     );
                 }
             }

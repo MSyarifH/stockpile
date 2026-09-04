@@ -257,4 +257,14 @@ final class InMemoryProductRepository implements ProductRepository
 
         return $low;
     }
+
+    public function forSelect(): array
+    {
+        // In-memory equivalent: return active products without computing stock
+        // totals — the form dropdown doesn't need them.
+        return array_values(array_filter(
+            $this->products,
+            static fn (Product $p): bool => $p->isActive,
+        ));
+    }
 }

@@ -50,6 +50,12 @@ final class Router
     {
         $pathMatched = false;
 
+        // RFC 9110: HEAD must be served wherever GET is, identically but with
+        // no body. Apache drops the body for a HEAD response, so matching it as
+        // GET is all that is needed — and it is what makes `curl -I` and any
+        // health check behave correctly instead of receiving 405.
+        $method = $request->method() === 'HEAD' ? 'GET' : $request->method();
+
         foreach ($this->routes as $route) {
             $parameters = $this->match($route['pattern'], $request->path());
             if ($parameters === null) {
@@ -57,7 +63,7 @@ final class Router
             }
 
             $pathMatched = true;
-            if ($route['method'] !== $request->method()) {
+            if ($route['method'] !== $method) {
                 continue;
             }
 

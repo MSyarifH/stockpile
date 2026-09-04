@@ -134,11 +134,16 @@ final class StockServiceTest extends TestCase
      */
     public function testTwoLinesOnTheSameRowAreSummedBeforeTheStockCheck(): void
     {
-        $this->expectException(InsufficientStockException::class);
-        $this->service->issueAll([
-            $this->command(1, 1, 6),
-            $this->command(1, 1, 6),   // 12 total against a balance of 10
-        ]);
+        try {
+            $this->service->issueAll([
+                $this->command(1, 1, 6),
+                $this->command(1, 1, 6),   // 12 total against a balance of 10
+            ]);
+            self::fail('Expected InsufficientStockException.');
+        } catch (InsufficientStockException $e) {
+            self::assertSame(6, $e->requested);
+            self::assertSame(10, $e->available, 'Available must report the true initial balance, not corrupted by projected deltas.');
+        }
     }
 
     public function testTheSameRowIsLockedOnlyOnce(): void

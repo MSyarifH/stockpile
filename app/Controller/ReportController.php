@@ -60,6 +60,10 @@ final class ReportController
     }
 
     /**
+     * Streams the CSV directly to php://output instead of buffering the entire
+     * file as a string.  Peak memory is now proportional to one CSV row, not to
+     * the full export — preventing OOM on large date ranges.
+     *
      * @param callable(AuthenticatedUser,string,string):array{0:string,1:list<list<string>>} $build
      */
     private function download(Request $request, callable $build): Response
@@ -80,12 +84,16 @@ final class ReportController
             ]), 422);
         }
 
-        return Response::raw($this->csv->write($rows), 200, [
-            'Content-Type' => 'text/csv; charset=utf-8',
-            // The filename carries the date range, so two exports never
-            // overwrite each other in the downloads folder.
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            'Cache-Control' => 'no-store',
-        ]);
+        return Response::streamed(
+            fn () => $this->csv->writeToOutput($rows),
+            200,
+            [
+                'Content-Type' => 'text/csv; charset=utf-8',
+                // The filename carries the date range, so two exports never
+                // overwrite each other in the downloads folder.
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'no-store',
+            ],
+        );
     }
 }

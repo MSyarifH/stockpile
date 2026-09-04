@@ -193,6 +193,7 @@ CREATE TABLE sales_orders (
     KEY idx_so_status (status),
     KEY idx_so_order_date (order_date),
     KEY idx_so_created_by (created_by),
+    KEY idx_so_seller_date (created_by, order_date),
     CONSTRAINT fk_so_customer  FOREIGN KEY (customer_id)  REFERENCES customers (id)  ON DELETE RESTRICT,
     CONSTRAINT fk_so_warehouse FOREIGN KEY (warehouse_id) REFERENCES warehouses (id) ON DELETE RESTRICT,
     CONSTRAINT fk_so_creator   FOREIGN KEY (created_by)   REFERENCES users (id)      ON DELETE RESTRICT,

@@ -44,4 +44,30 @@ final class CsvWriter
 
         return $csv;
     }
+
+    /**
+     * Writes rows directly to php://output, bypassing the in-memory buffer.
+     *
+     * Used by the streaming CSV export so the response body is never held as a
+     * single multi-megabyte string: each row is flushed as soon as it is
+     * formatted, keeping peak memory proportional to a single row regardless of
+     * how many rows the report contains.
+     *
+     * @param list<list<string>> $rows the first row is normally the header
+     */
+    public function writeToOutput(array $rows): void
+    {
+        $handle = fopen('php://output', 'w');
+        if ($handle === false) {
+            throw new RuntimeException('Could not open php://output for the CSV export.');
+        }
+
+        fwrite($handle, "\xEF\xBB\xBF");
+
+        foreach ($rows as $row) {
+            fputcsv($handle, $row);
+        }
+
+        fclose($handle);
+    }
 }

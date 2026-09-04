@@ -242,7 +242,7 @@ final class PurchaseOrderService
 
         // A purchase order dated in the future has not happened yet; allowing it
         // would let stock be received against an order that does not exist.
-        if ($parsed > new \DateTimeImmutable('today +1 day')) {
+        if ($parsed > new \DateTimeImmutable('today 23:59:59')) {
             throw new ValidationException(['order_date' => 'The order date cannot be in the future.']);
         }
     }

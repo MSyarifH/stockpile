@@ -135,6 +135,14 @@ final class PurchaseOrderServiceTest extends TestCase
         ]);
     }
 
+    public function testTomorrowOrderDateIsRejected(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->service->create($this->admin(), 1, 1, date('Y-m-d', strtotime('+1 day')), [
+            ['product_id' => 1, 'quantity' => 5, 'purchase_price' => 100.0],
+        ]);
+    }
+
     public function testAnOrderWithNoLinesIsRejected(): void
     {
         $this->expectException(ValidationException::class);
