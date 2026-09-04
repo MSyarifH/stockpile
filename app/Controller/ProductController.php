@@ -174,16 +174,16 @@ final class ProductController
     private function validate(Request $request): array
     {
         $data = Validator::validate($request->all(), [
-            'sku' => 'required|max:64',
-            'name' => 'required|max:190',
-            'category_id' => 'required|int|min:1',
-            'unit' => 'required|max:20',
+            'sku' => 'required|max_length:64',
+            'name' => 'required|max_length:190',
+            'category_id' => 'required|int|min_value:1',
+            'unit' => 'required|max_length:20',
             // min:0 is enforced here AND in the service AND by a CHECK constraint.
             // Three layers because a negative price is a data-integrity problem,
             // not merely a form error.
-            'purchase_price' => 'required|decimal|min:0',
-            'selling_price' => 'required|decimal|min:0',
-            'reorder_point' => 'required|int|min:0',
+            'purchase_price' => 'required|decimal|min_value:0',
+            'selling_price' => 'required|decimal|min_value:0',
+            'reorder_point' => 'required|int|min_value:0',
         ]);
 
         return [

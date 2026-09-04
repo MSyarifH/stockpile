@@ -62,10 +62,10 @@ final class UserController
 
         try {
             $data = Validator::validate($request->all(), [
-                'name' => 'required|max:120',
-                'email' => 'required|email|max:190',
+                'name' => 'required|max_length:120',
+                'email' => 'required|email|max_length:190',
                 'role' => 'required|in:Admin,Sales,WarehouseStaff',
-                'password' => 'required|max:200',
+                'password' => 'required|max_length:200',
             ]);
 
             $this->users->create($actor, [
@@ -111,8 +111,8 @@ final class UserController
 
         try {
             $data = Validator::validate($request->all(), [
-                'name' => 'required|max:120',
-                'email' => 'required|email|max:190',
+                'name' => 'required|max_length:120',
+                'email' => 'required|email|max_length:190',
                 'role' => 'required|in:Admin,Sales,WarehouseStaff',
             ]);
 

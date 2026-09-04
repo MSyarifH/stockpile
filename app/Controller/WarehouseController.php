@@ -56,8 +56,8 @@ final class WarehouseController
 
         try {
             $data = Validator::validate($request->all(), [
-                'name' => 'required|max:120',
-                'location' => 'required|max:190',
+                'name' => 'required|max_length:120',
+                'location' => 'required|max_length:190',
             ]);
             $this->warehouses->create(
                 $actor,
@@ -99,8 +99,8 @@ final class WarehouseController
 
         try {
             $data = Validator::validate($request->all(), [
-                'name' => 'required|max:120',
-                'location' => 'required|max:190',
+                'name' => 'required|max_length:120',
+                'location' => 'required|max_length:190',
             ]);
             $this->warehouses->update(
                 $actor,

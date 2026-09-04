@@ -55,8 +55,8 @@ final class CategoryController
 
         try {
             $data = Validator::validate($request->all(), [
-                'name' => 'required|max:120',
-                'description' => 'optional|max:255',
+                'name' => 'required|max_length:120',
+                'description' => 'optional|max_length:255',
             ]);
             $this->categories->create($actor, (string) $data['name'], (string) ($data['description'] ?? ''));
         } catch (ValidationException $e) {
@@ -89,8 +89,8 @@ final class CategoryController
 
         try {
             $data = Validator::validate($request->all(), [
-                'name' => 'required|max:120',
-                'description' => 'optional|max:255',
+                'name' => 'required|max_length:120',
+                'description' => 'optional|max_length:255',
             ]);
             $this->categories->update($actor, (int) $id, (string) $data['name'], (string) ($data['description'] ?? ''));
         } catch (ValidationException $e) {

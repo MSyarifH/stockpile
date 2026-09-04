@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Support\Exception\ValidationException;
+use LogicException;
 
 /**
  * Server-side validation (VAL-01). The frontend validates too, for feedback,
@@ -12,6 +13,12 @@ use App\Support\Exception\ValidationException;
  * must fail here.
  *
  * Rules are expressed as "field => rule string", e.g. 'email' => 'required|email'.
+ *
+ * Available rules: required, optional, email, int, decimal, boolean, date,
+ * in:a,b,c, min_value:n, max_value:n, max_length:n.
+ *
+ * An unrecognised rule name throws rather than being ignored — see the default
+ * branch of applyRules().
  */
 final class Validator
 {
@@ -103,14 +110,27 @@ final class Validator
                     $value = round((float) $string, 2);
                     break;
 
-                case 'min':
+                // min_value and max_length are named for WHAT they compare.
+                // They were previously 'min' and 'max', which read as a matching
+                // pair but were not one: min compared the numeric value while
+                // max compared the string length. Every call site happened to
+                // mean the right thing, but 'int|max:100' would have limited the
+                // number of digits rather than the value — accepting 999999.
+                case 'min_value':
                     if ((float) $value < (float) $parameter) {
                         $this->fail($field, sprintf('must be at least %s.', $parameter));
                         return;
                     }
                     break;
 
-                case 'max':
+                case 'max_value':
+                    if ((float) $value > (float) $parameter) {
+                        $this->fail($field, sprintf('must be at most %s.', $parameter));
+                        return;
+                    }
+                    break;
+
+                case 'max_length':
                     if (mb_strlen($string) > (int) $parameter) {
                         $this->fail($field, sprintf('must be at most %s characters.', $parameter));
                         return;
@@ -136,6 +156,25 @@ final class Validator
                 case 'boolean':
                     $value = in_array($string, ['1', 'true', 'on', 'yes'], true);
                     break;
+
+                // Handled in passes() before this method is reached; listed so
+                // they do not fall into the default branch below.
+                case 'required':
+                case 'optional':
+                    break;
+
+                default:
+                    // Without this branch a mistyped rule name was silently
+                    // ignored and the value accepted unconditionally, so
+                    // 'required|emial' validated anything at all. Rules are
+                    // written by developers, never supplied by a request, so
+                    // failing loudly here is safe and catches the typo at the
+                    // first execution instead of in production.
+                    throw new LogicException(sprintf(
+                        'Unknown validation rule "%s" for field "%s".',
+                        (string) $name,
+                        $field,
+                    ));
             }
         }
 

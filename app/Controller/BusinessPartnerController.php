@@ -124,9 +124,9 @@ final class BusinessPartnerController
     private function validate(Request $request): array
     {
         $data = Validator::validate($request->all(), [
-            'name' => 'required|max:150',
-            'contact' => 'optional|max:120',
-            'address' => 'optional|max:255',
+            'name' => 'required|max_length:150',
+            'contact' => 'optional|max_length:120',
+            'address' => 'optional|max_length:255',
         ]);
 
         return [
