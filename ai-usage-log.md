@@ -465,6 +465,29 @@ being written up as if complete.
 
 ---
 
+## Session 9 — 2026-09-02 — As-built diagram and a documentation drift found (Phase 9)
+
+### AI-34 · As-built class diagram, drawn from the code rather than from intent
+- **Method:** enumerated all 85 classes from the filesystem first, then drew the diagram from
+  that list — not from the initial diagram or from memory.
+- **What that enumeration caught:** ADR-001 still named `SupplierRepository` and
+  `CustomerRepository` as the concrete repositories. Those were superseded in Phase 2 by the
+  decision to merge them into one `BusinessPartnerRepository`, and two further concrete
+  repositories (`WarehouseRepository`, `DashboardRepository`) had appeared since the ADR was
+  written. **The ADR no longer matched the code.**
+- **Why this mattered:** §8.2 lists a class diagram that does not reflect actual code as a
+  critical failure, and an ADR that misnames classes is the same defect in prose. Corrected,
+  with the correction recorded in the ADR itself rather than silently edited.
+- **Verified after writing:** all 36 file paths in the diagram's traceability table exist; all
+  4 Mermaid blocks parse; the initial diagram and ERD still parse unchanged.
+- **Honest note on the initial-vs-as-built comparison:** three things genuinely changed (five
+  new support classes, `UserRepository` gaining an interface, suppliers and customers merging)
+  and one prediction was confirmed rather than changed (the re-entrant transaction manager).
+  Recording the confirmed prediction is as useful as recording the changes, because it shows the
+  initial diagram was a real design attempt and not a formality.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.

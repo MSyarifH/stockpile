@@ -351,12 +351,12 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 
 ## Phase 9 — Documentation & submission
 
-### DESIGN-01
+### DESIGN-01 ✅
 - [x] Initial class diagram (Phase 0.5) — must predate the code
-- [ ] As-built class diagram in `docs/architecture/`
-- [ ] Diagram distinguishes dependencies on **interfaces** from those on concrete classes
-- [ ] 2–3 sentences on what changed between initial and as-built, and why
-- [ ] Every class in the diagram traceable to real code (assessor will pick one)
+- [x] As-built class diagram in `docs/architecture/`
+- [x] Diagram distinguishes dependencies on **interfaces** from those on concrete classes
+- [x] 2–3 sentences on what changed between initial and as-built, and why
+- [x] Every class in the diagram traceable to real code (assessor will pick one)
 
 ### DESIGN-02 — 2–3 ADRs (`docs/architecture/adr-*.md`, context/decision/consequences) ✅
 - [x] ADR-001 — Repository interfaces on business boundaries, concrete elsewhere
@@ -389,7 +389,7 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 - [ ] App + DB run via Docker **from a clean folder**
 - [ ] Unit + integration tests run with one command and all pass
 - [ ] Static analysis attached, zero critical errors
-- [ ] Both class diagrams present and matching actual code
+- [x] Both class diagrams present and matching actual code
 - [ ] Goods issue/receipt proven transactional; oversell **not reproducible**
 - [ ] Segregation of duties proven on the server, not just the UI
 - [ ] Search, filter, sort, pagination, 3-role dashboards, JSON endpoint all demonstrable

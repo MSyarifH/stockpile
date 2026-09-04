@@ -51,9 +51,24 @@ Interface + MySQL + in-memory fake:
 | `PurchaseOrderRepository` | partial receipt arithmetic and outstanding quantity |
 | `ProductRepository` | low-stock / reorder-point calculation |
 
-Concrete class only, no interface — `CategoryRepository`, `SupplierRepository`,
-`CustomerRepository`. These are read and written but never *reasoned about*: no service branches
-on their contents, so no unit test needs to fake them.
+Concrete class only, no interface:
+
+| Repository | Why no interface |
+|---|---|
+| `CategoryRepository` | pure CRUD; no rule branches on a category |
+| `BusinessPartnerRepository` | pure CRUD for suppliers and customers |
+| `WarehouseRepository` | pure CRUD; the one rule it participates in (open a stock row per product) is asserted by an integration test, not a unit test |
+| `DashboardRepository` | read-only aggregation; its correctness is a property of the SQL, which a fake would not exercise |
+
+These are read and written but never *reasoned about*: no service branches on their contents, so
+no unit test needs to fake them.
+
+**Verified 2026-09-02:** the code contains exactly 6 repository interfaces
+(`UserRepository`, `StockRepository`, `StockLedgerRepository`, `SalesOrderRepository`,
+`PurchaseOrderRepository`, `ProductRepository`), each with a `MySql*` and an `InMemory*`
+implementation, plus the 4 concrete repositories above. This ADR was corrected after that check
+— it previously named `SupplierRepository` and `CustomerRepository`, which the Phase 2 decision
+to merge them into `BusinessPartnerRepository` had superseded.
 
 Services receive repositories through constructor injection. The only place that names a
 concrete MySQL implementation is the composition root in `public/index.php`.
