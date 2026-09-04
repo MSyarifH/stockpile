@@ -2,6 +2,20 @@ parameters:
     level: 6
     paths:
         - app
+        - public
         - scripts
         - tests
+
+    # views/ is deliberately NOT analysed.
+    #
+    # Templates receive their variables from View::render(), which uses extract().
+    # PHPStan cannot see through that, so it reports every template variable as
+    # "might not be defined" — 119 findings, all false. Silencing them would mean
+    # 119 suppressions, and TEST-03 is explicit that remaining findings must be
+    # explained rather than ignored: a suppressed error is not a fixed error.
+    #
+    # The templates are covered instead by PHP_CodeSniffer (PSR-12 + strict_types),
+    # by `php -l` syntax checks, and by the HTTP checks in docs/testing/.
+    # See docs/quality/static-analysis.md.
+
     treatPhpDocTypesAsCertain: false
