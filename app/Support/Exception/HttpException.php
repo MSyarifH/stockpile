@@ -41,4 +41,9 @@ final class HttpException extends RuntimeException
     {
         return new self($message, 400);
     }
+
+    public static function payloadTooLarge(string $message = 'The data you sent was too large.'): self
+    {
+        return new self($message, 413);
+    }
 }

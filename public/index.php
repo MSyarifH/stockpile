@@ -53,6 +53,7 @@ use App\Support\Csrf;
 use App\Support\CsvWriter;
 use App\Support\Database;
 use App\Support\Exception\HttpException;
+use App\Support\Exception\ValidationException;
 use App\Support\ImageUploader;
 use App\Support\PdoTransactionManager;
 use App\Support\Request;
@@ -147,6 +148,16 @@ try {
     $view->share('csrfToken', $csrf->token());
     $view->share('flashes', $session->takeFlash());
     $view->share('user', $session->user());
+
+    // PHP silently empties $_POST when post_max_size is exceeded, so this must
+    // be checked BEFORE anything looks for a CSRF token — otherwise an
+    // over-sized upload is reported as a security failure (BUG-05).
+    if ($request->bodyWasDiscarded()) {
+        throw HttpException::payloadTooLarge(
+            'That upload was larger than the server accepts. The limit is '
+            . ini_get('post_max_size') . ' per request; images must be 2 MB or smaller.'
+        );
+    }
 
     // --- routes ----------------------------------------------------------
     // Third argument: null = public, [] = any signed-in user, [Role...] = those roles.
@@ -262,10 +273,26 @@ function handleFailure(Throwable $exception, Request $request, View $view, strin
     [$status, $message] = match (true) {
         $exception instanceof HttpException => [$exception->status(), $exception->getMessage()],
         $exception instanceof AuthorizationException => [403, $exception->getMessage()],
+        // A validation failure that reaches here is one a controller did not
+        // catch in order to re-render its form — a state transition posted
+        // directly, for instance. It is still the client's fault, not a server
+        // fault, so it must not become a 500: ERR-01 asks for an accurate
+        // status, and a 500 also hides a usable message behind
+        // "Something went wrong".
+        $exception instanceof ValidationException => [422, implode(' ', $exception->errors())],
+        // A foreign key that does not exist arrives as an integrity-constraint
+        // violation from MySQL. The value came from the request, so it is a
+        // validation problem rather than a server fault. The driver's message is
+        // NOT passed on — it would leak table and constraint names.
+        $exception instanceof PDOException && $exception->getCode() === '23000'
+            => [422, 'One of the selected records does not exist, or would break a rule. Please check the form.'],
         default => [500, 'Something went wrong. Please try again.'],
     };
 
-    if ($status >= 500) {
+    // Logged for 4xx caused by an exception too, because an unexpected 422 from
+    // a constraint violation is worth seeing in the log even though the client
+    // is shown a friendly message.
+    if ($status >= 500 || $exception instanceof PDOException) {
         // Logged, never displayed. §8.2 treats a leaked stack trace as a failure.
         error_log(sprintf(
             '[%s] %s in %s:%d',

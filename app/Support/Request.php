@@ -89,6 +89,26 @@ final class Request
         return is_array($file) ? $file : null;
     }
 
+    /**
+     * True when PHP discarded the request body because it exceeded
+     * post_max_size.
+     *
+     * PHP does not raise an error for this — it empties $_POST and $_FILES and
+     * carries on. The first thing to notice is then the missing CSRF token, so
+     * an over-sized upload was reported as a security failure, which sends the
+     * user looking in entirely the wrong place.
+     */
+    public function bodyWasDiscarded(): bool
+    {
+        if ($this->method !== 'POST') {
+            return false;
+        }
+
+        $declared = (int) ($this->server['CONTENT_LENGTH'] ?? 0);
+
+        return $declared > 0 && $this->body === [] && $this->files === [];
+    }
+
     public function wantsJson(): bool
     {
         $accept = (string) ($this->server['HTTP_ACCEPT'] ?? '');
