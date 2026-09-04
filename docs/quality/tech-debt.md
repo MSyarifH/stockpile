@@ -158,3 +158,33 @@ is explained in `docs/quality/static-analysis.md` rather than being ignored
 silently, as TEST-03 requires.
 
 **Ideal fix:** upgrade to `^2.2` and address anything it newly reports.
+
+---
+
+## TD-09 · Two commits contain changes their message does not describe
+
+**What:** commit `b2fe510` is described as "serve HEAD wherever GET is served, and document the
+ports" but contains 21 files and 265 insertions, including a `sales_orders` index
+(`idx_so_seller_date`) and edits to `CsvWriter`, `Response` and several repositories. Commit
+`6448cd7` similarly contains 17 files where its message accounts for 12.
+
+**Why it is like this:** every commit in this project was staged with `git add -A`. Anything left
+in the working tree from earlier work was swept into whichever commit came next, so the commit
+boundaries do not match the described units of work.
+
+**Risk if left:** **medium, and it is an evidence problem rather than a code problem.** §6.1 asks
+for "commit bertahap menggambarkan perubahan nyata". A commit message that describes a one-line
+HTTP fix while carrying a schema change is misleading to anyone reading the history, and the
+history is a graded artefact.
+
+**Why it was NOT fixed by rewriting history:** an interactive rebase would produce a tidy log
+that misrepresents how the work actually happened. Presenting a manufactured history as the real
+one would be a worse integrity problem than the untidy history it replaced, and §8.2 treats
+misrepresented evidence as a critical failure. The honest option is to record it here.
+
+**How it was found:** the index analysis noticed that `idx_so_seller_date` existed in
+`schema.sql` but not in the running database; tracing when that line entered the repository
+exposed the staging habit behind it.
+
+**Corrected going forward:** commits are staged with explicit paths (`git add <path>`), never
+`-A`, so a commit contains only what its message claims.

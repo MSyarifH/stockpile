@@ -6,10 +6,18 @@ grading checklist, not a build plan.
 
 **Legend:** `[x]` done & verified · `[~]` partially done · `[ ]` not started · **⚠** high risk
 
-**Status at last update (2026-09-02):** Phases 0–7 complete — every §2 functional requirement is
-implemented and verified over HTTP. 92 unit tests across 8 logic areas (pass with the database
-stopped) plus 6 integration tests against real MySQL.
-Next: Phase 8–9 (as-built diagram, refactor log, tech-debt, critique, screenshots).
+**Status at last update (2026-09-04):** Phases 0–9 complete apart from the final release steps.
+115 unit tests across 10 logic areas (pass with the database stopped) plus 6 integration tests
+against real MySQL. Documentation evidence complete: both class diagrams, 3 ADRs, refactor log,
+SRP audit, tech-debt register (9 entries), critique, index analysis with 33 EXPLAIN plans,
+static-analysis report, test scenarios and results, known bugs, and 14 screenshots at 1440px and
+a true 360px.
+
+**Seven defects were found during this evidence phase and fixed** — see
+`docs/testing/known-bugs.md`. Two were requirement failures: the navigation overflowed at 360px
+(UI-01) and a mistyped validation rule silently disabled validation (VAL-01).
+
+Remaining: final tag, and re-running the §10 checklist from a clean clone.
 
 ---
 
@@ -22,7 +30,7 @@ controller later.
       Repository: no business rules.
 - [x] **VAL-01** — every write validated server-side even when JS already validated it.
 - [x] **ERR-01** — no login → redirect; no permission → 403; missing → 404; never leak a trace.
-- [ ] **UI-01** — every page usable at 360px, labelled inputs, visible focus state.
+- [x] **UI-01** — every page usable at 360px, labelled inputs, visible focus state.
 - [x] **TEST-01** — every service method containing a branch gets a unit test *when written*.
 - [x] **§4.2** — prepared statements everywhere; escape all output; authorization server-side.
 - [x] **DESIGN-03** — append to `docs/quality/refactor-log.md` when you clean up old code.
@@ -55,8 +63,8 @@ controller later.
 - [x] Enum values match §1.3 exactly
 - [x] PDO prepared statements throughout — 63 `prepare()` calls, 0 queries interpolating a superglobal
 - [x] Explicit transactions on goods receipt / goods issue (`transactional()` in stock, PO and SO services)
-- [ ] `EXPLAIN` evidence that indexes serve the real dashboard/report queries
-- [ ] Written explanation of one multi-table transaction + one index (Bukti)
+- [x] `EXPLAIN` evidence that indexes serve the real dashboard/report queries
+- [x] Written explanation of one multi-table transaction + one index (Bukti)
 
 ### Seed data (§7.1, FIND-01 data)
 - [x] Deterministic generator `scripts/generate-seed.py`
@@ -119,12 +127,12 @@ Central failure handler: 401 → redirect to login, 403/404/405 → error page, 
 - [x] Protected pages unreachable without a session
 - [x] `session_regenerate_id(true)` after successful login
 - [x] `password_hash()` / `password_verify()` only
-- [ ] **Bukti:** demo of 3 role logins, a failed login, and a protected page without session
+- [x] **Bukti:** demo of 3 role logins, a failed login, and a protected page without session
 
 ### AUTH-02 Logout
 - [x] Logout clears auth data from session
 - [x] Protected URL cannot be reopened after logout (back button / direct URL)
-- [ ] **Bukti:** demo of logout then re-opening a protected URL
+- [x] **Bukti:** demo of logout then re-opening a protected URL
 
 ### USR-01 User management
 - [x] Admin: create / list / edit / activate / deactivate users
@@ -132,7 +140,7 @@ Central failure handler: 401 → redirect to login, 403/404/405 → error page, 
 - [x] Role restricted to `Admin` / `Sales` / `WarehouseStaff`
 - [x] **No public registration page**
 - [x] Sales and Warehouse Staff receive 403 on user admin pages **and** endpoints
-- [ ] **Bukti:** CRUD demo, duplicate-email validation, access test as Sales and as Warehouse
+- [x] **Bukti:** CRUD demo, duplicate-email validation, access test as Sales and as Warehouse
 
 ---
 
@@ -159,7 +167,7 @@ identical rules, kept in separate tables so a sales order cannot reference a sup
 - [x] Warehouse CRUD (Admin)
 - [x] Every product has a stock row per warehouse
 - [x] Stock view shows **total and per-warehouse breakdown**
-- [ ] **Bukti:** one product showing different stock in two warehouses
+- [x] **Bukti:** one product showing different stock in two warehouses
 
 ### Supplier / Customer
 - [x] Supplier CRUD, deactivate not delete
@@ -251,7 +259,7 @@ rule and the filter-preserving links are defined once.
 - [x] List + detail pages for products, POs, SOs, scoped by role
 - [x] Informative empty states
 - [x] Empty states distinguish "nothing yet" from "nothing matches those filters"
-- [ ] **Bukti:** screenshots with data and with no data
+- [x] **Bukti:** screenshots with data and with no data
 
 ### FIND-01
 - [x] Products: search by name/SKU; filter by category; filter by stock status (low/normal)
@@ -331,21 +339,21 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 - [x] Area 5 — PO partial receipt & outstanding quantity
 - [x] No session, no real PDO, no network; verified by running the unit suite with the
       database container **stopped** — 94 tests still pass
-- [ ] **Bukti:** results in `docs/testing/`, run by one README command
+- [x] **Bukti:** results in `docs/testing/`, run by one README command
 
 ### TEST-02 Integration (**≥3 against real MySQL**)
 - [x] Goods receipt increases stock end-to-end and writes the ledger row
 - [x] ⚠ **Two concurrent connections: second goods issue rejected when stock exhausted**
 - [x] Rollback leaves no partial write after a forced mid-transaction failure
 - [x] Test database isolated / reset between tests (no order dependence)
-- [ ] **Bukti:** separate suite, documented run command
+- [x] **Bukti:** separate suite, documented run command
 
 ### TEST-03 Static analysis & FIRST
-- [ ] PHPStan level ≥5 report, **zero critical errors**
-- [ ] PHP_CodeSniffer PSR-12 report
-- [ ] Remaining warnings explained in writing, not silently ignored
+- [x] PHPStan level ≥5 report, **zero critical errors**
+- [x] PHP_CodeSniffer PSR-12 report
+- [x] Remaining warnings explained in writing, not silently ignored
 - [x] No `sleep()`, no real network calls, no execution-order dependence
-- [ ] **Bukti:** reports filed in `docs/quality/`
+- [x] **Bukti:** reports filed in `docs/quality/`
 
 ---
 
@@ -370,13 +378,13 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 - [x] **≥1 commit tagged `refactor:`** improving *old* code, not the current feature
 
 ### DESIGN-04
-- [ ] `docs/quality/critique.md` — smells, SOLID violations, refactoring direction
+- [x] `docs/quality/critique.md` — smells, SOLID violations, refactoring direction
       (written analysis only; implementation not required)
 
 ### Submission package (§7)
 - [x] `README.md` — features, install, demo accounts, Docker/test commands, known limitations
 - [x] `composer.json` + `composer.lock`
-- [ ] `docs/testing/` — scenarios, results, screenshots, known bugs
+- [x] `docs/testing/` — scenarios, results, screenshots, known bugs
 - [ ] `ai-usage-log.md` complete, outstanding-verification register cleared
 - [x] No `.env`, live secrets, tokens, or PII **in the repo or its history**
 - [ ] Final tag / release created

@@ -21,6 +21,7 @@ localised change.
 | D6 | Is `Adjustment` movement exposed in the UI? | [Assumption] | Not in the UI. Used by the seed for opening balances only. Exposing manual adjustment would create a stock-editing path that §1.3 warns against. |
 | D7 | Does "inventory value" use purchase price or selling price? | [Assumption] | Purchase price — inventory is valued at cost. Stated on the dashboard so the figure is unambiguous. |
 | D8 | Should the JSON API use session auth or a token? | [Assumption] | Session, per API-01: "Autentikasi diperiksa sama seperti halaman biasa." Returns 401 JSON, never an HTML redirect. |
+| D10 | Does inventory value include stock of deactivated products? | **[Decided]** | Yes. A discontinued line still physically occupies the warehouse and is still an asset. Low-stock counts exclude them, because a discontinued line is not reordered — the two figures cover different populations on purpose, and the dashboard labels now say so. |
 | D9 | May a product never used on an order be hard-deleted? | **[Decided]** | No. Nothing is ever hard-deleted; deactivation only. Resolves a textual conflict between §1.3 and PRD-01 — see reasoning below and `requirement-tensions.md` B2. |
 
 ---
@@ -114,5 +115,25 @@ every list, and recorded in the tech-debt register as a known limitation rather 
 
 ---
 
-**Status:** D1–D3 and D9 resolved and implemented. Remaining entries (D4–D8) are low-risk readings that
+## D10 — Inventory value counts all stock; low-stock counts only active products
+
+The dashboard's inventory value and its low-stock count deliberately cover **different
+populations**, which looked like an inconsistency when testing found the two figures diverging
+(Rp 681,233,000 against Rp 670,455,000 with 3 deactivated products in the catalogue).
+
+**Decision: inventory value includes every product with stock; the low-stock count includes only
+active products.**
+
+**Business reasoning.** Valuation and replenishment answer different questions. "What is the
+stock in my warehouses worth?" must include a discontinued line — the boxes are still on the
+shelf and still an asset, and excluding them would understate the balance sheet. "What must I
+reorder?" must exclude it — nobody reorders a line they have withdrawn from sale.
+
+Making the two agree would break one of them. The real defect was that the dashboard did not say
+which population each tile covered, so the labels now do: "all stock including discontinued
+lines" against "of N active products (discontinued lines are not reordered)".
+
+---
+
+**Status:** D1–D3, D9 and D10 resolved and implemented. Remaining entries (D4–D8) are low-risk readings that
 do not change the shape of the design.

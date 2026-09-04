@@ -38,9 +38,25 @@ rejects the issue.
 
 Three supporting decisions:
 
-1. **`UNIQUE (product_id, warehouse_id)` on `product_stocks`.** InnoDB locks index records. With
-   this unique index the lookup takes a single-record lock; without it MySQL would scan and take
-   gap locks over a range. The locking strategy is only correct because the index exists.
+1. **`UNIQUE (product_id, warehouse_id)` on `product_stocks`.** InnoDB locks index records, so
+   how many rows get locked is decided by the access path. With this unique index the lookup is a
+   single-record lock. Measured with `EXPLAIN` against the live database:
+
+   | Predicate | `type` | `key` | `rows` |
+   |---|---|---|---|
+   | `product_id = ? AND warehouse_id = ?` | `const` | `uq_stock_product_warehouse` | **1** |
+   | `warehouse_id = ?` only | `ref` | `idx_stock_warehouse` | 35 |
+   | a column with no index | `ALL` | — | 89 |
+
+   **Correction to an earlier draft of this ADR.** It claimed that without the unique key "MySQL
+   would scan and take gap locks over a range". The conclusion — far more locking than necessary
+   — holds, but the mechanism named was wrong: `product_stocks` also carries
+   `idx_stock_warehouse`, so a schema lacking the unique key would most likely reach the row by
+   `warehouse_id` and lock one warehouse's ~35 records rather than scan the table. Corrected
+   after the index analysis in `docs/quality/index-analysis.md` measured the actual plans.
+
+   Either way the point stands: the locking strategy is only correct *because* the unique index
+   makes the lookup resolve to exactly one record.
 2. **Line items are locked in a deterministic order** (sorted by `product_id`). Two multi-line
    orders touching the same products in opposite orders would otherwise deadlock.
 3. **`CHECK (quantity >= 0)` on `product_stocks`** as a second line of defence. If the locking
