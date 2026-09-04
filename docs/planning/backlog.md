@@ -129,6 +129,17 @@ Central failure handler: 401 → redirect to login, 403/404/405 → error page, 
 - [x] `password_hash()` / `password_verify()` only
 - [x] **Bukti:** demo of 3 role logins, a failed login, and a protected page without session
 
+### PROFILE (§1.2 "profil sendiri") ✅ — found missing during the final code audit
+- [x] Every role can view their own account (name, email, role, status)
+- [x] Every role can change their own password without Admin rights
+- [x] Changing your own password requires the current one
+- [x] The new password must differ from the current one and meet the length rule
+- [x] The account acted on comes from the session, never from a request parameter
+- [x] Session id regenerated after a password change, as at login
+- [x] **Bukti:** verified over HTTP for all three roles (200/200/200, 302 to login when
+      signed out); wrong current password, too-short and unchanged passwords all 422; after a
+      successful change the old password fails to log in and the new one succeeds
+
 ### AUTH-02 Logout
 - [x] Logout clears auth data from session
 - [x] Protected URL cannot be reopened after logout (back button / direct URL)

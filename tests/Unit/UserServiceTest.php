@@ -142,4 +142,77 @@ final class UserServiceTest extends TestCase
         self::assertNotNull($updated);
         self::assertFalse($updated->isActive);
     }
+
+    // --- own profile (§1.2 "profil sendiri", allowed to every role) ---------
+
+    public function testAnyRoleCanReadTheirOwnProfileWithoutBeingAnAdmin(): void
+    {
+        $ownProfile = $this->service->ownProfile($this->sales());
+
+        self::assertSame(2, $ownProfile->id);
+        self::assertSame('sales@example.test', $ownProfile->email);
+    }
+
+    /**
+     * The account is taken from the session, never from the request, so there is
+     * no id a Sales user could substitute to read someone else's record.
+     */
+    public function testOwnProfileIgnoresAnyIdAndUsesTheActor(): void
+    {
+        self::assertSame(1, $this->service->ownProfile($this->admin())->id);
+        self::assertSame(2, $this->service->ownProfile($this->sales())->id);
+    }
+
+    /**
+     * Changing your own password requires proving you know the current one.
+     * Without it, anyone reaching an unattended signed-in browser could lock the
+     * real owner out.
+     */
+    public function testChangingOwnPasswordRequiresTheCurrentOne(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->service->changeOwnPassword($this->sales(), 'not-my-password', 'a-new-password');
+    }
+
+    public function testChangingOwnPasswordSucceedsWithTheCorrectCurrentOne(): void
+    {
+        $this->service->changeOwnPassword($this->sales(), 'secret123', 'a-new-password');
+
+        $updated = $this->repository->findById(2);
+        self::assertNotNull($updated);
+        self::assertTrue(password_verify('a-new-password', $updated->passwordHash));
+        self::assertFalse(password_verify('secret123', $updated->passwordHash), 'The old password must stop working.');
+    }
+
+    public function testTheNewPasswordMustDifferFromTheCurrentOne(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->service->changeOwnPassword($this->sales(), 'secret123', 'secret123');
+    }
+
+    public function testAShortNewPasswordIsRejectedForOwnPasswordChangeToo(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->service->changeOwnPassword($this->sales(), 'secret123', 'short');
+    }
+
+    public function testChangingOwnPasswordNeverRequiresAdminRights(): void
+    {
+        $warehouse = new AuthenticatedUser(3, 'Warehouse', Role::WarehouseStaff);
+        $this->repository->create(new User(
+            3,
+            'Warehouse',
+            'wh@example.test',
+            password_hash('secret123', PASSWORD_DEFAULT),
+            Role::WarehouseStaff,
+            true,
+        ));
+
+        // No AuthorizationException: this is the one account they may change.
+        $this->service->changeOwnPassword($warehouse, 'secret123', 'another-password');
+
+        $updated = $this->repository->findById(3);
+        self::assertNotNull($updated);
+        self::assertTrue(password_verify('another-password', $updated->passwordHash));
+    }
 }

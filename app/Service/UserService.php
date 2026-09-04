@@ -90,6 +90,50 @@ final class UserService
         ));
     }
 
+    /**
+     * The signed-in user's own account (§1.2: "profil sendiri", allowed to every
+     * role). Deliberately does NOT go through assertAdmin(): a Sales user has
+     * every right to see their own record and none to see anyone else's, so the
+     * id is taken from the session rather than from the request.
+     */
+    public function ownProfile(AuthenticatedUser $actor): User
+    {
+        $user = $this->users->findById($actor->id);
+        if ($user === null) {
+            throw HttpException::notFound('Your account no longer exists.');
+        }
+
+        return $user;
+    }
+
+    /**
+     * A user changing their OWN password must prove they know the current one.
+     *
+     * Without that check, anyone who reached an unattended signed-in browser
+     * could lock the real owner out of their account. It is the reason this is
+     * a separate method from changePassword(), which is an Admin resetting
+     * someone else's and cannot know the old value.
+     */
+    public function changeOwnPassword(
+        AuthenticatedUser $actor,
+        string $currentPassword,
+        string $newPassword,
+    ): void {
+        $user = $this->ownProfile($actor);
+
+        if (!password_verify($currentPassword, $user->passwordHash)) {
+            throw new ValidationException(['current_password' => 'That is not your current password.']);
+        }
+
+        $this->assertPasswordAcceptable($newPassword);
+
+        if (password_verify($newPassword, $user->passwordHash)) {
+            throw new ValidationException(['password' => 'The new password must differ from the current one.']);
+        }
+
+        $this->users->updatePassword($actor->id, password_hash($newPassword, PASSWORD_DEFAULT));
+    }
+
     public function changePassword(AuthenticatedUser $actor, int $id, string $password): void
     {
         $this->assertAdmin($actor);

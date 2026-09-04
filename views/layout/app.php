@@ -46,7 +46,7 @@ $flashes = $flashes ?? [];
             <form class="topbar__user" method="post" action="/logout">
                 <input type="hidden" name="_token" value="<?= $e($csrfToken ?? '') ?>">
                 <span class="badge badge--role"><?= $e($user->role->label()) ?></span>
-                <span class="topbar__name"><?= $e($user->name) ?></span>
+                <a class="topbar__name" href="/profile"><?= $e($user->name) ?></a>
                 <button class="btn btn--ghost" type="submit">Sign out</button>
             </form>
         <?php endif; ?>

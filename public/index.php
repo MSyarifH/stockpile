@@ -20,6 +20,7 @@ use App\Controller\BusinessPartnerController;
 use App\Controller\CategoryController;
 use App\Controller\DashboardController;
 use App\Controller\ProductController;
+use App\Controller\ProfileController;
 use App\Controller\ReportController;
 use App\Controller\PurchaseOrderController;
 use App\Controller\SalesOrderController;
@@ -113,6 +114,7 @@ try {
     $dashboardController = new DashboardController($dashboardService, $session, $view);
     $reportController = new ReportController($reportService, new CsvWriter(), $session, $view);
     $apiController = new ApiController($productService, $session);
+    $profileController = new ProfileController($userService, $session, $view, $csrf);
     $userController = new UserController($userService, $session, $view, $csrf);
     $categoryController = new CategoryController($categoryService, $session, $view, $csrf);
     $warehouseController = new WarehouseController($warehouseService, $session, $view, $csrf);
@@ -170,6 +172,11 @@ try {
     $router->post('/logout', $authController->logout(...), []);
 
     $router->get('/dashboard', $dashboardController->index(...), []);
+
+    // §1.2 grants "profil sendiri" to every role, so [] (any signed-in user).
+    // The account acted on comes from the session, never from the request.
+    $router->get('/profile', $profileController->show(...), []);
+    $router->post('/profile/password', $profileController->changePassword(...), []);
 
     $router->get('/users', $userController->index(...), [Role::Admin]);
     $router->get('/users/create', $userController->create(...), [Role::Admin]);

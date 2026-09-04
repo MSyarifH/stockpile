@@ -382,3 +382,5 @@ code {
 .tile__label { margin: 0; font-size: 0.82rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
 .tile__value { margin: 0.25rem 0; font-size: 1.6rem; font-weight: 700; line-height: 1.15; }
 .tile__note { margin: 0; font-size: 0.82rem; color: var(--ink-soft); }
+a.topbar__name { color: var(--ink-soft); text-decoration: none; }
+a.topbar__name:hover { color: var(--ink); text-decoration: underline; }
