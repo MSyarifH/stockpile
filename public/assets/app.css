@@ -80,8 +80,16 @@ body {
 }
 .nav {
     display: flex;
+    /* Without wrapping, the ten links an Admin sees form one unbreakable
+       932px row: at 360px the navigation was cut off and the whole document
+       scrolled sideways. UI-01 requires that neither the navigation nor the
+       tables be clipped, so this is a requirement failure, not a nicety.
+       min-width: 0 is needed as well — a flex item defaults to min-width:auto
+       and refuses to shrink below its content. */
+    flex-wrap: wrap;
     gap: 0.25rem;
     flex: 1 1 auto;
+    min-width: 0;
 }
 .nav a {
     padding: 0.4rem 0.7rem;
