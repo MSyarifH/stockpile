@@ -97,4 +97,3 @@
 
 <script src="/assets/order-lines.js" defer></script>
 <script src="/assets/availability.js" defer></script>
-<script>document.body.classList.add('sales-form');</script>

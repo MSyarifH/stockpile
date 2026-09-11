@@ -15,7 +15,15 @@
     'use strict';
 
     var table = document.getElementById('order-lines');
-    if (!table || !document.body.classList.contains('sales-form')) {
+    if (!table) {
+        return;
+    }
+
+    // Runs only where the product options actually carry a SKU. Feature
+    // detection rather than a page flag: the purchase order form uses the same
+    // line-item markup but has no availability lookup, and an inline <script>
+    // adding a marker class was the only inline script left in the project.
+    if (!table.querySelector('option[data-sku]')) {
         return;
     }
 
