@@ -6,7 +6,7 @@ $orders = $page->items;
 ?>
 <div class="page-header">
     <h1 class="page-title">Purchase orders</h1>
-    <a class="btn btn--primary" href="/purchase-orders/create">New purchase order</a>
+    <a class="btn btn--primary" href="/purchase-orders/create"><?= $icon('plus') ?>New purchase order</a>
 </div>
 
 <form class="filters" method="get" action="/purchase-orders">
@@ -33,9 +33,9 @@ $orders = $page->items;
         </select>
     </div>
     <div class="filters__actions">
-        <button class="btn btn--primary" type="submit">Apply</button>
+        <button class="btn btn--primary" type="submit"><?= $icon('filter') ?>Apply</button>
         <?php if ($filter->isActive()) : ?>
-            <a class="btn btn--ghost" href="/purchase-orders">Clear</a>
+            <a class="btn btn--ghost" href="/purchase-orders"><?= $icon('x') ?>Clear</a>
         <?php endif; ?>
     </div>
 </form>
@@ -71,7 +71,7 @@ $orders = $page->items;
                             <?= $e($order->status->label()) ?></span>
                     </td>
                     <td data-label="Actions">
-                        <a class="btn btn--small" href="/purchase-orders/<?= (int) $order->id ?>">Open</a>
+                        <a class="btn btn--small" href="/purchase-orders/<?= (int) $order->id ?>"><?= $icon('eye') ?>Open</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

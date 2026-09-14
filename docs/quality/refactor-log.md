@@ -198,6 +198,88 @@ Suite green; CSV output verified identical over HTTP afterwards.
 
 ---
 
+## R4 — Special Case / Speculative Generality · Replace bespoke script with a generic one
+
+**Smell:** `public/assets/login.js` existed to check that two fields on one form
+were not blank. Every other form in the application — product, user, category,
+warehouse, supplier, customer, profile, purchase order, sales order — had no
+client-side validation at all, which left VAL-01 (*"divalidasi di frontend dan
+backend"*) satisfied on exactly one page out of twelve.
+
+The instinct was to copy `login.js` per form. That would have produced twelve
+near-identical scripts, and — worse — twelve restatements of rules that already
+exist twice: once in the markup's constraint attributes, once in
+`App\Support\Validator`. A third copy is a third thing to forget to update.
+
+**Technique:** Replace Special Case with a general one, plus Remove Duplicate
+Knowledge. The rules were not moved into JavaScript; the script was taught to
+*read the rules already present in the HTML*.
+
+### Before — `public/assets/login.js`, the whole file
+
+```js
+form.addEventListener('submit', function (event) {
+    var email = form.querySelector('#email');
+    var password = form.querySelector('#password');
+
+    if (!email.value.trim() || !password.value) {
+        event.preventDefault();
+        var target = !email.value.trim() ? email : password;
+        target.focus();
+    }
+});
+```
+
+Hard-codes two element ids, one form, and one rule ("not blank"). It could not
+tell the user *what* was wrong, and knew nothing about `type="email"`.
+
+### After — `public/assets/form-validate.js`
+
+```js
+function checkField(field) {
+    var label = labelFor(field);          // mirrors Validator::label()
+    var value = field.type === 'file' ? '' : String(field.value).trim();
+
+    if (value === '') {
+        return field.required ? label + ' is required.' : null;
+    }
+    if (field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        return label + ' must be a valid email address.';
+    }
+    ...
+}
+
+document.querySelectorAll('form[novalidate]').forEach(wire);
+```
+
+No element ids, no form names, no rule table. Opt-in is `novalidate`, which
+already means *"this application validates this form, not the browser"* — so no
+new marker attribute was invented for it.
+
+**Consequences.**
+
+- `login.js` was **deleted**, not kept alongside. The login page loads the
+  generic script and behaves better than before: it now names the offending
+  field instead of silently refusing to submit.
+- Twelve forms gained client-side validation with no per-form code.
+- The rules cannot drift from the server, because neither copy holds them:
+  both read the constraints declared once in the markup.
+- Message wording is copied from `Validator` and `ImageUploader`, so the user
+  reads an identical sentence whether the check ran in the browser or after the
+  POST.
+
+**Verification.** Ten checks executed against the real script in a browser —
+required, email shape, `min`, integer `step`, decimal `step`, `minlength`,
+date `max`, array-named fields (`items[quantity][]`), a valid form submitting,
+and an error clearing live once corrected. All pass; see
+`docs/testing/form-validate-harness.html`. PHPUnit still 129 green, PHPStan
+level 6 clean, PSR-12 clean.
+
+**Result:** 1 form validated → 12. One file deleted, one added; net −24 lines
+of duplicated intent, +1 shared behaviour.
+
+---
+
 ## Not refactored — and why
 
 Recorded so the omission reads as judgement rather than oversight.

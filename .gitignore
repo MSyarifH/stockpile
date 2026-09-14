@@ -6,3 +6,6 @@
 .DS_Store
 .phpunit.result.cache
 /.phpunit.cache/
+
+# The assessment brief itself: reference material, not part of the submission.
+/Project Brief - Programmer*.pdf

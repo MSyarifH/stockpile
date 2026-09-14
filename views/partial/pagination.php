@@ -4,6 +4,7 @@
  * rule — is defined once (FIND-01).
  *
  * @var callable $e
+ * @var callable $icon
  * @var \App\Support\Page<mixed> $page
  * @var \App\Support\QueryString $query
  */
@@ -21,9 +22,9 @@ $current = $page->currentPage;
         <li>
             <?php if ($page->hasPrevious()) : ?>
                 <a class="btn btn--small" href="<?= $e($query->with(['page' => $current - 1])) ?>"
-                   rel="prev">Previous</a>
+                   rel="prev"><?= $icon('chevron-left') ?>Previous</a>
             <?php else : ?>
-                <span class="btn btn--small btn--disabled" aria-disabled="true">Previous</span>
+                <span class="btn btn--small btn--disabled" aria-disabled="true"><?= $icon('chevron-left') ?>Previous</span>
             <?php endif; ?>
         </li>
 
@@ -40,9 +41,9 @@ $current = $page->currentPage;
         <li>
             <?php if ($page->hasNext()) : ?>
                 <a class="btn btn--small" href="<?= $e($query->with(['page' => $current + 1])) ?>"
-                   rel="next">Next</a>
+                   rel="next">Next<?= $icon('chevron-right') ?></a>
             <?php else : ?>
-                <span class="btn btn--small btn--disabled" aria-disabled="true">Next</span>
+                <span class="btn btn--small btn--disabled" aria-disabled="true">Next<?= $icon('chevron-right') ?></span>
             <?php endif; ?>
         </li>
     </ul>

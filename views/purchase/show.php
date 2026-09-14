@@ -89,7 +89,7 @@ $status = $order->status;
 
     <?php if ($status->acceptsGoodsReceipt()) : ?>
         <div class="form-actions">
-            <button class="btn btn--primary" type="submit">Record goods receipt</button>
+            <button class="btn btn--primary" type="submit"><?= $icon('package') ?>Record goods receipt</button>
             <p class="field__hint">
                 Partial receipt is allowed — enter only what arrived. Stock and the ledger are
                 updated in one transaction.

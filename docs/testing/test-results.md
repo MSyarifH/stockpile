@@ -169,6 +169,48 @@ that a 2.x major version exists; that is recorded and explained as TD-08 in
 
 ---
 
+### 1.5 Browser harness — `form-validate.js` (VAL-01, frontend half)
+
+Run 2026-09-14 against the file in the repository, headless Chrome 140:
+
+```
+$ "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu \
+    --dump-dom --virtual-time-budget=3000 \
+    "file://$PWD/docs/testing/form-validate-harness.html"
+
+PASS  blank required email
+PASS  malformed email
+PASS  negative number vs min=0
+PASS  fraction where step=1
+PASS  decimal accepted where step=0.01
+PASS  password below minlength
+PASS  future date beyond max
+PASS  array field label from name
+PASS  valid form submits (optional fields blank)
+PASS  error clears live once the value becomes valid
+
+10 of 10 passed.
+```
+
+**The first run was 7 of 10**, and the three failures were in the harness, not the script:
+
+```
+FAIL  blank required email
+        expected: Email address is required.
+        got:      ["Email is required."]
+```
+
+The harness had been written expecting the visible `<label>` text. `form-validate.js` derives
+the label from the field `name`, which is what `Validator::label()` does on the server — so the
+script's behaviour was the correct one and the expectation was wrong. The harness was corrected.
+Recorded here rather than quietly fixed, because a test that is adjusted to match the code is
+exactly the kind of change that needs to be visible.
+
+**Scope, stated plainly:** these 10 checks are **not** counted towards the TEST-01 minimum of six
+unit tests, which requires PHP test cases. They are evidence that the frontend half of VAL-01 was
+executed rather than assumed. The server-side half is covered by TS-VAL-01-1 … 11 in §3 and by
+the PHPUnit suite.
+
 ## 2. Database invariants
 
 These were run **before** the HTTP scenarios and again **after** them, so the figure is not a

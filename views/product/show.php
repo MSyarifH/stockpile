@@ -7,7 +7,7 @@
         <p class="muted"><code><?= $e($product->sku) ?></code> · <?= $e($product->categoryName ?? '—') ?></p>
     </div>
     <?php if ($user !== null && $user->isAdmin()) : ?>
-        <a class="btn btn--primary" href="/products/<?= (int) $product->id ?>/edit">Edit</a>
+        <a class="btn btn--primary" href="/products/<?= (int) $product->id ?>/edit"><?= $icon('pencil') ?>Edit</a>
     <?php endif; ?>
 </div>
 

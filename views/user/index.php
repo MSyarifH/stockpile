@@ -7,7 +7,7 @@
 ?>
 <div class="page-header">
     <h1 class="page-title">Users</h1>
-    <a class="btn btn--primary" href="/users/create">Add user</a>
+    <a class="btn btn--primary" href="/users/create"><?= $icon('plus') ?>Add user</a>
 </div>
 
 <?php if ($users === []) : ?>
@@ -37,7 +37,7 @@
                         </span>
                     </td>
                     <td data-label="Actions" class="row-actions">
-                        <a class="btn btn--small" href="/users/<?= (int) $row->id ?>/edit">Edit</a>
+                        <a class="btn btn--small" href="/users/<?= (int) $row->id ?>/edit"><?= $icon('pencil') ?>Edit</a>
                         <form method="post" action="/users/<?= (int) $row->id ?>/active">
                             <input type="hidden" name="_token" value="<?= $e($csrfToken ?? '') ?>">
                             <input type="hidden" name="activate" value="<?= $row->isActive ? '0' : '1' ?>">

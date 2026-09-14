@@ -50,7 +50,7 @@ $base = '/sales-orders/' . (int) $order->id;
     <?php if ($canApprove) : ?>
         <form method="post" action="<?= $e($base) ?>/approve">
             <input type="hidden" name="_token" value="<?= $e($csrfToken) ?>">
-            <button class="btn btn--primary" type="submit">Approve</button>
+            <button class="btn btn--primary" type="submit"><?= $icon('check') ?>Approve</button>
         </form>
         <form method="post" action="<?= $e($base) ?>/reject">
             <input type="hidden" name="_token" value="<?= $e($csrfToken) ?>">
@@ -61,7 +61,7 @@ $base = '/sales-orders/' . (int) $order->id;
     <?php if ($status->acceptsGoodsIssue() && $user !== null && $user->is(Role::Admin, Role::WarehouseStaff)) : ?>
         <form method="post" action="<?= $e($base) ?>/issue">
             <input type="hidden" name="_token" value="<?= $e($csrfToken) ?>">
-            <button class="btn btn--primary" type="submit">Issue goods</button>
+            <button class="btn btn--primary" type="submit"><?= $icon('truck') ?>Issue goods</button>
         </form>
     <?php endif; ?>
 

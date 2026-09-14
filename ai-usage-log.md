@@ -488,6 +488,63 @@ being written up as if complete.
 
 ---
 
+## Session 10 — 2026-09-14 — Client-side validation and the icon set
+
+**Tool:** Claude (Anthropic), via Claude Code. **Prompt summary (sanitised):** asked to enrich
+the project's JavaScript — client-side input validation in particular — and to add an icon
+library, having established that §4 permits a credited one.
+
+### AI-35 · Generic client-side validation replacing a single-purpose script
+- **Prompt summary:** "the JS files are still thin, especially for input validation — enrich
+  them, reuse where possible."
+- **Output accepted:** `public/assets/form-validate.js`, and deletion of `public/assets/login.js`.
+- **Output rejected:** the first approach offered was a rule table inside the JavaScript —
+  `{sku: {required: true, maxLength: 64}, ...}` — one entry per field. **Rejected** because it
+  creates a third copy of rules that already exist in the markup's constraint attributes and in
+  `App\Support\Validator`, and nothing would keep the three in step. The accepted version reads
+  the constraints from the DOM and holds no rules of its own.
+- **Reviewed:** confirmed against VAL-01 (*"divalidasi di frontend dan backend; backend adalah
+  sumber kebenaran"*) that a frontend check is required but must not be load-bearing. The script
+  can only cancel a submit; `Validator` re-checks every value regardless.
+- **Verified by execution, not by reading:** wrote a browser harness
+  (`docs/testing/form-validate-harness.html`) exercising the real script. **The first run
+  reported three failures** — the harness expected messages built from the visible `<label>`
+  text, while the script derives them from the field `name` exactly as `Validator::label()`
+  does. The script was correct and the harness was wrong; the harness was corrected, not the
+  script. Ten of ten pass. PHPUnit 129 green, PHPStan level 6 clean, PSR-12 clean.
+- **Recorded as:** refactor log entry R4.
+
+### AI-36 · Icon set, and two rendering bugs found only by looking at the page
+- **Prompt summary:** "a credited icon library such as Font Awesome or Lucide is allowed."
+- **Output accepted:** Lucide v0.544.0 (ISC), self-hosted; `scripts/build-icon-sprite.py`
+  extracts only the 24 icons the views reference from the official `lucide-static` package.
+- **Output rejected:** a CDN `<link>`/`<script>` to Font Awesome. **Rejected** because §5.1
+  requires the app to run from a clean folder via Docker; an assessor without internet would see
+  no icons. Rejected also on licence grounds — Font Awesome's free set is CC BY 4.0 plus SIL OFL
+  plus MIT depending on the component, which is more to state accurately in an attribution than
+  Lucide's single ISC licence.
+- **Verified — and two defects found this way:**
+  1. The generated sprite was first served as `/assets/icons.svg` and referenced with
+     `<use href="/assets/icons.svg#i-package">`. A dashboard screenshot showed **every icon
+     missing**, while the HTML was correct and the sprite returned HTTP 200. A reduced test page
+     put an external reference and an inline symbol side by side: the inline one rendered, the
+     external one did not. The sprite is now inlined.
+  2. With the sprite inlined, the icons were still wrong — `<use>` clones a symbol into a shadow
+     tree that inherits from the `<use>` element's position in the document, not from the
+     symbol's original parent, so `stroke="currentColor"` on the sprite root never reached the
+     shapes. The build script now emits those attributes on each `<symbol>`.
+  Both are recorded in `docs/quality/tech-debt.md` as TD-10.
+- **Regression checked deliberately:** adding an icon to each of ten nav links widens the
+  navigation, which is exactly what caused the 360px overflow documented in
+  `docs/testing/screenshots.md`. Re-measured: `document.scrollWidth == clientWidth` at 485, 753
+  and 1425 CSS pixels, and the widest unbreakable element is 268px against a 328px budget at
+  360px, so no horizontal scroll is possible. Chrome on macOS clamps `--window-size` below
+  ~500px, so the widest-element measurement is used instead of trusting a 360px screenshot —
+  the same trap already noted in the screenshots document.
+- **Attribution:** recorded in README.md and in the generated file's own header, per §6.1.
+
+---
+
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.

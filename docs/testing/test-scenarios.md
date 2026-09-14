@@ -218,6 +218,34 @@ something has not been shown to exist.
 | TS-VAL-01-10 **(neg)** | Signed in as Sales | POST `/sales-orders` with `customer_id=99999`, `items[product_id][]=99999`, `warehouse_id=99999` in turn | **422** in each case; no order row and no orphaned line items |
 | TS-VAL-01-11 | Any rejected write above | Inspect the database | the relevant table's row count is unchanged — the message is not the only evidence |
 
+### VAL-01 frontend half — `form-validate.js`
+
+VAL-01 asks for validation in the frontend **as well as** the backend. These scenarios cover the
+browser half. They are run by opening `docs/testing/form-validate-harness.html`, which loads the
+real `public/assets/form-validate.js` against fields carrying the same constraint attributes the
+application's forms render.
+
+Every one of these is a **usability** check, never a security one: the corresponding negative
+cases above prove the server refuses the same input when the browser is bypassed.
+
+| ID | Field under test | Input | Expected result |
+|---|---|---|---|
+| TS-VAL-01-F1 | `email` (required) | blank | submit cancelled; "Email is required." |
+| TS-VAL-01-F2 | `email` | `not-an-email` | "Email must be a valid email address." |
+| TS-VAL-01-F3 | `reorder_point` (`min="0"`) | `-1` | "Reorder point must be at least 0." |
+| TS-VAL-01-F4 | `reorder_point` (`step="1"`) | `2.5` | "Reorder point must be a whole number." |
+| TS-VAL-01-F5 | `purchase_price` (`step="0.01"`) | `12.50` | **accepted** — a decimal step must not be rejected as a non-integer |
+| TS-VAL-01-F6 | `password` (`minlength="8"`) | `short` | "Password must be at least 8 characters." |
+| TS-VAL-01-F7 | `order_date` (`max=today`) | a future date | "Order date cannot be later than …" |
+| TS-VAL-01-F8 | `items[quantity][]` (`min="1"`) | `0` | "Quantity must be at least 1." — the label is derived from an array-style name |
+| TS-VAL-01-F9 | all fields | valid values | submit proceeds; no messages rendered |
+| TS-VAL-01-F10 | `email`, after failing | corrected to a valid address | message and `aria-invalid` clear on input, without a second submit |
+
+**Cross-check tying the two halves together:** the message text in F1–F8 is produced by
+`form-validate.js` but written to match `App\Support\Validator::label()` and
+`ImageUploader`. TS-VAL-01-5 … 10 above show the server producing its own messages for the same
+class of input, so the user reads the same sentence either way.
+
 ## ERR-01 — Error handling
 
 | ID | Precondition | Steps | Expected result |

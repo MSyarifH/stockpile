@@ -1,0 +1,99 @@
+<!doctype html><meta charset="utf-8">
+<title>form-validate.js harness</title>
+<!--
+  Evidence harness for public/assets/form-validate.js (VAL-01, frontend half).
+
+  Not a PHPUnit suite and not counted towards TEST-01/TEST-02: those require
+  PHP test cases, and S4.3 puts automated end-to-end testing out of scope.
+  This exists because the alternative was to claim the client-side validation
+  worked without ever having executed it -- the same mistake that let a broken
+  stock filter pass as "0 rows" earlier in this project.
+
+  Run it by opening this file in a browser, or headless:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      --headless --disable-gpu --dump-dom --virtual-time-budget=3000 \
+      "file://$PWD/docs/testing/form-validate-harness.html"
+
+  The fields below deliberately copy the constraint attributes used by the real
+  forms (product, profile, purchase order) so the harness exercises the same
+  attribute combinations the application actually renders.
+-->
+<body>
+<form id="f" novalidate action="#">
+  <div class="field"><label for="email">Email address</label>
+    <input id="email" name="email" type="email" required></div>
+  <div class="field"><label for="reorder_point">Reorder point</label>
+    <input id="reorder_point" name="reorder_point" type="number" min="0" step="1"></div>
+  <div class="field"><label for="purchase_price">Purchase price</label>
+    <input id="purchase_price" name="purchase_price" type="number" step="0.01" min="0"></div>
+  <div class="field"><label for="password">New password</label>
+    <input id="password" name="password" type="password" minlength="8"></div>
+  <div class="field"><label for="order_date">Order date</label>
+    <input id="order_date" name="order_date" type="date" max="2026-09-14"></div>
+  <div class="field"><input name="items[quantity][]" type="number" min="1"></div>
+  <button type="submit">Go</button>
+</form>
+<pre id="out"></pre>
+<script src="../../public/assets/form-validate.js"></script>
+<script>
+var results = [];
+function attempt(setup) {
+  document.querySelectorAll('.field__error[data-source=client]').forEach(function (n) { n.remove(); });
+  document.querySelectorAll('[aria-invalid]').forEach(function (n) { n.removeAttribute('aria-invalid'); });
+  setup();
+  var blocked = !document.getElementById('f').dispatchEvent(
+    new Event('submit', { cancelable: true, bubbles: true }));
+  var messages = Array.prototype.map.call(
+    document.querySelectorAll('.field__error[data-source=client]'),
+    function (n) { return n.textContent; });
+  return { blocked: blocked, messages: messages };
+}
+function set(id, value) { document.getElementById(id).value = value; }
+function check(name, expected) {
+  var r = attempt(function () {});
+  var got = r.messages.indexOf(expected) !== -1;
+  results.push((got ? 'PASS  ' : 'FAIL  ') + name + (got ? '' : '\n        expected: ' + expected + '\n        got: ' + JSON.stringify(r.messages)));
+}
+function clearAll() { ['email','reorder_point','purchase_price','password','order_date'].forEach(function (i) { set(i, ''); });
+  document.querySelector('[name="items[quantity][]"]').value = ''; }
+
+clearAll();
+check('blank required email', 'Email is required.');
+
+clearAll(); set('email', 'not-an-email');
+check('malformed email', 'Email must be a valid email address.');
+
+clearAll(); set('email', 'a@b.co'); set('reorder_point', '-1');
+check('negative number vs min=0', 'Reorder point must be at least 0.');
+
+clearAll(); set('email', 'a@b.co'); set('reorder_point', '2.5');
+check('fraction where step=1', 'Reorder point must be a whole number.');
+
+clearAll(); set('email', 'a@b.co'); set('purchase_price', '12.50');
+var r = attempt(function () {});
+results.push((r.messages.length === 0 && !r.blocked ? 'PASS  ' : 'FAIL  ') + 'decimal accepted where step=0.01 -> ' + JSON.stringify(r.messages));
+
+clearAll(); set('email', 'a@b.co'); set('password', 'short');
+check('password below minlength', 'Password must be at least 8 characters.');
+
+clearAll(); set('email', 'a@b.co'); set('order_date', '2027-01-01');
+check('future date beyond max', 'Order date cannot be later than 2026-09-14.');
+
+clearAll(); set('email', 'a@b.co'); document.querySelector('[name="items[quantity][]"]').value = '0';
+check('array field label from name', 'Quantity must be at least 1.');
+
+clearAll(); set('email', 'a@b.co');
+r = attempt(function () {});
+results.push((!r.blocked && r.messages.length === 0 ? 'PASS  ' : 'FAIL  ') + 'valid form submits (optional fields blank)');
+
+clearAll(); set('email', '');
+attempt(function () {});
+var live = document.getElementById('email');
+var had = live.hasAttribute('aria-invalid');
+live.value = 'a@b.co';
+live.dispatchEvent(new Event('input', { bubbles: true }));
+results.push((had && !live.hasAttribute('aria-invalid') ? 'PASS  ' : 'FAIL  ') + 'error clears live once the value becomes valid');
+
+document.getElementById('out').textContent = results.join('\n');
+</script>

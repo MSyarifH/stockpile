@@ -3,7 +3,7 @@
 ?>
 <div class="page-header">
     <h1 class="page-title">Warehouses</h1>
-    <a class="btn btn--primary" href="/warehouses/create">Add warehouse</a>
+    <a class="btn btn--primary" href="/warehouses/create"><?= $icon('plus') ?>Add warehouse</a>
 </div>
 
 <?php if ($warehouses === []) : ?>
@@ -25,7 +25,7 @@
                             <?= $warehouse->isActive ? 'Active' : 'Inactive' ?></span>
                     </td>
                     <td data-label="Actions" class="row-actions">
-                        <a class="btn btn--small" href="/warehouses/<?= (int) $warehouse->id ?>/edit">Edit</a>
+                        <a class="btn btn--small" href="/warehouses/<?= (int) $warehouse->id ?>/edit"><?= $icon('pencil') ?>Edit</a>
                         <form method="post" action="/warehouses/<?= (int) $warehouse->id ?>/active">
                             <input type="hidden" name="_token" value="<?= $e($csrfToken ?? '') ?>">
                             <input type="hidden" name="activate" value="<?= $warehouse->isActive ? '0' : '1' ?>">

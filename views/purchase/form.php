@@ -58,7 +58,7 @@
             <tr class="line-row">
                 <td data-label="Product">
                     <label class="visually-hidden">Product</label>
-                    <select name="items[product_id][]">
+                    <select name="items[product_id][]" required>
                         <option value="">Choose a product…</option>
                         <?php foreach ($products as $product) : ?>
                             <option value="<?= (int) $product->id ?>" data-price="<?= $e((string) $product->purchasePrice) ?>">
@@ -76,7 +76,7 @@
                     <input class="qty-input" type="number" step="0.01" min="0" value="0" name="items[purchase_price][]">
                 </td>
                 <td data-label="Remove">
-                    <button class="btn btn--small btn--ghost line-remove" type="button">Remove</button>
+                    <button class="btn btn--small btn--ghost line-remove" type="button"><?= $icon('trash-2') ?>Remove</button>
                 </td>
             </tr>
             </tbody>
@@ -84,7 +84,7 @@
     </div>
 
     <div class="form-actions">
-        <button class="btn" type="button" id="add-line">Add line</button>
+        <button class="btn" type="button" id="add-line"><?= $icon('plus') ?>Add line</button>
     </div>
 
     <div class="form-actions">

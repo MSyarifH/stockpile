@@ -8,7 +8,7 @@ $products = $page->items;
 <div class="page-header">
     <h1 class="page-title">Products</h1>
     <?php if ($user !== null && $user->isAdmin()) : ?>
-        <a class="btn btn--primary" href="/products/create">Add product</a>
+        <a class="btn btn--primary" href="/products/create"><?= $icon('plus') ?>Add product</a>
     <?php endif; ?>
 </div>
 
@@ -37,9 +37,9 @@ $products = $page->items;
         </select>
     </div>
     <div class="filters__actions">
-        <button class="btn btn--primary" type="submit">Apply</button>
+        <button class="btn btn--primary" type="submit"><?= $icon('filter') ?>Apply</button>
         <?php if ($filter->isActive()) : ?>
-            <a class="btn btn--ghost" href="/products">Clear</a>
+            <a class="btn btn--ghost" href="/products"><?= $icon('x') ?>Clear</a>
         <?php endif; ?>
     </div>
 </form>
@@ -85,7 +85,7 @@ $products = $page->items;
                     </td>
                     <td data-label="Actions" class="row-actions">
                         <?php if ($user !== null && $user->isAdmin()) : ?>
-                            <a class="btn btn--small" href="/products/<?= (int) $product->id ?>/edit">Edit</a>
+                            <a class="btn btn--small" href="/products/<?= (int) $product->id ?>/edit"><?= $icon('pencil') ?>Edit</a>
                             <form method="post" action="/products/<?= (int) $product->id ?>/active">
                                 <input type="hidden" name="_token" value="<?= $e($csrfToken ?? '') ?>">
                                 <input type="hidden" name="activate" value="<?= $product->isActive ? '0' : '1' ?>">
@@ -94,7 +94,7 @@ $products = $page->items;
                                 </button>
                             </form>
                         <?php else : ?>
-                            <a class="btn btn--small" href="/products/<?= (int) $product->id ?>">View</a>
+                            <a class="btn btn--small" href="/products/<?= (int) $product->id ?>"><?= $icon('eye') ?>View</a>
                         <?php endif; ?>
                     </td>
                 </tr>

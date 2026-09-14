@@ -57,7 +57,7 @@ stage before Fulfilled. Goods issue is only legal from `Approved`.
 - **Pagination is exactly 10 rows per page**, and active filters must survive page changes.
 - Seed: ≥30 products, ≥25 combined PO+SO, ≥2 warehouses, 1 Admin + ≥2 Sales + ≥2 Warehouse
   Staff, some products below reorder point, and examples of `PendingApproval` and `Cancelled`.
-  (Current seed: 34 products, 30 orders, 3 warehouses, 6 users, 10 stock rows below reorder.)
+  (Current seed: 34 products, 30 orders, 3 warehouses, 7 users, 10 stock rows below reorder.)
 
 ## Commands
 

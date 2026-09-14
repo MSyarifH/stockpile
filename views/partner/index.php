@@ -27,7 +27,7 @@ $base = '/' . $type->urlSegment();
                             <?= $partner->isActive ? 'Active' : 'Inactive' ?></span>
                     </td>
                     <td data-label="Actions" class="row-actions">
-                        <a class="btn btn--small" href="<?= $e($base) ?>/<?= (int) $partner->id ?>/edit">Edit</a>
+                        <a class="btn btn--small" href="<?= $e($base) ?>/<?= (int) $partner->id ?>/edit"><?= $icon('pencil') ?>Edit</a>
                         <form method="post" action="<?= $e($base) ?>/<?= (int) $partner->id ?>/active">
                             <input type="hidden" name="_token" value="<?= $e($csrfToken ?? '') ?>">
                             <input type="hidden" name="activate" value="<?= $partner->isActive ? '0' : '1' ?>">

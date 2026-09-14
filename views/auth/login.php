@@ -1,6 +1,7 @@
 <?php
 /**
  * @var callable $e
+ * @var callable $icon
  * @var string $title
  * @var string $csrfToken
  * @var string $email
@@ -16,12 +17,13 @@
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body class="page-centred">
+<?php require __DIR__ . '/../partial/icon-sprite.php'; ?>
 <main class="card card--auth">
     <h1 class="card__title">Sign in</h1>
     <p class="card__subtitle">Inventory &amp; Order Management System</p>
 
     <?php if ($error !== null) : ?>
-        <p class="alert alert--error" role="alert"><?= $e($error) ?></p>
+        <p class="alert alert--error" role="alert"><?= $icon('triangle-alert') ?><?= $e($error) ?></p>
     <?php endif; ?>
 
     <form method="post" action="/login" novalidate>
@@ -41,6 +43,6 @@
         <button class="btn btn--primary btn--block" type="submit">Sign in</button>
     </form>
 </main>
-<script src="/assets/login.js" defer></script>
+<script src="/assets/form-validate.js" defer></script>
 </body>
 </html>

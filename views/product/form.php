@@ -64,7 +64,7 @@ $action = $editing === null ? '/products' : '/products/' . (int) $editing->id;
 
     <div class="field">
         <label for="image">Product image (optional)</label>
-        <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp">
+        <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" data-max-bytes="2097152">
         <?php if (isset($errors['image'])) : ?><p class="field__error"><?= $e($errors['image']) ?></p><?php endif; ?>
         <p class="field__hint">JPEG, PNG or WebP, up to 2 MB. Stored under a random filename.</p>
     </div>

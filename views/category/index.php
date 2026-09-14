@@ -3,7 +3,7 @@
 ?>
 <div class="page-header">
     <h1 class="page-title">Categories</h1>
-    <a class="btn btn--primary" href="/categories/create">Add category</a>
+    <a class="btn btn--primary" href="/categories/create"><?= $icon('plus') ?>Add category</a>
 </div>
 
 <?php if ($categories === []) : ?>
@@ -18,7 +18,7 @@
                     <td data-label="Name"><?= $e($category->name) ?></td>
                     <td data-label="Description"><?= $e($category->description) ?></td>
                     <td data-label="Actions" class="row-actions">
-                        <a class="btn btn--small" href="/categories/<?= (int) $category->id ?>/edit">Edit</a>
+                        <a class="btn btn--small" href="/categories/<?= (int) $category->id ?>/edit"><?= $icon('pencil') ?>Edit</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

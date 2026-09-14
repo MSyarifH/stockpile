@@ -26,7 +26,7 @@
                     <label for="to-stock">To</label>
                     <input id="to-stock" name="to" type="date" required value="<?= $e($to) ?>">
                 </div>
-                <button class="btn btn--primary" type="submit">Download CSV</button>
+                <button class="btn btn--primary" type="submit"><?= $icon('download') ?>Download CSV</button>
             </form>
         </section>
     <?php endif; ?>
@@ -44,7 +44,7 @@
                 <label for="to-order">To</label>
                 <input id="to-order" name="to" type="date" required value="<?= $e($to) ?>">
             </div>
-            <button class="btn btn--primary" type="submit">Download CSV</button>
+            <button class="btn btn--primary" type="submit"><?= $icon('download') ?>Download CSV</button>
         </form>
     </section>
     <?php endif; ?>

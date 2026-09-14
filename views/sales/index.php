@@ -9,7 +9,7 @@ $canCreate = $user !== null && !$user->is(\App\Entity\Role::WarehouseStaff);
 <div class="page-header">
     <h1 class="page-title">Sales orders</h1>
     <?php if ($canCreate) : ?>
-        <a class="btn btn--primary" href="/sales-orders/create">New sales order</a>
+        <a class="btn btn--primary" href="/sales-orders/create"><?= $icon('plus') ?>New sales order</a>
     <?php endif; ?>
 </div>
 
@@ -41,9 +41,9 @@ $canCreate = $user !== null && !$user->is(\App\Entity\Role::WarehouseStaff);
         </select>
     </div>
     <div class="filters__actions">
-        <button class="btn btn--primary" type="submit">Apply</button>
+        <button class="btn btn--primary" type="submit"><?= $icon('filter') ?>Apply</button>
         <?php if ($filter->isActive()) : ?>
-            <a class="btn btn--ghost" href="/sales-orders">Clear</a>
+            <a class="btn btn--ghost" href="/sales-orders"><?= $icon('x') ?>Clear</a>
         <?php endif; ?>
     </div>
 </form>
@@ -79,7 +79,7 @@ $canCreate = $user !== null && !$user->is(\App\Entity\Role::WarehouseStaff);
                             <?= $e($order->status->label()) ?></span>
                     </td>
                     <td data-label="Actions">
-                        <a class="btn btn--small" href="/sales-orders/<?= (int) $order->id ?>">Open</a>
+                        <a class="btn btn--small" href="/sales-orders/<?= (int) $order->id ?>"><?= $icon('eye') ?>Open</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

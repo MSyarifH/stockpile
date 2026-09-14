@@ -188,3 +188,33 @@ exposed the staging habit behind it.
 
 **Corrected going forward:** commits are staged with explicit paths (`git add <path>`), never
 `-A`, so a commit contains only what its message claims.
+
+## TD-10 · The icon sprite is inlined into every HTML response
+
+**What:** `views/partial/icon-sprite.php` is ~8 KB of SVG `<symbol>` definitions, and every full
+page `require`s it. That 8 KB is therefore re-sent with every HTML response instead of being
+fetched once and cached, and pages use between 12 and 25 of the 24 symbols.
+
+**Why it is like this:** the obvious alternative — serve `/assets/icons.svg` once and reference
+it with `<use href="/assets/icons.svg#i-package">` — is the form the SVG spec describes and it
+was the first implementation. It was measured not to render: a reduced test page served from the
+application showed an empty box for the external reference and a correct icon for an identical
+inline symbol beside it. Rather than ship icons that are invisible in at least one browser, the
+sprite was inlined, where `<use href="#i-package">` works everywhere.
+
+A second, subtler bug was fixed in the same change: the stroke presentation attributes were
+originally on the sprite's root `<svg>`. `<use>` clones a symbol into a shadow tree that inherits
+from where the `<use>` element sits in the document, **not** from the symbol's original parent,
+so those attributes never reached the shapes. They are now emitted on each `<symbol>`.
+
+**Risk if left:** **low.** 8 KB uncompressed, and Apache gzips it to well under 2 KB; the pages
+it rides on are already larger than that. No correctness impact.
+
+**Ideal fix:** emit only the symbols a given page actually references, or keep the external
+sprite file and inline it as a build-time fallback once the rendering behaviour is confirmed
+across the browsers the assessor will use. Either is a performance refinement, not a fix.
+
+**How it was found:** a screenshot of the dashboard, taken to check that the new icons had not
+reintroduced the 360px navigation overflow. Every nav icon was missing from the render while the
+HTML contained all 24 symbols and the sprite returned HTTP 200 — the markup was right and the
+page was wrong, which only looking at the rendered output could show.

@@ -92,7 +92,10 @@ body {
     min-width: 0;
 }
 .nav a {
-    padding: 0.4rem 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.55rem;
     border-radius: var(--radius);
     color: var(--ink);
     text-decoration: none;
@@ -188,12 +191,41 @@ body {
 .field__error { margin: 0.35rem 0 0; color: var(--error-ink); font-size: 0.85rem; }
 .field__hint { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.82rem; }
 
+/* A field the client-side validator has rejected (VAL-01). The red border is
+   paired with a message and with aria-invalid, never used alone: colour is not
+   available to every user, so it has to be the redundant signal rather than the
+   only one. */
+.field--invalid > input,
+.field--invalid > select,
+.field--invalid > textarea,
+td.field--invalid input,
+td.field--invalid select {
+    border-color: var(--error-ink);
+    background: var(--error-bg);
+}
+
+/* -----------------------------------------------------------------------
+   Icons. Lucide (ISC) as a self-hosted sprite; see README attribution.
+   Sized in em so an icon tracks the font size of whatever contains it, and
+   stroked in currentColor so it inherits that element's colour too.
+   ----------------------------------------------------------------------- */
+.icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    vertical-align: -0.125em;
+}
+
+
 .form-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 /* --- buttons ------------------------------------------------------------ */
 
 .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
     padding: 0.55rem 0.95rem;
     border: 1px solid var(--line);
     border-radius: var(--radius);
@@ -217,10 +249,16 @@ body {
 /* --- feedback ----------------------------------------------------------- */
 
 .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
     padding: 0.7rem 0.9rem;
     border-radius: var(--radius);
     margin: 0 0 var(--space);
 }
+/* Nudged down so the icon aligns with the first line of text rather than the
+   top of its box. */
+.alert .icon { margin-top: 0.28em; }
 .alert--success { background: var(--ok-bg); color: var(--ok-ink); }
 .alert--error { background: var(--error-bg); color: var(--error-ink); }
 
