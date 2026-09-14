@@ -34,14 +34,17 @@ before declaring success, creates `.env` and installs Composer dependencies if t
 and fails with a sentence instead of a stack trace when Docker is not running or a port is taken.
 
 ```bash
-./run.sh            # build, start, and wait until the app really answers
+./run.sh            # print every command with what it does, and start nothing
+./run.sh start      # build, start, and wait until the app really answers
 ./run.sh stop       # stop the containers, keeping all data
 ./run.sh down       # remove the containers, keeping the database volume
 ./run.sh reset      # DESTROY the database volume and re-import schema + seed (asks first)
 ./run.sh status     # container state, plus an HTTP probe of the app
 ./run.sh check      # tests + PHPStan + PHP_CodeSniffer + the stock-ledger invariant
-./run.sh help       # all commands
 ```
+
+Run with no arguments it prints the menu and starts nothing: one of these commands deletes the
+database volume, so the default is the harmless one.
 
 
 Sign in with `admin@ioms.test` / `Password123!` (all demo accounts are listed below).

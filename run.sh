@@ -9,8 +9,12 @@
 # vendor/, and querying the app before MySQL finishes its first-run import),
 # and because failing with a clear sentence beats failing with a stack trace.
 #
-#   ./run.sh              start the stack and wait until it really answers
-#   ./run.sh help         every command
+#   ./run.sh              list every command with what it does
+#   ./run.sh start        start the stack and wait until it really answers
+#
+# Running it with no arguments prints the menu rather than starting anything:
+# the commands here include one that destroys the database volume, so the
+# default had better be the harmless one.
 #
 set -Eeuo pipefail
 
@@ -133,7 +137,7 @@ check_port() {
                 return 0
             fi
             die "Port $port ($label) is already in use by another process." \
-                "Either stop it, or change the port in .env and run ./run.sh up again."
+                "Either stop it, or change the port in .env and run ./run.sh start again."
         fi
     fi
 }
@@ -155,7 +159,7 @@ wait_for_http() {
     return 1
 }
 
-cmd_up() {
+cmd_start() {
     require_docker; require_files; require_seed; ensure_env
 
     local app_port db_port
@@ -212,14 +216,14 @@ cmd_stop() {
     require_docker
     step "Stopping containers (data is kept)"
     "${COMPOSE[@]}" stop
-    ok "Stopped. Start again with ./run.sh up"
+    ok "Stopped. Start again with ./run.sh start"
 }
 
 cmd_down() {
     require_docker
     step "Removing containers (the database volume is kept)"
     "${COMPOSE[@]}" down
-    ok "Removed. ./run.sh up restores the same data."
+    ok "Removed. ./run.sh start restores the same data."
 }
 
 cmd_reset() {
@@ -235,7 +239,7 @@ cmd_reset() {
     step "Destroying containers and volumes"
     "${COMPOSE[@]}" down -v
     ok "Volumes removed"
-    cmd_up
+    cmd_start
 }
 
 cmd_status() {
@@ -262,7 +266,7 @@ running_or_die() {
     # brittle: the service name also appears inside the NAME and IMAGE columns.
     local id
     id=$("${COMPOSE[@]}" ps -q --status running app 2>/dev/null || true)
-    [ -n "$id" ] || die "The stack is not running." "Start it with: ./run.sh up"
+    [ -n "$id" ] || die "The stack is not running." "Start it with: ./run.sh start"
 }
 
 cmd_test() {
@@ -332,40 +336,79 @@ cmd_job() {
 }
 
 cmd_help() {
+    # Printed whenever run.sh is called with no arguments. Each line says what
+    # the command does AND what it costs, because the difference between `down`
+    # and `reset` is the difference between a pause and losing the database.
+    local app_port db_port
+    app_port=$(env_value APP_PORT 8080)
+    db_port=$(env_value DB_PORT_HOST 3307)
+
     cat <<HELP
 ${BOLD}IOMS — Inventory & Order Management System${RESET}
+${DIM}Optional wrapper around the Docker Compose commands in README.md.${RESET}
 
-  ${BOLD}./run.sh${RESET} [command]
+  ${BOLD}./run.sh <command>${RESET}
 
-${BOLD}Running${RESET}
-  up          Build and start, then wait until the app actually answers (default)
-  stop        Stop the containers, keeping all data
-  down        Remove the containers, keeping the database volume
-  restart     stop, then up
-  reset       ${RED}Destroy the database volume${RESET} and re-import schema + seed
-  status      Show container state and probe the app over HTTP
+${BOLD}Starting and stopping${RESET}
 
-${BOLD}Working${RESET}
-  logs [svc]  Follow logs (all services, or just 'app' / 'db')
-  test        Run PHPUnit: unit + integration
-  check       Tests, PHPStan, PHP_CodeSniffer, and the stock-ledger invariant
-  shell       A bash shell inside the app container
-  mysql       A MySQL client on the application database
-  job         Run the scheduled low-stock script (JOB-01)
+  ${GREEN}start${RESET}        Build the images, start the containers, and wait until the app
+               really answers over HTTP. Safe to run repeatedly. On a first run
+               it also creates .env, installs Composer dependencies, and waits
+               for MySQL to import the schema and seed.
+  ${BOLD}stop${RESET}         Stop the containers. Nothing is deleted — 'start' brings the
+               same data back.
+  ${BOLD}down${RESET}         Remove the containers but keep the database volume. Use this to
+               free memory; your data survives.
+  ${BOLD}restart${RESET}      stop, then start.
+  ${RED}reset${RESET}        ${RED}Deletes the database volume.${RESET} Every product, order and stock
+               movement created since the last reset is lost, and the seed is
+               re-imported from scratch. Asks for confirmation first; pass
+               --yes to skip the prompt.
 
-${DIM}This wrapper is optional; every command it runs is documented in README.md.
-Ports come from .env (APP_PORT, DB_PORT_HOST); it is created from .env.example
-on first run.${RESET}
+${BOLD}Looking at it${RESET}
+
+  ${BOLD}status${RESET}       Container state, plus an HTTP probe of the login page.
+  ${BOLD}logs${RESET} [svc]   Follow the logs. Add 'app' or 'db' to narrow it down.
+
+${BOLD}Checking it${RESET}
+
+  ${BOLD}test${RESET}         PHPUnit: unit + integration suites.
+  ${BOLD}check${RESET}        Everything: PHPUnit, PHPStan (level 6), PHP_CodeSniffer (PSR-12),
+               and the stock-ledger invariant — that product_stocks still equals
+               SUM(stock_ledger) for every product and warehouse.
+
+${BOLD}Getting inside${RESET}
+
+  ${BOLD}shell${RESET}        A bash shell in the app container.
+  ${BOLD}mysql${RESET}        A MySQL client on the application database. Credentials come
+               from the container's environment, so they never reach your shell
+               history.
+  ${BOLD}job${RESET}          Run the scheduled low-stock script (JOB-01). It exits 1 when
+               products need reordering — that is a signal, not a failure.
+
+  ${BOLD}help${RESET}         This menu. Printed when run.sh is called with no command.
+
+${BOLD}Once it is running${RESET}
+
+  Open      ${BOLD}http://localhost:${app_port}${RESET}
+  Sign in   admin@ioms.test / Password123!   ${DIM}(every demo account is in README.md)${RESET}
+  MySQL     localhost:${db_port}
+
+${DIM}Ports are read from .env (APP_PORT, DB_PORT_HOST), which is created from
+.env.example on first run. Change them there if either is taken.
+
+This script is a convenience only. Every command it runs is documented in
+README.md and works by hand without it.${RESET}
 HELP
 }
 
 # --- dispatch ----------------------------------------------------------------
 
-case "${1:-up}" in
-    up|start)      shift || true; cmd_up "$@" ;;
+case "${1:-help}" in
+    start|up)      shift || true; cmd_start "$@" ;;
     stop)          cmd_stop ;;
     down)          cmd_down ;;
-    restart)       cmd_stop; cmd_up ;;
+    restart)       cmd_stop; cmd_start ;;
     reset|rebuild) shift || true; cmd_reset "${1:-}" ;;
     status|ps)     cmd_status ;;
     logs)          shift; cmd_logs "$@" ;;
