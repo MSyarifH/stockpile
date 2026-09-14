@@ -26,6 +26,24 @@ docker compose exec app composer install
 
 ### → Open **http://localhost:8080**
 
+### Or use the helper script
+
+`./run.sh` is an **optional** wrapper that runs exactly the commands above. Everything in this
+README works without it; it exists because it waits for MySQL to finish its first-run import
+before declaring success, creates `.env` and installs Composer dependencies if they are missing,
+and fails with a sentence instead of a stack trace when Docker is not running or a port is taken.
+
+```bash
+./run.sh            # build, start, and wait until the app really answers
+./run.sh stop       # stop the containers, keeping all data
+./run.sh down       # remove the containers, keeping the database volume
+./run.sh reset      # DESTROY the database volume and re-import schema + seed (asks first)
+./run.sh status     # container state, plus an HTTP probe of the app
+./run.sh check      # tests + PHPStan + PHP_CodeSniffer + the stock-ledger invariant
+./run.sh help       # all commands
+```
+
+
 Sign in with `admin@ioms.test` / `Password123!` (all demo accounts are listed below).
 
 ### Ports

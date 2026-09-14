@@ -543,6 +543,32 @@ library, having established that §4 permits a credited one.
   the same trap already noted in the screenshots document.
 - **Attribution:** recorded in README.md and in the generated file's own header, per §6.1.
 
+### AI-37 · `run.sh`, and a guard that never fired
+- **Prompt summary:** "write a robust run.sh with a Docker check and a stop command."
+- **Output accepted:** `run.sh` — a wrapper over the README's Docker commands, with
+  `up/stop/down/restart/reset/status/logs/test/check/shell/mysql/job`.
+- **Boundary held deliberately:** the script adds nothing the application depends on. §5.1 says
+  the schema and seed are run "sesuai prosedur README", so the README stays the authoritative
+  path and `run.sh` is documented as optional. A helper that becomes the only working route
+  would make the documented procedure a lie.
+- **Verified by running every path, not by reading it.** Three defects were found that way:
+  1. `./run.sh job` exited non-zero and was reported as a failure. `check-low-stock.php` exits 1
+     *on purpose* when products need reordering, so a cron wrapper can alert without parsing
+     text. The script now distinguishes that signal from a real failure.
+  2. `running_or_die` matched the service name in `docker compose ps` text output, where it also
+     appears inside the NAME and IMAGE columns. Replaced with `ps -q`, which prints ids only.
+  3. **The port-conflict guard never fired.** It skipped itself when the project already had
+     containers running, tested with `ps --status running | grep -q .` — but `ps` prints a
+     header row even when nothing is running, so the pattern always matched and the guard was
+     dead on every clean start. Found by holding port 8090 with an unrelated listener and
+     watching `up` proceed anyway. Fixed with `ps -q`; re-tested, the guard now refuses.
+- **Clean-clone test (§5.1, §10):** cloned the repository to an empty directory with no `.env`
+  and no `vendor/`, on ports 8090/3317 so it could not borrow anything from the working stack.
+  `./run.sh up` built, imported the seed, installed dependencies and came up; login returned
+  302, the dashboard 200 with all 24 icon symbols present, and `./run.sh check` reported 129
+  tests green, PHPStan clean, PSR-12 clean and zero ledger drift. Torn down afterwards, leaving
+  no containers or volumes.
+
 ---
 
 ## Outstanding verification register
