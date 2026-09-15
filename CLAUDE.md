@@ -89,7 +89,7 @@ docker compose exec app vendor/bin/phpunit --filter testRejectsIssueWhenStockIns
 MySQL shell (credentials come from `.env`):
 
 ```bash
-docker compose exec db mysql -uioms -p"$DB_PASSWORD" ioms
+docker compose exec db mysql -ustockpile -p"$DB_PASSWORD" stockpile
 ```
 
 ## Database

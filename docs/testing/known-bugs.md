@@ -1,5 +1,9 @@
 # Known Bugs and Limitations
 
+> Database output quoted below predates the rename of the schema from `ioms` to `stockpile`
+> (2026-09-15) and is reproduced as captured. Only the schema name in the text differs from what
+> the same command prints today.
+
 Everything observed during the test run recorded in [`test-results.md`](test-results.md) that
 failed, behaved oddly, or is a limitation an assessor should know about. Written while testing,
 not reconstructed afterwards, and nothing was fixed in the code in order to shorten this list.

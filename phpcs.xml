@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset name="IOMS">
+<ruleset name="Stockpile">
     <description>PSR-12 for application code.</description>
     <file>app</file>
     <file>tests</file>

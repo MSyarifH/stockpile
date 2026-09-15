@@ -264,7 +264,7 @@ SELECT COUNT(*) FROM sales_orders
 |---|---|---|---|
 | TS-DB-01-6 negative stock | `SELECT COUNT(*) FROM product_stocks WHERE quantity < 0` | 0 | PASS |
 | TS-DB-01-7 password hashing | `SELECT COUNT(*) FROM users WHERE password_hash NOT LIKE '$2y$%'` | 0 | PASS |
-| TS-DB-01-1 storage engine | non-InnoDB tables in `ioms` | 0 of 12 | PASS |
+| TS-DB-01-1 storage engine | non-InnoDB tables in `ioms` (the schema's name at the time; now `stockpile`) | 0 of 12 | PASS |
 | TS-DB-01-2 primary keys | tables without a PK | 0 | PASS |
 | TS-DB-01-3 foreign keys | `constraint_type = 'FOREIGN KEY'` | 17 | PASS |
 | TS-DB-01-4 prepared statements | `prepare()` calls in `app/` | 64 | PASS |

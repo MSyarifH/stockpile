@@ -78,7 +78,7 @@ class OrderService
         }
 
         // 2. persistence
-        $pdo = new PDO('mysql:host=db;dbname=ioms', 'root', 'root');
+        $pdo = new PDO('mysql:host=db;dbname=stockpile', 'root', 'root');
         $pdo->query("INSERT INTO orders (email, total)
                      VALUES ('" . $customerEmail . "', " . ($qty * $price) . ")");
         $orderId = $pdo->lastInsertId();

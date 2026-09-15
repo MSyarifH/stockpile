@@ -60,7 +60,7 @@ MySQL is published on **3307**, not 3306, so it cannot collide with a MySQL alre
 the host. Connect a client with:
 
 ```bash
-mysql -h 127.0.0.1 -P 3307 -u ioms -p ioms
+mysql -h 127.0.0.1 -P 3307 -u stockpile -p stockpile
 ```
 
 If either port is already taken, change it in `.env` and run `docker compose up -d` again —

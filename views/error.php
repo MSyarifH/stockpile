@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= (int) $status ?> · IOMS</title>
+    <title><?= (int) $status ?> · Stockpile</title>
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body class="page-centred">

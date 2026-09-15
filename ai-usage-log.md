@@ -647,6 +647,49 @@ library, having established that §4 permits a credited one.
   are byte-identical, so there is still no user enumeration, but the original sentence overstated
   what had been compared. Corrected in place with the reason given.
 
+## Session 11 — 2026-09-15 — Product identity and the navigation bar
+
+### AI-42 · Renaming IOMS to Stockpile
+- **Prompt summary:** "what is IOMS, why is it everywhere as the identity?"
+- **Answer given plainly:** it was a placeholder acronym I introduced for Inventory & Order
+  Management System. It was never a decision the brief required, and it appeared in only eight
+  places in code — three page titles, the brand link, a CSS comment, the PHPCS ruleset name,
+  the run.sh banner — plus `DB_NAME`/`DB_USER`.
+- **Output accepted:** renamed to **Stockpile** throughout, the schema and MySQL user included.
+- **Verified against a rebuilt stack, not just a grep:** changing `.env` alone does not move a
+  running container, whose environment was fixed at creation. After `./run.sh reset`, the app
+  and database both report `stockpile`, `SHOW DATABASES` lists only `stockpile`, 138 tests pass
+  and all three roles log in.
+- **Historical output deliberately left alone.** `docs/quality/index-analysis.md`,
+  `known-bugs.md` and `test-results.md` quote real command output containing the old schema name,
+  including a MySQL error reading `'ioms'@'localhost'`. An `EXPLAIN` plan is a measurement;
+  editing its text to match a later rename would turn it into a transcript of something nobody
+  ran. Each file carries a note saying the schema was renamed and that only the name in the
+  output differs.
+
+### AI-43 · Rebuilding the navigation bar
+- **Prompt summary:** "redo the navbar UI/UX" (with a screenshot of it wrapping onto three rows).
+- **The actual defect, named before designing:** ten flat links, all equally prominent, which is
+  a navigation that ranks nothing. The wrapping was the symptom.
+- **Output accepted:** top level capped at the five-or-six transaction-flow sections from §1.1;
+  the Admin's reference data grouped into one **Master data** menu; the current section marked
+  with `aria-current` and prefix matching so a detail page still highlights its section; the
+  account cluster pushed to the opposite end.
+- **Output rejected:** a scripted dropdown with a click handler, ARIA roles and manual focus
+  management. `<details>`/`<summary>` already opens on Enter, closes on Escape and reports its
+  expanded state, all natively; `nav.js` is 50 lines adding only dismiss-on-leave, and the menu
+  works with it deleted.
+- **Two of my own mistakes, caught by looking rather than reading the diff:**
+  1. I set the menu to open automatically when one of its links was the current page. The
+     screenshot showed the panel covering the table the user had just navigated to. Removed.
+  2. I hid "Sign out" with `display: none` below 520px. The icon beside it is `aria-hidden`, so
+     that would have left a button with **no accessible name at all** — announced as "button".
+     Changed to the clipping technique, which hides it visually and keeps it in the
+     accessibility tree.
+- **Regression measured, not assumed**, because a wider bar is exactly how the earlier 360px
+  overflow bug happened: `document.scrollWidth == clientWidth` for all three roles at 360, 768
+  and 1440. Desktop bar is one row, 57px, for every role. All sixteen screenshots re-captured.
+
 ---
 
 ## Outstanding verification register

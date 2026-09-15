@@ -23,6 +23,13 @@ docker compose exec -T db mysql -uioms -p... ioms -e "EXPLAIN <query>"
 
 Environment: MySQL 8.0 in Docker, database `ioms`, seed data as shipped.
 
+> The database was later renamed `ioms` → `stockpile` along with the product. The commands
+> and output below are reproduced exactly as they were run, old name included: an `EXPLAIN`
+> plan is a measurement, and editing the text of a measurement to match a later rename would
+> make it a transcript of something nobody executed. Re-running these against the renamed
+> database changes the schema name in the output and nothing else — the plans, key choices
+> and row counts are unaffected, because neither the tables nor the indexes changed.
+
 Row counts at the time of measurement:
 
 | Table | Rows | | Table | Rows |

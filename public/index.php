@@ -150,6 +150,9 @@ try {
     $view->share('csrfToken', $csrf->token());
     $view->share('flashes', $session->takeFlash());
     $view->share('user', $session->user());
+    // The layout marks the current link with aria-current; it needs the path to
+    // do that, and a view has no business reading the request itself.
+    $view->share('currentPath', $request->path());
 
     // PHP silently empties $_POST when post_max_size is exceeded, so this must
     // be checked BEFORE anything looks for a CSRF token — otherwise an

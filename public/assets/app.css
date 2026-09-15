@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
-   IOMS stylesheet. Hand-written; no CSS framework (§4 forbids one).
+   Stockpile stylesheet. Hand-written; no CSS framework (§4 forbids one).
    Mobile-first: base rules target 360px, wider screens are progressive.
    --------------------------------------------------------------------------- */
 
@@ -66,48 +66,146 @@ body {
 .topbar__inner {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0.75rem var(--space);
+    padding: 0.6rem var(--space);
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.5rem 0.75rem;
     align-items: center;
 }
 .brand {
     font-weight: 700;
-    letter-spacing: 0.04em;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
     color: var(--brand);
     text-decoration: none;
+    white-space: nowrap;
 }
+
+/* Mobile first: the brand and the account controls share the top line, and the
+   navigation drops to a full-width block underneath. That is the arrangement
+   phones use everywhere, and it saves a row -- left in source order the account
+   cluster ended up stranded on a line of its own. Undone at 760px, where all
+   three fit across a single bar. */
 .nav {
+    order: 3;
+    flex-basis: 100%;
     display: flex;
-    /* Without wrapping, the ten links an Admin sees form one unbreakable
-       932px row: at 360px the navigation was cut off and the whole document
-       scrolled sideways. UI-01 requires that neither the navigation nor the
-       tables be clipped, so this is a requirement failure, not a nicety.
-       min-width: 0 is needed as well — a flex item defaults to min-width:auto
+    /* Wrapping is still required: at 360px six items cannot sit on one line,
+       and without this the whole document scrolled sideways (UI-01). What
+       changed is how much has to wrap — the Admin's reference-data links moved
+       into one grouped menu, so the top level is five or six items rather than
+       ten. min-width: 0 is needed too: a flex item defaults to min-width: auto
        and refuses to shrink below its content. */
     flex-wrap: wrap;
-    gap: 0.25rem;
+    gap: 0.15rem;
     flex: 1 1 auto;
     min-width: 0;
 }
-.nav a {
+.nav a,
+.menu > summary {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.4rem 0.55rem;
+    padding: 0.45rem 0.6rem;
     border-radius: var(--radius);
-    color: var(--ink);
+    color: var(--ink-soft);
     text-decoration: none;
+    font-size: 0.94rem;
+    white-space: nowrap;
+    cursor: pointer;
 }
-.nav a:hover { background: var(--bg); }
+.nav a:hover,
+.menu > summary:hover { background: var(--bg); color: var(--ink); }
 
+/* The section being viewed. Weight and colour carry it as well as the tinted
+   background, so it does not depend on colour perception alone; aria-current
+   on the same element carries it to a screen reader. */
+.nav a[aria-current="page"],
+.menu > summary[aria-current="true"] {
+    background: #eaf1fa;
+    color: var(--brand-dark);
+    font-weight: 600;
+}
+
+/* --- grouped menu ------------------------------------------------------- */
+
+.menu { position: relative; }
+.menu > summary {
+    list-style: none;                 /* Firefox */
+}
+.menu > summary::-webkit-details-marker { display: none; }
+.menu > summary .icon:last-child {
+    transition: transform 0.15s ease;
+    opacity: 0.6;
+}
+.menu[open] > summary .icon:last-child { transform: rotate(180deg); }
+
+.menu__panel {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 0;
+    z-index: 20;
+    min-width: 12rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.35rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgb(28 36 48 / 12%);
+}
+.menu__panel a { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+    .menu > summary .icon:last-child { transition: none; }
+}
+
+/* --- account cluster ---------------------------------------------------- */
+
+/* Pushed to the far end of the bar so navigation and account controls do not
+   read as one undifferentiated list of ten things. */
 .topbar__user {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-left: auto;
 }
-.topbar__name { color: var(--ink-soft); font-size: 0.9rem; }
+.topbar__account {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.4rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+}
+.topbar__account:hover { background: var(--bg); }
+.topbar__name { color: var(--ink-soft); font-size: 0.9rem; white-space: nowrap; }
+
+@media (min-width: 760px) {
+    .nav {
+        order: 0;
+        flex-basis: auto;
+    }
+}
+
+/* Below 520px the word "Sign out" is the difference between the account
+   cluster fitting beside the brand and wrapping onto its own line.
+   It is hidden the accessible way, not with display: none. The icon beside it
+   is aria-hidden, so removing the text from the accessibility tree as well
+   would leave a button with no name at all -- a screen reader would announce
+   "button", and the only way to log out would be unlabelled. The same applies
+   to the user's name, which is the link to the profile page. */
+@media (max-width: 520px) {
+    .topbar__signout-label,
+    .topbar__name {
+        position: absolute;
+        width: 1px; height: 1px;
+        margin: -1px; padding: 0;
+        overflow: hidden; clip: rect(0 0 0 0);
+        white-space: nowrap; border: 0;
+    }
+}
 
 .container {
     max-width: 1100px;

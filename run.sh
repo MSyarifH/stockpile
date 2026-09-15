@@ -344,7 +344,7 @@ cmd_help() {
     db_port=$(env_value DB_PORT_HOST 3307)
 
     cat <<HELP
-${BOLD}IOMS — Inventory & Order Management System${RESET}
+${BOLD}Stockpile — Inventory & Order Management System${RESET}
 ${DIM}Optional wrapper around the Docker Compose commands in README.md.${RESET}
 
   ${BOLD}./run.sh <command>${RESET}

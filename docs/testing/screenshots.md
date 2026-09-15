@@ -78,19 +78,50 @@ CATEGORY, STOCK, REORDER AT, STATUS and ACTIONS as label/value pairs inside a ca
 `sales-orders-360.png` shows NUMBER, CUSTOMER, FROM, DATE, RAISED BY, STATUS and ACTIONS the same
 way. The filter bar, buttons, badges and pagination all fit as well.
 
-### The navigation, after the fix
+### The navigation, after the redesign
 
-`dashboard-360.png` and `products-360.png` show the ten Admin links wrapped across five rows,
-with the role badge, user name and Sign out button below them. Nothing is clipped. This is the
-worst case: Sales and Warehouse Staff see fewer links and therefore fewer rows.
+The bar was rebuilt on 2026-09-15. Before that, an Admin saw **ten flat links**, which wrapped
+onto three rows even at 1440px and pushed the account controls onto a fourth — a navigation that
+had stopped ranking anything, because everything was equally prominent.
 
-**Five rows, not the four in the original capture.** Each link now carries an icon, which widens
-it. That is exactly the change that could have reintroduced the overflow this section documents,
-so it was measured rather than eyeballed: `document.scrollWidth == document.clientWidth` at 485,
-753 and 1425 CSS pixels, and the widest element that cannot be broken across lines is the
-badge/name/Sign-out block at **268px**, against a **328px** budget at 360px (360 minus the 16px
-side gutters). Wrapping onto one more row is the layout absorbing the extra width correctly;
-no page scrolls sideways at any width.
+Three changes, each with a reason:
+
+1. **Top level capped at five or six.** The reference data an Admin manages but rarely opens
+   mid-task — categories, warehouses, suppliers, customers, users — moved into one grouped
+   **Master data** menu. Dashboard, Products, Purchases, Sales and Reports stay at the top,
+   because those are the transaction flow the brief's §1.1 describes.
+2. **The current section is marked**, with a tinted background, a heavier weight and
+   `aria-current="page"`. Prefix matching means `/products/12/edit` still highlights Products:
+   a user who has drilled into a record should not watch the navigation forget where they are.
+3. **The account cluster is pushed to the far end** so navigation and account controls stop
+   reading as one undifferentiated list.
+
+The menu is a plain `<details>`/`<summary>`. It opens on click and on Enter, closes on Escape,
+and announces its expanded state — with no JavaScript at all. `nav.js` adds only the closing
+behaviour `<details>` does not provide: dismiss when the pointer or the focus leaves. Delete that
+file and the menu still opens, still closes on a second click, and every link inside it still
+works.
+
+It is deliberately **not** opened automatically when one of its links is the current page: the
+panel is absolutely positioned and would cover the table the user just navigated to. The
+highlighted summary already says which group they are in.
+
+#### Measured, because a wider bar is how the earlier overflow bug happened
+
+| Viewport | Admin bar height | `document.scrollWidth` vs viewport |
+|---|---|---|
+| 1440px | **57px** — one row | equal, no overflow |
+| 768px | 134px | equal, no overflow |
+| 360px | 180px | equal, no overflow |
+
+Sales and Warehouse Staff see five links and no menu: 140px at 360px, 57px at 1440px.
+
+At 360px the brand and the account controls share the top line and the navigation drops to a
+full-width block beneath — the arrangement phones use, and it saves a row over leaving the
+account cluster stranded on its own line. Below 520px the words "Sign out" and the user's name
+are hidden **the accessible way** (clipped, not `display: none`): the icons beside them are
+`aria-hidden`, so removing the text from the accessibility tree as well would leave a button
+announced as just "button".
 
 ### The validation messages
 

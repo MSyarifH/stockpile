@@ -33,7 +33,7 @@ ICONS = [
     "tags", "warehouse", "factory", "users", "user", "log-out",
     # Actions
     "plus", "trash-2", "pencil", "download", "filter",
-    "check", "x", "chevron-left", "chevron-right",
+    "check", "x", "chevron-left", "chevron-right", "chevron-down",
     # Status and feedback
     "circle-check", "triangle-alert", "info", "eye",
 ]
