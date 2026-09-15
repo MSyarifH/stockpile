@@ -207,7 +207,7 @@ being written up as if complete.
   approval reserves stock, so reservation is ruled out by the brief itself.
 - **Correction I made to the AI's proposal:** the AI's D2 rule would have deadlocked the system.
   With a single seeded Admin, an order raised by that Admin could never be approved by anyone.
-  I required a second Admin account (`admin2@ioms.test`) before accepting the rule; §7.1 states
+  I required a second Admin account (`admin2@example.com`) before accepting the rule; §7.1 states
   one Admin as a minimum, not a maximum. Recorded because the rule was correct but unusable as
   first proposed, and the gap was operational rather than logical.
 - **Verification (evidence):** Seed regenerated and reloaded from an empty volume — 2 Admin
@@ -619,6 +619,34 @@ library, having established that §4 permits a credited one.
   showed the old wording — the same staleness problem as AI-38, avoided this time by noticing
   before committing rather than after.
 
+### AI-41 · Demo email domain, and why not gmail.com
+- **Prompt summary:** "`@ioms.test` looks ugly, `@mail` or `@gmail` would be nicer."
+- **Concern raised before acting, not after:** `.test` is reserved by RFC 6761 and can never
+  resolve to a real domain, which is precisely why test fixtures use it. `gmail.com` and
+  `mail.com` are live providers — `admin@gmail.com` and `sales1@gmail.com` are plausibly real
+  people's mailboxes. Committing fabricated accounts on them puts other parties' addresses in
+  the repository, which §6.1 rules out, and it would matter the moment anything in the system
+  actually sent mail (the §4.4 bonus list includes a simulated email notifier).
+- **Resolution:** the choice was the author's; I offered documentation-reserved alternatives that
+  still read naturally. `@example.com` (RFC 2606) was chosen — it looks like an ordinary address,
+  is universally recognised as an example, and cannot be registered by anyone.
+- **Changed at the source, not in the output:** `scripts/generate-seed.py` holds the user list;
+  `database/seed.sql` and `schema-and-seed.sql` were regenerated from it. Verified the generator
+  is deterministic: the regenerated seed differs from the committed one on **exactly the seven
+  email lines and nothing else**.
+- **Verified against a rebuilt database**, since the MySQL entrypoint only imports the seed when
+  the volume is created — editing the file alone would have left the old addresses live. After
+  `./run.sh reset`: all seven accounts present, three roles log in and reach their dashboards,
+  and `inactive@example.com` is refused 401 with `/dashboard` still redirecting (AUTH-01).
+- **Recorded results re-run rather than search-and-replaced.** `docs/testing/test-results.md`
+  contains executed evidence; editing the addresses in place would have left a PASS describing a
+  command nobody ran. TS-AUTH-01-1/2/3/5/6 and TS-USR-01-4 were re-executed against the new seed.
+- **One claim corrected while re-running it:** the document said the unknown-user and
+  wrong-password responses differ only by the CSRF token. They also differ by the email echoed
+  back into the form — which VAL-01 *requires* to be retained. With both normalised the bodies
+  are byte-identical, so there is still no user enumeration, but the original sentence overstated
+  what had been compared. Corrected in place with the reason given.
+
 ---
 
 ## Outstanding verification register
@@ -653,7 +681,7 @@ included. Proven by `Tests\Unit\SalesOrderServiceTest`:
 The last two are the pair that matters: either alone would be satisfied by a wrong
 implementation. Together they show the check is `approved_by != created_by` and not "Admins may
 always approve" or "orders raised by an Admin can never be approved". The seed carries a second
-Admin (`admin2@ioms.test`) specifically so the second case is demonstrable live.
+Admin (`admin2@example.com`) specifically so the second case is demonstrable live.
 
 **The register is now empty.** No AI-derived claim in this project is unproven.
 

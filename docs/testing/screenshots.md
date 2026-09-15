@@ -1,8 +1,13 @@
 # UI screenshots (UI-01, VIEW-01)
 
 Captured against the running Docker stack at `http://localhost:8080`, signed in as
-`admin@ioms.test` (role `Admin`). Sixteen PNGs, two viewports per page: **desktop 1440x900** and
+`admin@example.com` (role `Admin`). Sixteen PNGs, two viewports per page: **desktop 1440x900** and
 **mobile 360x800**. All files live in `docs/testing/screenshots/`.
+
+**Note on the addresses.** The demo accounts were renamed from `@ioms.test` to `@example.com`
+after these images were taken. No screenshot shows an email address — the login form renders
+empty and the top bar carries the display name ("Rizky Admin"), not the address — so the images
+are unaffected; only the capture procedure below was updated.
 
 **Re-captured 2026-09-15.** The first set was taken on 2026-09-04 and went stale when the
 navigation gained icons and every form gained client-side validation. Screenshots that no longer
@@ -117,7 +122,7 @@ mkdir -p /tmp/agent5 && cd /tmp/agent5
 curl -s -c cookie.txt http://localhost:8080/login -o login.html
 TOKEN=$(grep -o 'name="_token" value="[^"]*"' login.html | head -1 | sed 's/.*value="//;s/"//')
 curl -s -b cookie.txt -c cookie.txt -X POST http://localhost:8080/login \
-  -d "_token=$TOKEN" -d "email=admin@ioms.test" -d "password=Password123!"
+  -d "_token=$TOKEN" -d "email=admin@example.com" -d "password=Password123!"
 
 # 2. Save each page
 curl -s -b cookie.txt http://localhost:8080/dashboard          -o dashboard.html

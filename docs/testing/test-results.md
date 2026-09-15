@@ -275,6 +275,15 @@ SELECT COUNT(*) FROM sales_orders
 
 ## 3. HTTP scenario results
 
+> **Demo addresses changed 2026-09-15**, from `@ioms.test` to `@example.com` (RFC 2606, reserved
+> for documentation and impossible to register — see the note in `scripts/generate-seed.py`).
+> The AUTH-01 and USR-01 rows below were **re-run against the rebuilt database** rather than
+> having their addresses edited in place: a recorded PASS has to describe a command that was
+> actually executed. The one wording change is in TS-AUTH-01-5 — the two login failure responses
+> differ by the email the user typed back into the form, which VAL-01 requires to be retained, so
+> the comparison normalises that as well as the CSRF token. The error message itself, and
+> everything else on the page, is byte-identical.
+
 Status codes are as observed by `curl -w '%{http_code}'`. "DB after" means the database was
 queried after the request to confirm what was or was not written.
 
@@ -282,12 +291,12 @@ queried after the request to confirm what was or was not written.
 
 | ID | Command / URL | Expected | Actual | Verdict |
 |---|---|---|---|---|
-| TS-AUTH-01-1 | `POST /login` admin@ioms.test | 302 then 200 | 302, `/dashboard` 200, Admin tiles rendered | PASS |
-| TS-AUTH-01-2 | `POST /login` sales1@ioms.test | 302 then 200 | 302, `/dashboard` 200, Sales tiles | PASS |
-| TS-AUTH-01-3 | `POST /login` warehouse1@ioms.test | 302 then 200 | 302, `/dashboard` 200, Warehouse tiles | PASS |
+| TS-AUTH-01-1 | `POST /login` admin@example.com | 302 then 200 | 302, `/dashboard` 200, Admin tiles rendered | PASS |
+| TS-AUTH-01-2 | `POST /login` sales1@example.com | 302 then 200 | 302, `/dashboard` 200, Sales tiles | PASS |
+| TS-AUTH-01-3 | `POST /login` warehouse1@example.com | 302 then 200 | 302, `/dashboard` 200, Warehouse tiles | PASS |
 | TS-AUTH-01-4 | `POST /login` valid email, wrong password | 401, generic message | **401**, "The email address or password is incorrect." | PASS |
-| TS-AUTH-01-5 | `POST /login` nosuch@ioms.test | 401, identical response | **401**; `diff` of the two bodies with the CSRF token normalised is **empty** | PASS |
-| TS-AUTH-01-6 | `POST /login` inactive@ioms.test | 401, no session | **401**, same generic message; `/dashboard` still 302 → `/login` | PASS |
+| TS-AUTH-01-5 | `POST /login` nosuch@example.com | 401, identical response | **401**; `diff` of the two bodies, with the CSRF token **and the echoed email** normalised, is **empty** | PASS |
+| TS-AUTH-01-6 | `POST /login` inactive@example.com | 401, no session | **401**, same generic message; `/dashboard` still 302 → `/login` | PASS |
 | TS-AUTH-01-7 | `GET` six protected URLs signed out | 302 → `/login` | all six **302** → `http://localhost:8080/login` | PASS |
 | TS-AUTH-01-8 | `PHPSESSID` before vs after login | must differ | `152f8679…` → `1842ac0a…` | PASS |
 | TS-AUTH-01-9 | `LEFT(password_hash,7)` | `$2y$` prefix | `$2y$10$` on every row, including the account created during testing | PASS |
@@ -312,7 +321,7 @@ login form to learn whether an address is registered or merely disabled.
 | TS-USR-01-1 | `POST /users` new Sales user | 302, row created | **302** → `/users`; id 8, hash `$2y$10$` | PASS |
 | TS-USR-01-2 | Log in as that user | success | 302 then `/dashboard` **200** | PASS |
 | TS-USR-01-3 | `POST /users/8/active` `activate=0` / `=1` | toggles, login follows | 302 each; `is_active` 0 then 1; login **401** while inactive, **302/200** after reactivation | PASS |
-| TS-USR-01-4 | `POST /users` email `sales1@ioms.test` | 422 | **422**, "That email address is already in use."; no second row | PASS |
+| TS-USR-01-4 | `POST /users` email `sales1@example.com` | 422 | **422**, "That email address is already in use."; no second row | PASS |
 | TS-USR-01-5 | `POST /users` `role=SuperUser` | 422 | **422** | PASS |
 | TS-USR-01-6 | `POST /users` `password=123` | 422 | **422** | PASS |
 | TS-USR-01-7 | `POST /users/1/active` `activate=0` as user 1 | 403, stays active | **403**, "You cannot deactivate your own account."; `is_active` still 1 | PASS |
@@ -477,7 +486,7 @@ because the same mistake could easily be misread as a defect at a defence.
 
 All three dashboards returned **200**. Every displayed figure was then re-derived in SQL.
 
-**Admin** (`/dashboard` as admin@ioms.test)
+**Admin** (`/dashboard` as admin@example.com)
 
 | Tile | Displayed | Independent SQL | Match |
 |---|---|---|---|
@@ -489,11 +498,11 @@ All three dashboards returned **200**. Every displayed figure was then re-derive
 | Sales orders by status | Draft 3, PendingApproval 4, Approved 4, Fulfilled 6, Cancelled 3 | identical | yes |
 | Needs reordering | SKU-ATK-0014 (11 / 35), SKU-KES-0028 (27 / 45) | identical | yes |
 
-**Sales** (`sales1@ioms.test`) — Your orders 10, Order value Rp 17.862.000, Drafts to submit 2,
+**Sales** (`sales1@example.com`) — Your orders 10, Order value Rp 17.862.000, Drafts to submit 2,
 Awaiting approval 2, and a status breakdown of 2/2/2/2/2. `SELECT COUNT(*) … WHERE created_by = 2`
 returns **10**, matching the tile, and the breakdown sums to it.
 
-**Warehouse** (`warehouse1@ioms.test`) — Goods receipt queue 6, Goods issue queue 4, Units in
+**Warehouse** (`warehouse1@example.com`) — Goods receipt queue 6, Goods issue queue 4, Units in
 stock 5.077, Below reorder point 2. Independent SQL: `status IN ('Ordered','PartiallyReceived')`
 = **6**; `sales_orders.status = 'Approved'` = **4**. Both match.
 
@@ -650,7 +659,7 @@ is also why nothing was cleaned up afterwards.
 
 | What | Detail |
 |---|---|
-| User id 8 | `qa.test@ioms.test`, Sales, left **deactivated** |
+| User id 8 | `qa.test@example.com`, Sales, left **deactivated** |
 | Product id 229 | `T-IMG-OK`, "Good Image Test", left **deactivated**, holds one uploaded 1×1 PNG |
 | Category id 7 | created as `<script>alert(1)</script>` for the escaping test, then renamed to "QA Escaping Test" |
 | `PO-2026-0016` (id 16) | one line of 15 × `SKU-ELK-0001` into Gudang Bandung, now `Received` |

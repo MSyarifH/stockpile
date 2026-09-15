@@ -207,7 +207,7 @@ cmd_start() {
     fi
 
     printf '\n  %sOpen%s   http://localhost:%s\n' "$BOLD" "$RESET" "$app_port"
-    printf '  %sSign in%s admin@ioms.test / Password123!  %s(all demo accounts are in README.md)%s\n' \
+    printf '  %sSign in%s admin@example.com / Password123!  %s(all demo accounts are in README.md)%s\n' \
         "$BOLD" "$RESET" "$DIM" "$RESET"
     printf '  %sMySQL%s   localhost:%s\n\n' "$BOLD" "$RESET" "$db_port"
 }
@@ -391,7 +391,7 @@ ${BOLD}Getting inside${RESET}
 ${BOLD}Once it is running${RESET}
 
   Open      ${BOLD}http://localhost:${app_port}${RESET}
-  Sign in   admin@ioms.test / Password123!   ${DIM}(every demo account is in README.md)${RESET}
+  Sign in   admin@example.com / Password123!   ${DIM}(every demo account is in README.md)${RESET}
   MySQL     localhost:${db_port}
 
 ${DIM}Ports are read from .env (APP_PORT, DB_PORT_HOST), which is created from

@@ -13,8 +13,8 @@ something has not been shown to exist.
 
 - Base URL `http://localhost:8080`. The stack is started with `docker compose up -d`.
 - Demo accounts all use the password `Password123!`:
-  `admin@ioms.test`, `admin2@ioms.test` (Admin); `sales1@ioms.test`, `sales2@ioms.test` (Sales);
-  `warehouse1@ioms.test`, `warehouse2@ioms.test` (Warehouse Staff); `inactive@ioms.test`
+  `admin@example.com`, `admin2@example.com` (Admin); `sales1@example.com`, `sales2@example.com` (Sales);
+  `warehouse1@example.com`, `warehouse2@example.com` (Warehouse Staff); `inactive@example.com`
   (deactivated Sales account).
 - Every state-changing request is a `POST` carrying a `_token` field. Checks driven with `curl`
   therefore GET the relevant page first, extract `name="_token" value="…"`, and reuse one cookie
@@ -31,12 +31,12 @@ something has not been shown to exist.
 
 | ID | Precondition | Steps | Expected result |
 |---|---|---|---|
-| TS-AUTH-01-1 | Signed out | POST `/login` with `admin@ioms.test` / correct password | 302 to the Admin dashboard; `/dashboard` then returns 200 |
-| TS-AUTH-01-2 | Signed out | Same for `sales1@ioms.test` | 302, then `/dashboard` 200 showing the Sales dashboard |
-| TS-AUTH-01-3 | Signed out | Same for `warehouse1@ioms.test` | 302, then `/dashboard` 200 showing the Warehouse dashboard |
+| TS-AUTH-01-1 | Signed out | POST `/login` with `admin@example.com` / correct password | 302 to the Admin dashboard; `/dashboard` then returns 200 |
+| TS-AUTH-01-2 | Signed out | Same for `sales1@example.com` | 302, then `/dashboard` 200 showing the Sales dashboard |
+| TS-AUTH-01-3 | Signed out | Same for `warehouse1@example.com` | 302, then `/dashboard` 200 showing the Warehouse dashboard |
 | TS-AUTH-01-4 **(neg)** | Signed out | POST `/login` with a valid email and a wrong password | 401, login form redisplayed with a message that names neither field |
 | TS-AUTH-01-5 **(neg)** | Signed out | POST `/login` with an email that does not exist | 401 and a response **byte-identical** to TS-AUTH-01-4 once the CSRF token is normalised, so the response cannot be used to enumerate accounts |
-| TS-AUTH-01-6 **(neg)** | `inactive@ioms.test` exists with `is_active = 0` | POST `/login` with its correct password | 401; no session established; `/dashboard` still redirects to `/login` |
+| TS-AUTH-01-6 **(neg)** | `inactive@example.com` exists with `is_active = 0` | POST `/login` with its correct password | 401; no session established; `/dashboard` still redirects to `/login` |
 | TS-AUTH-01-7 **(neg)** | Signed out | GET `/dashboard`, `/products`, `/users`, `/purchase-orders`, `/sales-orders`, `/reports` | every one 302 to `/login`; no page content served |
 | TS-AUTH-01-8 | Signed out | Record `PHPSESSID` from the login page, log in, record it again | the two identifiers differ, proving `session_regenerate_id(true)` ran |
 | TS-AUTH-01-9 | Any account seeded | Read `users.password_hash` | every row is a `$2y$` bcrypt hash; no plaintext or reversible value |
@@ -56,7 +56,7 @@ something has not been shown to exist.
 | TS-USR-01-1 | Signed in as Admin | POST `/users` with a new name, unique email, strong password, role `Sales` | 302 to `/users`; the row exists with a `$2y$` hash |
 | TS-USR-01-2 | The user from TS-USR-01-1 | Log in as that user | succeeds, proving the created credential is usable |
 | TS-USR-01-3 | Same user | POST `/users/{id}/active` with `activate=0`, then `activate=1` | 302 each time; `is_active` follows; login fails while deactivated and succeeds again after reactivation |
-| TS-USR-01-4 **(neg)** | Signed in as Admin | POST `/users` reusing `sales1@ioms.test` | 422 and the message "That email address is already in use."; no second row created |
+| TS-USR-01-4 **(neg)** | Signed in as Admin | POST `/users` reusing `sales1@example.com` | 422 and the message "That email address is already in use."; no second row created |
 | TS-USR-01-5 **(neg)** | Signed in as Admin | POST `/users` with `role=SuperUser` | 422; the role enumeration is closed to `Admin`/`Sales`/`WarehouseStaff` |
 | TS-USR-01-6 **(neg)** | Signed in as Admin | POST `/users` with `password=123` | 422; weak passwords refused server-side |
 | TS-USR-01-7 **(neg)** | Signed in as Admin (id 1) | POST `/users/1/active` with `activate=0` | 403 "You cannot deactivate your own account."; the account stays active, so a single Admin cannot lock everyone out |

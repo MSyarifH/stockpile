@@ -47,7 +47,7 @@ Run with no arguments it prints the menu and starts nothing: one of these comman
 database volume, so the default is the harmless one.
 
 
-Sign in with `admin@ioms.test` / `Password123!` (all demo accounts are listed below).
+Sign in with `admin@example.com` / `Password123!` (all demo accounts are listed below).
 
 ### Ports
 
@@ -109,13 +109,13 @@ All accounts use the password `Password123!`.
 
 | Email | Role | Purpose |
 |---|---|---|
-| `admin@ioms.test` | Admin | Full access; approves sales orders |
-| `admin2@ioms.test` | Admin | Second Admin — an order's creator may never approve it, so an Admin-raised order needs a different Admin |
-| `sales1@ioms.test` | Sales | Creates and submits sales orders |
-| `sales2@ioms.test` | Sales | Second Sales user, to test order ownership |
-| `warehouse1@ioms.test` | Warehouse Staff | Goods receipt and goods issue |
-| `warehouse2@ioms.test` | Warehouse Staff | Second warehouse user |
-| `inactive@ioms.test` | Sales (inactive) | Demonstrates that inactive users cannot log in |
+| `admin@example.com` | Admin | Full access; approves sales orders |
+| `admin2@example.com` | Admin | Second Admin — an order's creator may never approve it, so an Admin-raised order needs a different Admin |
+| `sales1@example.com` | Sales | Creates and submits sales orders |
+| `sales2@example.com` | Sales | Second Sales user, to test order ownership |
+| `warehouse1@example.com` | Warehouse Staff | Goods receipt and goods issue |
+| `warehouse2@example.com` | Warehouse Staff | Second warehouse user |
+| `inactive@example.com` | Sales (inactive) | Demonstrates that inactive users cannot log in |
 
 These are demo credentials for assessment. Real values belong in `.env`, which is git-ignored.
 

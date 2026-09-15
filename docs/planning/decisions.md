@@ -63,7 +63,7 @@ form, the JSON API and any script.
 **Operational consequence, and how it is handled.** With only one Admin account, an order raised
 by that Admin could never be approved by anyone — the control would deadlock the system. A rule
 that can wedge the business is not a safe rule. A **second Admin account** is therefore seeded
-(`admin2@ioms.test`). §7.1 specifies one Admin as a *minimum*, not a maximum, so this stays
+(`admin2@example.com`). §7.1 specifies one Admin as a *minimum*, not a maximum, so this stays
 within the brief, and it makes the "Admin cannot approve their own order" scenario demonstrable
 rather than theoretical.
 

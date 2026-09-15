@@ -281,13 +281,13 @@ INSERT INTO warehouses (id, name, location, is_active) VALUES
   (3, 'Gudang Surabaya', 'Jl. Rungkut Industri 8, Surabaya', 1);
 
 INSERT INTO users (id, name, email, password_hash, role, is_active) VALUES
-  (1, 'Rizky Admin', 'admin@ioms.test', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Admin', 1),
-  (2, 'Sinta Sales', 'sales1@ioms.test', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Sales', 1),
-  (3, 'Bagus Sales', 'sales2@ioms.test', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Sales', 1),
-  (4, 'Wawan Gudang', 'warehouse1@ioms.test', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'WarehouseStaff', 1),
-  (5, 'Dewi Gudang', 'warehouse2@ioms.test', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'WarehouseStaff', 1),
-  (6, 'Nonaktif Sales', 'inactive@ioms.test', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Sales', 0),
-  (7, 'Putri Admin', 'admin2@ioms.test', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Admin', 1);
+  (1, 'Rizky Admin', 'admin@example.com', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Admin', 1),
+  (2, 'Sinta Sales', 'sales1@example.com', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Sales', 1),
+  (3, 'Bagus Sales', 'sales2@example.com', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Sales', 1),
+  (4, 'Wawan Gudang', 'warehouse1@example.com', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'WarehouseStaff', 1),
+  (5, 'Dewi Gudang', 'warehouse2@example.com', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'WarehouseStaff', 1),
+  (6, 'Nonaktif Sales', 'inactive@example.com', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Sales', 0),
+  (7, 'Putri Admin', 'admin2@example.com', '$2y$10$vh5iiFvhaS53oJehaDv9GuBrN3lMIG/uM08JL9rDZZnlua7OePlPi', 'Admin', 1);
 
 INSERT INTO suppliers (id, name, contact, address, is_active) VALUES
   (1, 'PT Sinar Elektronik', '021-5550101', 'Jl. Gajah Mada 17, Jakarta', 1),

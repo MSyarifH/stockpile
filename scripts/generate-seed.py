@@ -31,15 +31,20 @@ WAREHOUSES = [
  ("Gudang Surabaya","Jl. Rungkut Industri 8, Surabaya"),
 ]
 USERS = [
- ("Rizky Admin",      "admin@ioms.test",      "Admin",          1),
- ("Sinta Sales",      "sales1@ioms.test",     "Sales",          1),
- ("Bagus Sales",      "sales2@ioms.test",     "Sales",          1),
- ("Wawan Gudang",     "warehouse1@ioms.test", "WarehouseStaff", 1),
- ("Dewi Gudang",      "warehouse2@ioms.test", "WarehouseStaff", 1),
- ("Nonaktif Sales",   "inactive@ioms.test",   "Sales",          0),  # proves AUTH-01 inactive-login rule
+ # Addresses use example.com, reserved for documentation by RFC 2606 and so
+ # impossible for anyone to register. A real provider such as gmail.com would
+ # have put fabricated accounts on addresses that may belong to actual people
+ # -- §6.1 rules out committing other parties' data, and it would matter the
+ # moment anything in this system actually sent mail.
+ ("Rizky Admin",      "admin@example.com",      "Admin",          1),
+ ("Sinta Sales",      "sales1@example.com",     "Sales",          1),
+ ("Bagus Sales",      "sales2@example.com",     "Sales",          1),
+ ("Wawan Gudang",     "warehouse1@example.com", "WarehouseStaff", 1),
+ ("Dewi Gudang",      "warehouse2@example.com", "WarehouseStaff", 1),
+ ("Nonaktif Sales",   "inactive@example.com",   "Sales",          0),  # proves AUTH-01 inactive-login rule
  # Second Admin exists for a reason: approved_by must never equal created_by (D2).
  # With a single Admin, any order an Admin raised could never be approved by anyone.
- ("Putri Admin",      "admin2@ioms.test",     "Admin",          1),
+ ("Putri Admin",      "admin2@example.com",     "Admin",          1),
 ]
 SUPPLIERS = [
  ("PT Sinar Elektronik","021-5550101","Jl. Gajah Mada 17, Jakarta"),
