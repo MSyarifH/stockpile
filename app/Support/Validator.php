@@ -191,9 +191,31 @@ final class Validator
         $this->errors[$field] = $this->label($field) . ' ' . $message;
     }
 
+    /**
+     * Turns a field name into the words a user reads in an error message.
+     *
+     * Three rules, no per-field table. A lookup table mapping every field to a
+     * caption would have to be maintained here AND mirrored in
+     * public/assets/form-validate.js, which produces the same messages in the
+     * browser; two tables for one concept is exactly the duplication that
+     * design avoids. These rules are small enough to implement identically on
+     * both sides, and they are what made the difference between "Category id is
+     * required." and "Category is required.".
+     *
+     * A foreign key's label drops the "_id": the user chose a *category*, and
+     * has no idea the form posts its id.
+     */
     private function label(string $field): string
     {
-        return ucfirst(str_replace('_', ' ', $field));
+        $words = str_replace('_', ' ', $field);
+        $words = preg_replace('/ id$/', '', $words) ?? $words;
+
+        // "SKU" is an acronym everywhere in this domain; "Sku" reads as a typo.
+        if ($words === 'sku') {
+            return 'SKU';
+        }
+
+        return ucfirst($words);
     }
 
     /** @return array<string,string> */

@@ -7,6 +7,7 @@ namespace Tests\Unit;
 use App\Support\Exception\ValidationException;
 use App\Support\Validator;
 use LogicException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -213,6 +214,65 @@ final class ValidatorTest extends TestCase
             self::fail('Expected validation to fail.');
         } catch (ValidationException $e) {
             self::assertSame('Reorder point is required.', $e->errors()['reorder_point']);
+        }
+    }
+
+    /**
+     * A foreign key is an implementation detail. The user picked a category;
+     * they never saw an id and should not be told one is missing.
+     */
+    public function testForeignKeyFieldsAreNamedAfterTheThingNotTheColumn(): void
+    {
+        try {
+            $this->validate(['category_id' => ''], ['category_id' => 'required']);
+            self::fail('Expected validation to fail.');
+        } catch (ValidationException $e) {
+            self::assertSame('Category is required.', $e->errors()['category_id']);
+        }
+    }
+
+    public function testSkuIsRenderedAsAnAcronym(): void
+    {
+        try {
+            $this->validate(['sku' => ''], ['sku' => 'required']);
+            self::fail('Expected validation to fail.');
+        } catch (ValidationException $e) {
+            self::assertSame('SKU is required.', $e->errors()['sku']);
+        }
+    }
+
+    /**
+     * Pins the exact wording the browser has to reproduce.
+     *
+     * public/assets/form-validate.js renders these same sentences client-side
+     * so a user reads one message whether the check ran before or after the
+     * POST. That mirroring is a convention, not something PHP can enforce, so
+     * this test is the tripwire: change the rule here and it fails, which is
+     * the prompt to change labelFor() in the script to match.
+     *
+     * @return list<array{string, string}>
+     */
+    public static function labelCases(): array
+    {
+        return [
+            ['sku', 'SKU is required.'],
+            ['category_id', 'Category is required.'],
+            ['warehouse_id', 'Warehouse is required.'],
+            ['product_id', 'Product is required.'],
+            ['current_password', 'Current password is required.'],
+            ['email', 'Email is required.'],
+            ['name', 'Name is required.'],
+        ];
+    }
+
+    #[DataProvider('labelCases')]
+    public function testLabelWordingTheBrowserMustMatch(string $field, string $expected): void
+    {
+        try {
+            $this->validate([$field => ''], [$field => 'required']);
+            self::fail('Expected validation to fail.');
+        } catch (ValidationException $e) {
+            self::assertSame($expected, $e->errors()[$field]);
         }
     }
 }

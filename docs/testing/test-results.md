@@ -184,6 +184,8 @@ $ "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --di
     "file://$PWD/docs/testing/form-validate-harness.html"
 
 PASS  blank required email
+PASS  sku label is an acronym, matching the server
+PASS  foreign key drops the _id, matching the server
 PASS  malformed email
 PASS  negative number vs min=0
 PASS  fraction where step=1
@@ -194,7 +196,7 @@ PASS  array field label from name
 PASS  valid form submits (optional fields blank)
 PASS  error clears live once the value becomes valid
 
-10 of 10 passed.
+12 of 12 passed.
 ```
 
 **The first run was 7 of 10**, and the three failures were in the harness, not the script:
@@ -211,7 +213,7 @@ script's behaviour was the correct one and the expectation was wrong. The harnes
 Recorded here rather than quietly fixed, because a test that is adjusted to match the code is
 exactly the kind of change that needs to be visible.
 
-**Scope, stated plainly:** these 10 checks are **not** counted towards the TEST-01 minimum of six
+**Scope, stated plainly:** these 12 checks are **not** counted towards the TEST-01 minimum of six
 unit tests, which requires PHP test cases. They are evidence that the frontend half of VAL-01 was
 executed rather than assumed. The server-side half is covered by TS-VAL-01-1 … 11 in §3 and by
 the PHPUnit suite.

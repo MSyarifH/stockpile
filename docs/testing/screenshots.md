@@ -93,11 +93,14 @@ no page scrolls sideways at any width.
 empty: a red border and tint on each offending control, and a message naming it. Two things in
 those images are worth pointing at during the defence:
 
-- The wording — "Sku is required.", "Category id is required." — is derived from the field
-  **name** by the same rule `App\Support\Validator::label()` uses on the server, which is why it
-  reads slightly awkwardly. That is deliberate: the sentence is identical whether the check ran
-  in the browser or after the POST, and the alternative (friendlier text in the browser only)
-  would mean two wordings for one rule.
+- The wording — "SKU is required.", "Category is required." — is derived from the field **name**
+  by the same rule `App\Support\Validator::label()` uses on the server, so the sentence is
+  identical whether the check ran in the browser or after the POST. An earlier capture read
+  "Sku is required." and "Category id is required."; the fix was made in **both** halves, as
+  three shared rules (underscores to spaces, drop a trailing `_id`, upper-case `sku`) rather
+  than a per-field caption table that would have had to exist twice.
+  `ValidatorTest::testLabelWordingTheBrowserMustMatch` pins the server's output so the browser
+  copy cannot drift silently.
 - Colour is never the only signal. Each message is real text, and the control also carries
   `aria-invalid="true"` with `aria-describedby` pointing at the message, so the failure is
   available to a screen reader and to anyone who cannot distinguish the red border (UI-01).

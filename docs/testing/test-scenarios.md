@@ -240,6 +240,11 @@ cases above prove the server refuses the same input when the browser is bypassed
 | TS-VAL-01-F8 | `items[quantity][]` (`min="1"`) | `0` | "Quantity must be at least 1." — the label is derived from an array-style name |
 | TS-VAL-01-F9 | all fields | valid values | submit proceeds; no messages rendered |
 | TS-VAL-01-F10 | `email`, after failing | corrected to a valid address | message and `aria-invalid` clear on input, without a second submit |
+| TS-VAL-01-F11 | `sku` (required) | blank | "**SKU** is required." — the acronym, not "Sku" |
+| TS-VAL-01-F12 | `category_id` (required) | nothing chosen | "**Category** is required." — the `_id` is an implementation detail the user never saw |
+
+F11 and F12 exist as a pair with `ValidatorTest::testLabelWordingTheBrowserMustMatch`, which
+asserts the same two sentences server-side. Either one alone would let the two halves drift.
 
 **Cross-check tying the two halves together:** the message text in F1–F8 is produced by
 `form-validate.js` but written to match `App\Support\Validator::label()` and

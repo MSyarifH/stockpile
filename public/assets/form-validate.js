@@ -34,9 +34,13 @@
     var ERROR_SOURCE = 'client';
 
     /**
-     * Reproduces Validator::label(): the field name with underscores replaced
-     * by spaces and the first letter capitalised. Array inputs such as
-     * items[quantity][] reduce to their innermost segment, "Quantity".
+     * Reproduces Validator::label() exactly -- underscores to spaces, a
+     * trailing " id" dropped, "sku" upper-cased, then the first letter
+     * capitalised. Keep the two in step: they are three rules rather than a
+     * per-field table precisely so that staying in step is cheap.
+     *
+     * Array inputs such as items[quantity][] reduce to their innermost named
+     * segment, "Quantity".
      */
     function labelFor(field) {
         var name = field.getAttribute('name') || '';
@@ -47,7 +51,10 @@
                 ? segments[segments.length - 2].slice(1, -1)
                 : last;
         }
-        name = name.replace(/_/g, ' ');
+        name = name.replace(/_/g, ' ').replace(/ id$/, '');
+        if (name === 'sku') {
+            return 'SKU';
+        }
         return name.charAt(0).toUpperCase() + name.slice(1);
     }
 

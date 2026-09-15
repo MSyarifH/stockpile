@@ -31,6 +31,10 @@
     <input id="password" name="password" type="password" minlength="8"></div>
   <div class="field"><label for="order_date">Order date</label>
     <input id="order_date" name="order_date" type="date" max="2026-09-14"></div>
+  <div class="field"><label for="sku">SKU</label>
+    <input id="sku" name="sku" type="text" required></div>
+  <div class="field"><label for="category_id">Category</label>
+    <select id="category_id" name="category_id" required><option value="">Choose…</option><option value="1">One</option></select></div>
   <div class="field"><input name="items[quantity][]" type="number" min="1"></div>
   <button type="submit">Go</button>
 </form>
@@ -55,35 +59,45 @@ function check(name, expected) {
   var got = r.messages.indexOf(expected) !== -1;
   results.push((got ? 'PASS  ' : 'FAIL  ') + name + (got ? '' : '\n        expected: ' + expected + '\n        got: ' + JSON.stringify(r.messages)));
 }
-function clearAll() { ['email','reorder_point','purchase_price','password','order_date'].forEach(function (i) { set(i, ''); });
+function clearAll() { ['email','reorder_point','purchase_price','password','order_date','sku'].forEach(function (i) { set(i, ''); });
+  document.getElementById('category_id').value = '1';
   document.querySelector('[name="items[quantity][]"]').value = ''; }
 
-clearAll();
+clearAll(); set('sku', 'SKU-1');
 check('blank required email', 'Email is required.');
+
+// These two pin the wording against tests/Unit/ValidatorTest.php
+// (testLabelWordingTheBrowserMustMatch). If the server's label rule changes and
+// this script is not updated, these fail.
+clearAll(); set('email', 'a@b.co'); set('sku', '');
+check('sku label is an acronym, matching the server', 'SKU is required.');
+
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co'); set('sku', 'SKU-1'); document.getElementById('category_id').value = '';
+check('foreign key drops the _id, matching the server', 'Category is required.');
 
 clearAll(); set('email', 'not-an-email');
 check('malformed email', 'Email must be a valid email address.');
 
-clearAll(); set('email', 'a@b.co'); set('reorder_point', '-1');
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co'); set('reorder_point', '-1');
 check('negative number vs min=0', 'Reorder point must be at least 0.');
 
-clearAll(); set('email', 'a@b.co'); set('reorder_point', '2.5');
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co'); set('reorder_point', '2.5');
 check('fraction where step=1', 'Reorder point must be a whole number.');
 
-clearAll(); set('email', 'a@b.co'); set('purchase_price', '12.50');
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co'); set('purchase_price', '12.50');
 var r = attempt(function () {});
 results.push((r.messages.length === 0 && !r.blocked ? 'PASS  ' : 'FAIL  ') + 'decimal accepted where step=0.01 -> ' + JSON.stringify(r.messages));
 
-clearAll(); set('email', 'a@b.co'); set('password', 'short');
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co'); set('password', 'short');
 check('password below minlength', 'Password must be at least 8 characters.');
 
-clearAll(); set('email', 'a@b.co'); set('order_date', '2027-01-01');
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co'); set('order_date', '2027-01-01');
 check('future date beyond max', 'Order date cannot be later than 2026-09-14.');
 
-clearAll(); set('email', 'a@b.co'); document.querySelector('[name="items[quantity][]"]').value = '0';
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co'); document.querySelector('[name="items[quantity][]"]').value = '0';
 check('array field label from name', 'Quantity must be at least 1.');
 
-clearAll(); set('email', 'a@b.co');
+clearAll(); set('sku', 'SKU-1'); set('email', 'a@b.co');
 r = attempt(function () {});
 results.push((!r.blocked && r.messages.length === 0 ? 'PASS  ' : 'FAIL  ') + 'valid form submits (optional fields blank)');
 

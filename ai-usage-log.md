@@ -600,6 +600,25 @@ library, having established that §4 permits a credited one.
   before and after all three refactors". That is a historical statement about when R1-R3
   happened and is accurate; rewriting it to 129 would falsify the record.
 
+### AI-40 · Fixing the label wording without reintroducing duplication
+- **Prompt summary:** approved fixing the awkward "Sku"/"Category id" wording I had flagged.
+- **Output rejected:** the first suggestion was a per-field caption map in `Validator`. Rejected
+  because `form-validate.js` renders the same sentences, so the map would have to exist twice —
+  the duplication refactor R4 was written to remove. A one-line improvement that undoes the
+  design it sits inside is not an improvement.
+- **Output accepted:** extend the derivation rule instead, identically in both halves — drop a
+  trailing `_id`, upper-case `sku`, then capitalise. Three lines each, no table.
+- **Verified by mutation, not by a green run:** removed the two new rules from `Validator` and
+  confirmed **six** unit tests turn red, then restored them. A test that stays green when the
+  behaviour it names is deleted is not evidence.
+- **Cross-half drift guarded explicitly:** `ValidatorTest::testLabelWordingTheBrowserMustMatch`
+  pins seven exact sentences server-side, and the browser harness gained the two matching cases
+  (now 12 of 12). PHP cannot enforce that a JavaScript file agrees with it, so the tripwire is
+  the substitute: change the rule and the suite says so.
+- **Evidence re-captured:** `products-create-invalid-*.png` retaken, since the previous pair
+  showed the old wording — the same staleness problem as AI-38, avoided this time by noticing
+  before committing rather than after.
+
 ---
 
 ## Outstanding verification register

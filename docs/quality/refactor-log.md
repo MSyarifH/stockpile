@@ -278,6 +278,37 @@ level 6 clean, PSR-12 clean.
 **Result:** 1 form validated → 12. One file deleted, one added; net −24 lines
 of duplicated intent, +1 shared behaviour.
 
+### R4a — follow-up: the shared wording was accurate but not readable
+
+Capturing the validation screenshots showed what the mirrored wording actually
+produced: **"Sku is required."** and **"Category id is required."**. Both were
+correct — the browser reproduced `Validator::label()` exactly — and both read
+like a database column talking to a user.
+
+The tempting fix was a caption table, `['sku' => 'SKU', 'category_id' => 'Category', …]`.
+Rejected: that table would have to exist in `Validator` **and** in
+`form-validate.js`, and a field added to one and forgotten in the other would
+regress silently. It trades a small ugliness for the exact duplication R4 was
+written to remove.
+
+Instead the *rule* was extended, in both halves, to three lines each:
+
+```php
+$words = str_replace('_', ' ', $field);
+$words = preg_replace('/ id$/', '', $words) ?? $words;   // the user picked a category, not an id
+if ($words === 'sku') { return 'SKU'; }                  // an acronym everywhere in this domain
+return ucfirst($words);
+```
+
+**Kept honest by tests, not by discipline.** `ValidatorTest` gained a data
+provider, `testLabelWordingTheBrowserMustMatch`, asserting the exact sentence
+for seven field names, and the browser harness gained the matching two cases.
+Verified by mutation: deleting the `_id` line and the `sku` branch turns **six**
+unit tests red, so the rule cannot be quietly removed.
+
+**Result:** 138 tests (was 129). Wording fixed in one place per half, with no
+table to keep in step.
+
 ---
 
 ## Not refactored — and why
