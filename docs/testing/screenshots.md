@@ -1,8 +1,15 @@
 # UI screenshots (UI-01, VIEW-01)
 
-Captured against the running Docker stack at `http://localhost:8080` on 2026-09-04, signed in as
-`admin@ioms.test` (role `Admin`). Fourteen PNGs, two viewports per page: **desktop 1440x900** and
+Captured against the running Docker stack at `http://localhost:8080`, signed in as
+`admin@ioms.test` (role `Admin`). Sixteen PNGs, two viewports per page: **desktop 1440x900** and
 **mobile 360x800**. All files live in `docs/testing/screenshots/`.
+
+**Re-captured 2026-09-15.** The first set was taken on 2026-09-04 and went stale when the
+navigation gained icons and every form gained client-side validation. Screenshots that no longer
+match the running application are misleading evidence, so all of them were retaken rather than
+partially updated, and one new page was added for the validation messages. The capture is now
+driven by a committed script, [`capture-screenshots.js`](capture-screenshots.js), so an assessor
+can regenerate the set instead of taking these on trust.
 
 ## Inventory
 
@@ -22,6 +29,8 @@ Captured against the running Docker stack at `http://localhost:8080` on 2026-09-
 | `sales-orders-360.png` | `/sales-orders` | 360x800 | Order rows as stacked cards; `Cancelled` status badge visible. |
 | `products-create-desktop.png` | `/products/create` | 1440x900 | Create-product form, constrained-width card. |
 | `products-create-360.png` | `/products/create` | 360x800 | Same form, full-width fields, labels above inputs. |
+| `products-create-invalid-desktop.png` | `/products/create` | 1440x900 | **Client-side validation (VAL-01)**: an empty submit blocked by `form-validate.js`, each field marked and named. |
+| `products-create-invalid-360.png` | `/products/create` | 360x800 | The same messages at mobile width. |
 
 ## What the 360px captures actually show about UI-01
 
@@ -66,9 +75,32 @@ way. The filter bar, buttons, badges and pagination all fit as well.
 
 ### The navigation, after the fix
 
-`dashboard-360.png` and `products-360.png` show the ten Admin links wrapped across four rows,
+`dashboard-360.png` and `products-360.png` show the ten Admin links wrapped across five rows,
 with the role badge, user name and Sign out button below them. Nothing is clipped. This is the
 worst case: Sales and Warehouse Staff see fewer links and therefore fewer rows.
+
+**Five rows, not the four in the original capture.** Each link now carries an icon, which widens
+it. That is exactly the change that could have reintroduced the overflow this section documents,
+so it was measured rather than eyeballed: `document.scrollWidth == document.clientWidth` at 485,
+753 and 1425 CSS pixels, and the widest element that cannot be broken across lines is the
+badge/name/Sign-out block at **268px**, against a **328px** budget at 360px (360 minus the 16px
+side gutters). Wrapping onto one more row is the layout absorbing the extra width correctly;
+no page scrolls sideways at any width.
+
+### The validation messages
+
+`products-create-invalid-*.png` show what `form-validate.js` renders when the form is submitted
+empty: a red border and tint on each offending control, and a message naming it. Two things in
+those images are worth pointing at during the defence:
+
+- The wording — "Sku is required.", "Category id is required." — is derived from the field
+  **name** by the same rule `App\Support\Validator::label()` uses on the server, which is why it
+  reads slightly awkwardly. That is deliberate: the sentence is identical whether the check ran
+  in the browser or after the POST, and the alternative (friendlier text in the browser only)
+  would mean two wordings for one rule.
+- Colour is never the only signal. Each message is real text, and the control also carries
+  `aria-invalid="true"` with `aria-describedby` pointing at the message, so the failure is
+  available to a screen reader and to anyone who cannot distinguish the red border (UI-01).
 
 ## How these were captured
 
@@ -106,15 +138,20 @@ done
   --headless=new --disable-gpu --hide-scrollbars --no-sandbox \
   --remote-debugging-port=9222 --user-data-dir=/tmp/agent5/cdcdp about:blank &
 
-# 5. Screenshot each file at both viewports (shot.js, below)
-node shot.js
+# 5. Screenshot each file at both viewports
+node docs/testing/capture-screenshots.js /tmp/agent5 docs/testing/screenshots
 ```
 
-`shot.js` drives one Chrome tab over the DevTools protocol using Node 22's built-in `WebSocket`
-(no npm packages). For each page it sets the viewport with
+`capture-screenshots.js` (committed next to this document) drives one Chrome tab over the
+DevTools protocol using Node 22's built-in `WebSocket` (no npm packages, no `package.json` — it
+is a documentation tool, not part of the application). For each page it sets the viewport with
 `Emulation.setDeviceMetricsOverride { width, height, deviceScaleFactor: 1, mobile: false }`,
 navigates to the `file://` URL, waits 1.2s, then calls `Page.captureScreenshot` and writes the
 base64 PNG. The two viewports are `1440x900` and `360x800`.
+
+The script **asserts the viewport it got**: it reads `window.innerWidth` back and aborts if it is
+not the width requested, rather than writing a PNG that misrepresents the layout. That check
+exists because of the clamp described next, which produced exactly such a picture once.
 
 ### Why `--window-size=360,800` was not used
 

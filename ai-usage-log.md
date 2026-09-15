@@ -569,22 +569,74 @@ library, having established that §4 permits a credited one.
   tests green, PHPStan clean, PSR-12 clean and zero ledger drift. Torn down afterwards, leaving
   no containers or volumes.
 
+### AI-38 · Re-capturing the UI evidence, and committing the tool that makes it
+- **Prompt summary:** asked what remained outstanding before release.
+- **Found, not suggested:** the fourteen UI-01 screenshots were captured on 2026-09-04; the
+  navigation gained icons and every form gained client-side validation on 2026-09-14. The
+  evidence no longer showed the application. §8.2 treats evidence that does not match the code
+  as a critical failure where the class diagram is concerned, and screenshots are the same kind
+  of claim about the same code.
+- **Output accepted:** all sixteen PNGs re-captured (two new ones for the validation messages),
+  and `docs/testing/capture-screenshots.js` committed so the set can be regenerated instead of
+  being taken on trust. Node 22's built-in WebSocket only — no npm packages, no `package.json`,
+  nothing for §4 to object to, and it is a documentation tool rather than part of the app.
+- **Output rejected:** re-capturing only the pages whose appearance "obviously" changed. Every
+  authenticated page carries the navigation, so every one of them had changed.
+- **Verified:** the script now reads `window.innerWidth` back after each viewport override and
+  aborts if it is not the width requested, rather than writing a PNG that misrepresents the
+  layout — the failure mode that the macOS 500px clamp had already produced once. Both new
+  captures were opened and read, not merely confirmed to exist.
+- **Observed and deliberately not "fixed":** the client-side messages read "Sku is required."
+  and "Category id is required.". That is `Validator::label()`'s wording, reproduced exactly.
+  Making the browser friendlier on its own would give one rule two wordings, which is the
+  duplication the design exists to avoid. Documented in `docs/testing/screenshots.md` instead.
+
+### AI-39 · Closing the register, and refreshing stale numbers
+- **AI-03 and AI-12 cleared** with the evidence recorded above. The register is now empty.
+- **`docs/testing/test-results.md` reported 102 tests**, correct when written and superseded
+  since. Re-run at the final state and updated to 129 (123 unit + 6 integration), with the
+  supersession stated in the document rather than silently overwritten.
+- **Left alone deliberately:** `docs/quality/refactor-log.md` still says "100 tests passed
+  before and after all three refactors". That is a historical statement about when R1-R3
+  happened and is accurate; rewriting it to 129 would falsify the record.
+
 ---
 
 ## Outstanding verification register
 
 Items where AI output is accepted as understanding but **not yet proven in this project**.
-Each must move to verified, or be removed, before final release.
+Each must move to verified, or be removed, before final release. As of 2026-09-15 every entry has
+been cleared; the cleared items are kept below rather than deleted, because what was once taken
+on trust and how it was later proven is the point of the register.
 
 **Cleared 2026-09-02:** AI-05 / AI-11 — `SELECT … FOR UPDATE` prevents oversell. Now proven by
 `Tests\Integration\StockMovementTest::testConcurrentIssuesCannotOversell` and
 `::testASecondTransactionCannotReadTheSameStockRowWhileItIsLocked`, both of which were confirmed
 to fail when the `FOR UPDATE` clause is removed.
 
-| Ref | Claim awaiting proof | Proof required |
-|---|---|---|
-| AI-03 | Chosen indexes serve the real queries | `EXPLAIN` on dashboard/report queries, output filed in `docs/quality/` |
-| AI-12 | `approved_by != created_by` enforced for every role | Unit test in Phase 5: Admin approving their own order is rejected |
+**Cleared 2026-09-15:** AI-03 — chosen indexes serve the real queries. Proven by
+`docs/quality/index-analysis.md`, which files measured `EXPLAIN` plans for the dashboard, report,
+list and stock queries. The analysis also **contradicted an earlier claim of my own**: ADR-002
+described the locking read as avoiding a table scan, while the measured plan shows `ref` on
+`idx_stock_warehouse` over 35 rows. The ADR was corrected to match the measurement.
+
+**Cleared 2026-09-15:** AI-12 — `approved_by != created_by` enforced for every role, Admin
+included. Proven by `Tests\Unit\SalesOrderServiceTest`:
+
+| Test | What it pins down |
+|---|---|
+| `testSalesCannotApproveAnyOrder` | Sales has no approval right at all |
+| `testSalesCannotApproveEvenTheirOwnOrder` | §1.2's explicit "tidak, meski order miliknya sendiri" |
+| `testWarehouseStaffCannotApprove` | Approval is not a warehouse activity |
+| `testAnAdminCannotApproveAnOrderTheyRaisedThemselves` | **The rule is about the person, not the role** — decision D2 |
+| `testADifferentAdminCanApproveThatSameOrder` | …and that the rule blocks the right thing only, so the flow is not deadlocked |
+
+The last two are the pair that matters: either alone would be satisfied by a wrong
+implementation. Together they show the check is `approved_by != created_by` and not "Admins may
+always approve" or "orders raised by an Admin can never be approved". The seed carries a second
+Admin (`admin2@ioms.test`) specifically so the second case is demonstrable live.
+
+**The register is now empty.** No AI-derived claim in this project is unproven.
 
 ---
 

@@ -43,28 +43,33 @@ PHPUnit 10.5.64 by Sebastian Bergmann and contributors.
 Runtime:       PHP 8.2.33
 Configuration: /var/www/html/phpunit.xml
 
-...............................................................  63 / 102 ( 61%)
-.......................................                         102 / 102 (100%)
+...............................................................  63 / 129 ( 48%)
+............................................................... 126 / 129 ( 97%)
+...                                                             129 / 129 (100%)
 
-Time: 00:06.176, Memory: 10.00 MB
+Time: 00:07.827, Memory: 10.00 MB
 
-OK (102 tests, 223 assertions)
+OK (129 tests, 269 assertions)
 ```
+
+*(Re-run 2026-09-15 at the final state of the code. The figures recorded here earlier — 102
+tests, 223 assertions — were correct when written and were superseded by later work; a results
+document that reports a number the suite no longer produces is not evidence of anything.)*
 
 Run separately, so the split between the two suites is visible:
 
 | Suite | Command | Result |
 |---|---|---|
-| unit | `vendor/bin/phpunit --testsuite unit` | `OK (96 tests, 205 assertions)` |
+| unit | `vendor/bin/phpunit --testsuite unit` | `OK (123 tests, 251 assertions)` |
 | integration | `vendor/bin/phpunit --testsuite integration` | `OK (6 tests, 18 assertions)` |
 
-96 + 6 = 102. Nothing is skipped, incomplete or marked risky; PHPUnit prints a bare `OK`, which
+123 + 6 = 129. Nothing is skipped, incomplete or marked risky; PHPUnit prints a bare `OK`, which
 it does not do when any test is skipped.
 
-The unit tests span eight logic areas — `AuthServiceTest`, `UserServiceTest`,
-`ProductServiceTest`, `StockServiceTest`, `PurchaseOrderServiceTest`, `SalesOrderServiceTest`,
-`ReportServiceTest`, `PaginationTest`, `CsvWriterTest` — comfortably above the required minimum
-of six tests across three areas. The integration suite is one file,
+The unit tests span ten logic areas — `AuthServiceTest`, `UserServiceTest`, `ProductServiceTest`,
+`StockServiceTest`, `PurchaseOrderServiceTest`, `SalesOrderServiceTest`, `ReportServiceTest`,
+`PaginationTest`, `CsvWriterTest`, `ValidatorTest` — comfortably above the required minimum of
+six tests across three areas. The integration suite is one file,
 `tests/Integration/StockMovementTest.php`, holding six tests against real MySQL.
 
 ### 1.2 Proof the unit suite needs no database (TS-TEST-2, TS-TEST-3, TS-TEST-4)
