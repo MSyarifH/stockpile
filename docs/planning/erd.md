@@ -2,6 +2,24 @@
 
 Drawn before implementation, from §1.3 of the brief. Reflects `database/schema.sql`.
 
+**StarUML version:** [`erd.mdj`](erd.mdj) holds the same 12 entities as a StarUML ER data model
+(12 entities, 90 columns, 17 relationships), for opening in a UML tool rather than reading as
+Mermaid. It is **generated** from `database/schema.sql` by
+[`scripts/export-staruml.py`](../../scripts/export-staruml.py) — regenerate it after any schema
+change rather than editing it, or the two will drift:
+
+```bash
+python3 scripts/export-staruml.py
+```
+
+> **`schema.sql` stays authoritative.** StarUML's ER model has no vocabulary for CHECK
+> constraints, secondary indexes, `ON DELETE`/`ON UPDATE` actions, storage engine or charset, so
+> the `.mdj` does not carry them and DDL generated from it would silently omit them. This
+> project depends on several: `CHECK (quantity >= 0)` is the last line of defence against
+> negative stock, and `UNIQUE (product_id, warehouse_id)` is what makes `SELECT … FOR UPDATE`
+> lock exactly one row instead of a range (ARCH-02). Create the database from
+> `database/schema-and-seed.sql`; use the `.mdj` to read and present the structure.
+
 ```mermaid
 erDiagram
     USERS ||--o{ PURCHASE_ORDERS : "creates"

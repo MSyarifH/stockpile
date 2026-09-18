@@ -1,0 +1,1908 @@
+{
+  "_type": "Project",
+  "_id": "AAAAAAGProject",
+  "name": "Stockpile",
+  "ownedElements": [
+    {
+      "_type": "ERDDataModel",
+      "_id": "AAAAAAGDataModel",
+      "_parent": {
+        "$ref": "AAAAAAGProject"
+      },
+      "name": "Stockpile schema",
+      "documentation": "Generated from database/schema.sql by scripts/export-staruml.py. Do not edit by hand -- the next regeneration overwrites it. CHECK constraints, secondary indexes and ON DELETE/ON UPDATE actions have no ER equivalent and are NOT represented here; schema.sql remains the authoritative definition.",
+      "ownedElements": [
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT000",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "users",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C00",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C01",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "name",
+              "type": "VARCHAR",
+              "length": 120,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C02",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "email",
+              "type": "VARCHAR",
+              "length": 190,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C03",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "password_hash",
+              "type": "VARCHAR",
+              "length": 255,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C04",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "role",
+              "type": "VARCHAR",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C05",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "is_active",
+              "type": "TINYINT",
+              "length": 1,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C06",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT000C07",
+              "_parent": {
+                "$ref": "ENT000"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT001",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "warehouses",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT001C00",
+              "_parent": {
+                "$ref": "ENT001"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT001C01",
+              "_parent": {
+                "$ref": "ENT001"
+              },
+              "name": "name",
+              "type": "VARCHAR",
+              "length": 120,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT001C02",
+              "_parent": {
+                "$ref": "ENT001"
+              },
+              "name": "location",
+              "type": "VARCHAR",
+              "length": 190,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT001C03",
+              "_parent": {
+                "$ref": "ENT001"
+              },
+              "name": "is_active",
+              "type": "TINYINT",
+              "length": 1,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT001C04",
+              "_parent": {
+                "$ref": "ENT001"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT001C05",
+              "_parent": {
+                "$ref": "ENT001"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT002",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "categories",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT002C00",
+              "_parent": {
+                "$ref": "ENT002"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT002C01",
+              "_parent": {
+                "$ref": "ENT002"
+              },
+              "name": "name",
+              "type": "VARCHAR",
+              "length": 120,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT002C02",
+              "_parent": {
+                "$ref": "ENT002"
+              },
+              "name": "description",
+              "type": "VARCHAR",
+              "length": 255,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT002C03",
+              "_parent": {
+                "$ref": "ENT002"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT002C04",
+              "_parent": {
+                "$ref": "ENT002"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT003",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "suppliers",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT003C00",
+              "_parent": {
+                "$ref": "ENT003"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT003C01",
+              "_parent": {
+                "$ref": "ENT003"
+              },
+              "name": "name",
+              "type": "VARCHAR",
+              "length": 150,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT003C02",
+              "_parent": {
+                "$ref": "ENT003"
+              },
+              "name": "contact",
+              "type": "VARCHAR",
+              "length": 120,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT003C03",
+              "_parent": {
+                "$ref": "ENT003"
+              },
+              "name": "address",
+              "type": "VARCHAR",
+              "length": 255,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT003C04",
+              "_parent": {
+                "$ref": "ENT003"
+              },
+              "name": "is_active",
+              "type": "TINYINT",
+              "length": 1,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT003C05",
+              "_parent": {
+                "$ref": "ENT003"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT003C06",
+              "_parent": {
+                "$ref": "ENT003"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT004",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "customers",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT004C00",
+              "_parent": {
+                "$ref": "ENT004"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT004C01",
+              "_parent": {
+                "$ref": "ENT004"
+              },
+              "name": "name",
+              "type": "VARCHAR",
+              "length": 150,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT004C02",
+              "_parent": {
+                "$ref": "ENT004"
+              },
+              "name": "contact",
+              "type": "VARCHAR",
+              "length": 120,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT004C03",
+              "_parent": {
+                "$ref": "ENT004"
+              },
+              "name": "address",
+              "type": "VARCHAR",
+              "length": 255,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT004C04",
+              "_parent": {
+                "$ref": "ENT004"
+              },
+              "name": "is_active",
+              "type": "TINYINT",
+              "length": 1,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT004C05",
+              "_parent": {
+                "$ref": "ENT004"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT004C06",
+              "_parent": {
+                "$ref": "ENT004"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT005",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "products",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C00",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C01",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "sku",
+              "type": "VARCHAR",
+              "length": 64,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C02",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "name",
+              "type": "VARCHAR",
+              "length": 190,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C03",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "category_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C04",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "unit",
+              "type": "VARCHAR",
+              "length": 20,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C05",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "purchase_price",
+              "type": "DECIMAL",
+              "length": 14,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C06",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "selling_price",
+              "type": "DECIMAL",
+              "length": 14,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C07",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "reorder_point",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C08",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "image_path",
+              "type": "VARCHAR",
+              "length": 255,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": true
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C09",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "is_active",
+              "type": "TINYINT",
+              "length": 1,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C10",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT005C11",
+              "_parent": {
+                "$ref": "ENT005"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT006",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "product_stocks",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT006C00",
+              "_parent": {
+                "$ref": "ENT006"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT006C01",
+              "_parent": {
+                "$ref": "ENT006"
+              },
+              "name": "product_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT006C02",
+              "_parent": {
+                "$ref": "ENT006"
+              },
+              "name": "warehouse_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT006C03",
+              "_parent": {
+                "$ref": "ENT006"
+              },
+              "name": "quantity",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT006C04",
+              "_parent": {
+                "$ref": "ENT006"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT007",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "purchase_orders",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C00",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C01",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "po_number",
+              "type": "VARCHAR",
+              "length": 32,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C02",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "supplier_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C03",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "warehouse_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C04",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "status",
+              "type": "VARCHAR",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C05",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "order_date",
+              "type": "DATE",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C06",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "created_by",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C07",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT007C08",
+              "_parent": {
+                "$ref": "ENT007"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT008",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "purchase_order_items",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT008C00",
+              "_parent": {
+                "$ref": "ENT008"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT008C01",
+              "_parent": {
+                "$ref": "ENT008"
+              },
+              "name": "purchase_order_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT008C02",
+              "_parent": {
+                "$ref": "ENT008"
+              },
+              "name": "product_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT008C03",
+              "_parent": {
+                "$ref": "ENT008"
+              },
+              "name": "quantity",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT008C04",
+              "_parent": {
+                "$ref": "ENT008"
+              },
+              "name": "received_quantity",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT008C05",
+              "_parent": {
+                "$ref": "ENT008"
+              },
+              "name": "purchase_price",
+              "type": "DECIMAL",
+              "length": 14,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT009",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_orders",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C00",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C01",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "so_number",
+              "type": "VARCHAR",
+              "length": 32,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": true,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C02",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "customer_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C03",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "warehouse_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C04",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "status",
+              "type": "VARCHAR",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C05",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "order_date",
+              "type": "DATE",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C06",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "created_by",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C07",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "approved_by",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": true
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C08",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "approved_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": true
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C09",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT009C10",
+              "_parent": {
+                "$ref": "ENT009"
+              },
+              "name": "updated_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT010",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_order_items",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT010C00",
+              "_parent": {
+                "$ref": "ENT010"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT010C01",
+              "_parent": {
+                "$ref": "ENT010"
+              },
+              "name": "sales_order_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT010C02",
+              "_parent": {
+                "$ref": "ENT010"
+              },
+              "name": "product_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT010C03",
+              "_parent": {
+                "$ref": "ENT010"
+              },
+              "name": "quantity",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT010C04",
+              "_parent": {
+                "$ref": "ENT010"
+              },
+              "name": "selling_price",
+              "type": "DECIMAL",
+              "length": 14,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDEntity",
+          "_id": "ENT011",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "stock_ledger",
+          "columns": [
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C00",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": true,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C01",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "product_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C02",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "warehouse_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C03",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "movement_type",
+              "type": "VARCHAR",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C04",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "quantity",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C05",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "reference_type",
+              "type": "VARCHAR",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C06",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "reference_id",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": true
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C07",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "performed_by",
+              "type": "INTEGER",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": true,
+              "unique": false,
+              "nullable": false
+            },
+            {
+              "_type": "ERDColumn",
+              "_id": "ENT011C08",
+              "_parent": {
+                "$ref": "ENT011"
+              },
+              "name": "created_at",
+              "type": "DATETIME",
+              "length": 0,
+              "primaryKey": false,
+              "foreignKey": false,
+              "unique": false,
+              "nullable": false
+            }
+          ]
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL000",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "products_category_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL000E1",
+            "_parent": {
+              "$ref": "REL000"
+            },
+            "reference": {
+              "$ref": "ENT002"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL000E2",
+            "_parent": {
+              "$ref": "REL000"
+            },
+            "reference": {
+              "$ref": "ENT005"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL001",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "product_stocks_product_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL001E1",
+            "_parent": {
+              "$ref": "REL001"
+            },
+            "reference": {
+              "$ref": "ENT005"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL001E2",
+            "_parent": {
+              "$ref": "REL001"
+            },
+            "reference": {
+              "$ref": "ENT006"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL002",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "product_stocks_warehouse_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL002E1",
+            "_parent": {
+              "$ref": "REL002"
+            },
+            "reference": {
+              "$ref": "ENT001"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL002E2",
+            "_parent": {
+              "$ref": "REL002"
+            },
+            "reference": {
+              "$ref": "ENT006"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL003",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "purchase_orders_supplier_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL003E1",
+            "_parent": {
+              "$ref": "REL003"
+            },
+            "reference": {
+              "$ref": "ENT003"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL003E2",
+            "_parent": {
+              "$ref": "REL003"
+            },
+            "reference": {
+              "$ref": "ENT007"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL004",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "purchase_orders_warehouse_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL004E1",
+            "_parent": {
+              "$ref": "REL004"
+            },
+            "reference": {
+              "$ref": "ENT001"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL004E2",
+            "_parent": {
+              "$ref": "REL004"
+            },
+            "reference": {
+              "$ref": "ENT007"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL005",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "purchase_orders_created_by",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL005E1",
+            "_parent": {
+              "$ref": "REL005"
+            },
+            "reference": {
+              "$ref": "ENT000"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL005E2",
+            "_parent": {
+              "$ref": "REL005"
+            },
+            "reference": {
+              "$ref": "ENT007"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL006",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "purchase_order_items_purchase_order_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL006E1",
+            "_parent": {
+              "$ref": "REL006"
+            },
+            "reference": {
+              "$ref": "ENT007"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL006E2",
+            "_parent": {
+              "$ref": "REL006"
+            },
+            "reference": {
+              "$ref": "ENT008"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL007",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "purchase_order_items_product_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL007E1",
+            "_parent": {
+              "$ref": "REL007"
+            },
+            "reference": {
+              "$ref": "ENT005"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL007E2",
+            "_parent": {
+              "$ref": "REL007"
+            },
+            "reference": {
+              "$ref": "ENT008"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL008",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_orders_customer_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL008E1",
+            "_parent": {
+              "$ref": "REL008"
+            },
+            "reference": {
+              "$ref": "ENT004"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL008E2",
+            "_parent": {
+              "$ref": "REL008"
+            },
+            "reference": {
+              "$ref": "ENT009"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL009",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_orders_warehouse_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL009E1",
+            "_parent": {
+              "$ref": "REL009"
+            },
+            "reference": {
+              "$ref": "ENT001"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL009E2",
+            "_parent": {
+              "$ref": "REL009"
+            },
+            "reference": {
+              "$ref": "ENT009"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL010",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_orders_created_by",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL010E1",
+            "_parent": {
+              "$ref": "REL010"
+            },
+            "reference": {
+              "$ref": "ENT000"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL010E2",
+            "_parent": {
+              "$ref": "REL010"
+            },
+            "reference": {
+              "$ref": "ENT009"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL011",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_orders_approved_by",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL011E1",
+            "_parent": {
+              "$ref": "REL011"
+            },
+            "reference": {
+              "$ref": "ENT000"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL011E2",
+            "_parent": {
+              "$ref": "REL011"
+            },
+            "reference": {
+              "$ref": "ENT009"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL012",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_order_items_sales_order_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL012E1",
+            "_parent": {
+              "$ref": "REL012"
+            },
+            "reference": {
+              "$ref": "ENT009"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL012E2",
+            "_parent": {
+              "$ref": "REL012"
+            },
+            "reference": {
+              "$ref": "ENT010"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL013",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "sales_order_items_product_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL013E1",
+            "_parent": {
+              "$ref": "REL013"
+            },
+            "reference": {
+              "$ref": "ENT005"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL013E2",
+            "_parent": {
+              "$ref": "REL013"
+            },
+            "reference": {
+              "$ref": "ENT010"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL014",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "stock_ledger_product_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL014E1",
+            "_parent": {
+              "$ref": "REL014"
+            },
+            "reference": {
+              "$ref": "ENT005"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL014E2",
+            "_parent": {
+              "$ref": "REL014"
+            },
+            "reference": {
+              "$ref": "ENT011"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL015",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "stock_ledger_warehouse_id",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL015E1",
+            "_parent": {
+              "$ref": "REL015"
+            },
+            "reference": {
+              "$ref": "ENT001"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL015E2",
+            "_parent": {
+              "$ref": "REL015"
+            },
+            "reference": {
+              "$ref": "ENT011"
+            },
+            "cardinality": "0..*"
+          }
+        },
+        {
+          "_type": "ERDRelationship",
+          "_id": "REL016",
+          "_parent": {
+            "$ref": "AAAAAAGDataModel"
+          },
+          "name": "stock_ledger_performed_by",
+          "end1": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL016E1",
+            "_parent": {
+              "$ref": "REL016"
+            },
+            "reference": {
+              "$ref": "ENT000"
+            },
+            "cardinality": "1"
+          },
+          "end2": {
+            "_type": "ERDRelationshipEnd",
+            "_id": "REL016E2",
+            "_parent": {
+              "$ref": "REL016"
+            },
+            "reference": {
+              "$ref": "ENT011"
+            },
+            "cardinality": "0..*"
+          }
+        }
+      ]
+    }
+  ]
+}
