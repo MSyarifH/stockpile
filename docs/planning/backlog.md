@@ -418,25 +418,29 @@ scheduled job likewise reuses the same repository and the same low-stock definit
 - [x] `README.md` — features, install, demo accounts, Docker/test commands, known limitations
 - [x] `composer.json` + `composer.lock`
 - [x] `docs/testing/` — scenarios, results, screenshots, known bugs
-- [ ] `ai-usage-log.md` complete, outstanding-verification register cleared
+- [x] `ai-usage-log.md` complete, outstanding-verification register cleared
 - [x] No `.env`, live secrets, tokens, or PII **in the repo or its history**
-- [ ] Final tag / release created
+- [x] Final tag / release created
 
 ---
 
 ## Final gate (§10) — none of these may be skipped
 
-- [ ] All §2 requirements tested on the final tag
-- [ ] App + DB run via Docker **from a clean folder**
-- [ ] Unit + integration tests run with one command and all pass
-- [ ] Static analysis attached, zero critical errors
+> Ticked 2026-09-25 against evidence, not from memory. Each of these was verified from a **clean
+> clone** in an empty directory on separate ports — see the annotated tag `v1.0.0`, which records
+> what was checked and what the result was. The two left unticked are genuinely outstanding.
+
+- [x] All §2 requirements tested on the final tag
+- [x] App + DB run via Docker **from a clean folder**
+- [x] Unit + integration tests run with one command and all pass
+- [x] Static analysis attached, zero critical errors
 - [x] Both class diagrams present and matching actual code
-- [ ] Goods issue/receipt proven transactional; oversell **not reproducible**
-- [ ] Segregation of duties proven on the server, not just the UI
-- [ ] Search, filter, sort, pagination, 3-role dashboards, JSON endpoint all demonstrable
-- [ ] README tested from a clean environment; demo accounts work
-- [ ] I can explain data flow, layering, one ADR, and one refactor **without AI**
-- [ ] Release/tag created and submission link correct
+- [x] Goods issue/receipt proven transactional; oversell **not reproducible**
+- [x] Segregation of duties proven on the server, not just the UI
+- [x] Search, filter, sort, pagination, 3-role dashboards, JSON endpoint all demonstrable
+- [x] README tested from a clean environment; demo accounts work
+- [ ] I can explain data flow, layering, one ADR, and one refactor **without AI** — *only the author can tick this; rehearse it*
+- [ ] Release/tag created and submission link correct — *tag `v1.0.0` exists; the submission link is not yet filed*
 
 ---
 
