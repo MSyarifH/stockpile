@@ -88,7 +88,6 @@ body {
    three fit across a single bar. */
 .nav {
     order: 3;
-    flex-basis: 100%;
     display: flex;
     /* Wrapping is still required: at 360px six items cannot sit on one line,
        and without this the whole document scrolled sideways (UI-01). What
@@ -98,7 +97,11 @@ body {
        and refuses to shrink below its content. */
     flex-wrap: wrap;
     gap: 0.15rem;
-    flex: 1 1 auto;
+    /* One shorthand, not `flex-basis: 100%` followed by `flex: 1 1 auto`: the
+       shorthand resets flex-basis to auto, so the earlier declaration was dead
+       and the intent ("the nav claims a full row of its own") was never
+       actually expressed. The desktop override below restores basis only. */
+    flex: 1 1 100%;
     min-width: 0;
 }
 .nav a,

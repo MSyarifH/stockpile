@@ -52,7 +52,7 @@ $renderLinks = static function (array $links) use ($e, $icon, $isCurrent): strin
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
-<?php require __DIR__ . '/../partial/icon-sprite.php'; ?>
+<?php require_once __DIR__ . '/../partial/icon-sprite.php'; ?>
 <a class="skip-link" href="#main">Skip to content</a>
 
 <header class="topbar">

@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body class="page-centred">
-<?php require __DIR__ . '/../partial/icon-sprite.php'; ?>
+<?php require_once __DIR__ . '/../partial/icon-sprite.php'; ?>
 <main class="card card--auth">
     <h1 class="card__title">Sign in</h1>
     <p class="card__subtitle">Inventory &amp; Order Management System</p>

@@ -28,8 +28,27 @@ class Session
             'httponly' => true,   // not readable from JavaScript
             'samesite' => 'Lax',  // blunts cross-site request forgery
             'path' => '/',
+            // Sent over HTTPS only -- but conditionally, because a cookie marked
+            // secure is never sent over plain HTTP at all. Hard-coding true would
+            // make the session silently stop working on the http://localhost:8080
+            // the setup instructions tell an assessor to use: they would log in,
+            // get redirected, and appear logged out. The flag therefore follows
+            // the scheme actually in use, including behind a TLS-terminating
+            // proxy, which is the only form of this that is both safe and honest.
+            'secure' => self::isHttps(),
         ]);
         session_start();
+    }
+
+    /** True when the current request reached us over TLS, directly or via a proxy. */
+    private static function isHttps(): bool
+    {
+        $https = $_SERVER['HTTPS'] ?? '';
+        if ($https !== '' && strtolower((string) $https) !== 'off') {
+            return true;
+        }
+
+        return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
     }
 
     /**

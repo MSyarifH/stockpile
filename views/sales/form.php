@@ -57,8 +57,11 @@
             <tbody>
             <tr class="line-row">
                 <td data-label="Product">
-                    <label class="visually-hidden">Product</label>
-                    <select name="items[product_id][]" required>
+                    <?php // aria-label, not <label for>: order lines are cloned by
+                          // order-lines.js, and a cloned id is a duplicate id --
+                          // which breaks the very association it was meant to make.
+                          // Server-rendered rows (purchase/show.php) use <label for>. ?>
+                    <select aria-label="Product" name="items[product_id][]" required>
                         <option value="">Choose a product…</option>
                         <?php foreach ($products as $product) : ?>
                             <option value="<?= (int) $product->id ?>"
@@ -70,12 +73,10 @@
                     </select>
                 </td>
                 <td data-label="Quantity">
-                    <label class="visually-hidden">Quantity</label>
-                    <input class="qty-input" type="number" min="1" value="1" name="items[quantity][]">
+                    <input aria-label="Quantity" class="qty-input" type="number" min="1" value="1" name="items[quantity][]">
                 </td>
                 <td data-label="Unit price">
-                    <label class="visually-hidden">Unit price</label>
-                    <input class="qty-input" type="number" step="0.01" min="0" value="0" name="items[selling_price][]">
+                    <input aria-label="Unit price" class="qty-input" type="number" step="0.01" min="0" value="0" name="items[selling_price][]">
                 </td>
                 <td data-label="Remove">
                     <button class="btn btn--small btn--ghost line-remove" type="button"><?= $icon('trash-2') ?>Remove</button>

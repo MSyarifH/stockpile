@@ -63,7 +63,7 @@ use App\Support\Router;
 use App\Support\Session;
 use App\Support\View;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 /** @var array{env:string,db:array{host:string,port:string,name:string,user:string,password:string},uploads:array<string,mixed>} $config */
 $config = require dirname(__DIR__) . '/config/config.php';
