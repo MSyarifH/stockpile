@@ -690,6 +690,51 @@ library, having established that §4 permits a credited one.
   overflow bug happened: `document.scrollWidth == clientWidth` for all three roles at 360, 768
   and 1440. Desktop bar is one row, 57px, for every role. All sixteen screenshots re-captured.
 
+### AI-44 · SonarQube Community 26.9.0.129388, and which findings I refused
+- **Prompt summary:** "the assessment requires a SonarQube report that passes" — the trainer
+  pinned the exact version (26.9.0.129388-community) and the default **Sonar way** gate.
+- **Output accepted:** the server as a *separate* compose stack (`tools/sonarqube/compose.yaml`),
+  pcov rather than Xdebug as the coverage driver, and `./run.sh sonar` wiring the whole sequence
+  together.
+- **First run, honestly:** Quality Gate OK but **12 bugs, 1 vulnerability, Reliability D**. The
+  gate passed only because a first analysis has no New Code baseline, so Sonar way's conditions
+  had nothing to measure. Recording this because a green badge that means nothing is exactly the
+  kind of evidence §8.2 treats as concealment.
+- **Fixed, because they were real:**
+  1. `.nav` declared `flex-basis: 100%` and then `flex: 1 1 auto`, whose shorthand resets the
+     basis — the first declaration was dead, and the desktop media query was overriding something
+     that never applied. Merged into one shorthand.
+  2. Six order-line fields carried a `<label class="visually-hidden">` that was **never associated
+     with its input** — no `for`, no `id`. The label existed and did nothing. Replaced with
+     `aria-label`, not `<label for>`, because `order-lines.js` clones these rows and a cloned
+     `id` is a duplicate `id`.
+  3. The session cookie had no `secure` flag.
+- **Three findings refused, with the reason written into SonarQube itself** (not silently
+  dismissed — the comments are readable in the UI):
+  - `View.php:68` `require $file` → `require_once` would key the include on the resolved path, so
+    rendering the same template twice in one request would return an empty string with **no
+    error**. Marked false positive. Latent trap, not a live bug today; said so in the comment.
+  - `index.php:69` `$config = require …` → the file **returns an array**. `require_once` returns
+    `true` on a second include, so `$config` would silently become a boolean. `require` is the
+    correct construct for a value-returning include. Marked false positive.
+  - `Session.php:27` secure flag → it **is** set, but conditionally (`Session::isHttps()`). A
+    cookie marked secure is never sent over plain HTTP, so hard-coding `true` would break the
+    `http://localhost:8080` the README tells an assessor to use: they would log in and appear
+    logged out. Marked accepted, with that reasoning recorded.
+- **Final state, re-measured after the fixes:** 0 bugs, 0 vulnerabilities, 0 security hotspots,
+  Reliability **A**, Security **A**, Maintainability **A**, duplication 1.7%.
+- **What I did NOT do:** raise coverage by excluding Controllers and `MySql*Repository` from
+  `sonar.coverage.exclusions`. That would lift 30.8% to a flattering number by deleting the
+  evidence rather than the gap. The gap is real and is stated as such in
+  `docs/quality/static-analysis.md`.
+- **Two of my own errors while setting this up**, both found by running rather than reading:
+  1. The healthcheck used `wget`, which this image does not ship. It reported *unhealthy* for ten
+     minutes while the server was perfectly fine.
+  2. I read the API over `localhost:9000` and got a completely different application — an
+     unrelated Node dev server held `[::1]:9000`, and on macOS the IPv6 loopback wins the race
+     for "localhost" even while Docker holds `*:9000`. Moved to 9310 and verified the port was
+     free on both stacks first.
+
 ---
 
 ## Outstanding verification register

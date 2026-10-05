@@ -336,3 +336,81 @@ ls phpstan-baseline.neon
 Both analyses exit 0. `composer stan` without `--memory-limit=512M` may print `Found 1
 error` with no file — that is the memory failure described in section 5.2, not a code
 finding.
+
+---
+
+## 9. SonarQube
+
+Added 2026-10-05, at commit `fef1b8f`+, because the assessment requires it in addition to the
+two tools above. **Community Edition 26.9.0.129388** with the default **Sonar way** Quality
+Gate — both pinned by the trainer.
+
+```bash
+./run.sh sonar     # server + coverage + analysis + gate, in one command
+```
+
+See `tools/sonarqube/README.md` for how it is wired and why the server is a separate stack.
+
+### 9.1 Final state
+
+| Metric | Value |
+|---|---|
+| Quality Gate | **OK** |
+| Bugs | 0 |
+| Vulnerabilities | 0 |
+| Security Hotspots | 0 |
+| Code Smells | 39 |
+| Coverage | 30.8% |
+| Duplicated lines | 1.7% |
+| Lines of code | 6,869 |
+| Reliability / Security / Maintainability | **A / A / A** |
+
+### 9.2 The first run was not this
+
+The first analysis reported **12 bugs, 1 vulnerability, Reliability D** — and the Quality Gate
+still said OK, because a first analysis has no New Code baseline for Sonar way's conditions to
+measure. A green gate on an empty measurement is worth nothing, and is recorded here rather
+than quietly replaced with the final table.
+
+Three findings were real and are fixed:
+
+1. **`public/assets/app.css` — `flex-basis` overridden by the `flex` shorthand** (the one
+   finding rated CRITICAL). `.nav` declared `flex-basis: 100%`, then `flex: 1 1 auto` four
+   lines later; the shorthand resets the basis, so the first declaration was dead and the
+   desktop media query was overriding something that never applied. The navbar looked correct
+   by coincidence. Merged into a single `flex: 1 1 100%`.
+2. **Six order-line inputs with an unassociated label.** The markup carried
+   `<label class="visually-hidden">Quantity</label>` with no `for` and no `id` — a label that
+   existed and did nothing, so a screen reader still announced an unnamed field. Replaced with
+   `aria-label`, *not* `<label for>`: `order-lines.js` clones these rows and a cloned `id` is a
+   duplicate `id`, which breaks the association it was meant to create. Server-rendered rows
+   (`views/purchase/show.php`) keep `<label for>`, which is correct there.
+3. **Session cookie without a `secure` flag** — now set via `Session::isHttps()`.
+
+### 9.3 Three findings refused, and why
+
+Each is marked in SonarQube itself with the reasoning, so the justification travels with the
+finding rather than living only here.
+
+| Location | Rule | Status | Reason |
+|---|---|---|---|
+| `app/Support/View.php:68` | `php:S2003` | False positive | `require_once` keys on the resolved path. `View::render()` is the single renderer for every template, so the same template rendered twice in one request would return an empty string **with no error**. A latent trap rather than a live bug today — stated as such in the comment. |
+| `public/index.php:69` | `php:S2003` | False positive | `config/config.php` **returns an array**. `require_once` returns `true` on a second include, so `$config` would silently become a boolean. `require` is the correct construct for a value-returning include. |
+| `app/Support/Session.php:27` | `php:S2092` | Accepted | The flag **is** set, conditionally. A cookie marked secure is never sent over plain HTTP, so hard-coding `true` would break the `http://localhost:8080` the README instructs an assessor to use — they would log in and immediately appear logged out. |
+
+### 9.4 Coverage, stated plainly
+
+**30.8%**, and it is the weakest number in this report.
+
+It follows directly from the architecture rather than from neglect: unit tests exercise
+`Service` classes through `InMemory*Repository`, which is exactly what lets the unit suite run
+with no database at all (§4.1). The cost is that `Controller` and `MySql*Repository` are
+executed only by the six integration tests.
+
+Adding `app/Controller/**` and `app/Repository/MySql*` to `sonar.coverage.exclusions` would
+raise the figure well above 80% in one line. It was not done. Excluding the untested code
+removes the evidence, not the gap — and an assessor reading `sonar-project.properties` would be
+entitled to read it as hiding the problem.
+
+The real remedy is tests that enter through the HTTP layer, which is already recorded as
+**TD-07** in `docs/quality/tech-debt.md` and remains outstanding.

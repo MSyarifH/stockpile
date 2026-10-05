@@ -144,6 +144,26 @@ docker compose exec app composer stan    # PHPStan level 6
 docker compose exec app composer sniff   # PHP_CodeSniffer, PSR-12
 ```
 
+Both report zero errors. The written report, including what these tools do **not** catch, is
+`docs/quality/static-analysis.md`.
+
+### SonarQube
+
+SonarQube Community **26.9.0.129388** with the default **Sonar way** Quality Gate:
+
+```bash
+./run.sh sonar        # start the server, regenerate coverage, analyse, print the gate
+./run.sh sonar-stop   # stop it
+```
+
+Dashboard at **http://localhost:9310** (`admin` / `StockpileSonar1!`). The server runs as its
+own stack in `tools/sonarqube/` — deliberately not part of `compose.yaml`, so starting the
+application does not pull 2.6 GB of analysis server with it.
+
+Current state: Quality Gate **OK**, 0 bugs, 0 vulnerabilities, 0 security hotspots,
+Reliability/Security/Maintainability **A/A/A**, duplication 1.7%. Coverage is **30.8%**, which
+is low and is explained rather than excluded — see `docs/quality/static-analysis.md` §9.
+
 ## Scheduled job
 
 ```bash
@@ -232,6 +252,9 @@ in [`docs/quality/tech-debt.md`](docs/quality/tech-debt.md); known defects are i
 - Dashboard figures are aggregated on every request, with no caching (TD-06).
 - No automated test covers the HTTP layer end to end (TD-07); §4.3 puts end-to-end testing out
   of scope, so the client-side script is verified by the browser harness linked above instead.
+  This is also why SonarQube measures line coverage at 30.8%: unit tests reach Services through
+  in-memory repositories, leaving Controllers and the MySQL repositories largely unexecuted.
+  Excluding them from coverage would raise the figure and hide the gap, so they are left in.
 
 ## Attribution
 
