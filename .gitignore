@@ -9,3 +9,7 @@
 
 # The assessment brief itself: reference material, not part of the submission.
 /Project Brief - Programmer*.pdf
+
+# Coverage reports consumed by SonarQube; regenerated, never reviewed.
+/build/
+tools/sonarqube/.token

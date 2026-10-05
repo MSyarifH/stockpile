@@ -7,6 +7,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install pdo_mysql zip \
     && rm -rf /var/lib/apt/lists/*
 
+# pcov drives PHPUnit's coverage report, which SonarQube reads. Xdebug would do
+# the same job but is a debugger first and slows the suite several times over;
+# pcov does nothing but line coverage. It is installed disabled (pcov.enabled=0
+# below) and switched on only for the one command that needs it, so the ordinary
+# test run pays nothing for it.
+RUN pecl install pcov \
+    && docker-php-ext-enable pcov
+
 # Composer is copied from its official image instead of curl|sh (reproducible, pinned).
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 
@@ -43,6 +51,7 @@ RUN { \
       echo 'error_log=/dev/stderr'; \
       echo 'upload_max_filesize=4M'; \
       echo 'post_max_size=8M'; \
+      echo 'pcov.enabled=0'; \
     } > /usr/local/etc/php/conf.d/zz-app.ini
 
 # Apache workers run as www-data, so the upload target must be writable by it.

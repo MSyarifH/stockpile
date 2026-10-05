@@ -20,6 +20,7 @@
         "test": "phpunit",
         "test:unit": "phpunit --testsuite unit",
         "test:integration": "phpunit --testsuite integration",
+        "test:coverage": "php -d pcov.enabled=1 vendor/bin/phpunit --coverage-clover=build/coverage/clover.xml --log-junit=build/coverage/junit.xml",
         "stan": "phpstan analyse --memory-limit=512M",
         "sniff": "phpcs"
     },

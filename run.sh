@@ -309,6 +309,93 @@ cmd_check() {
     fi
 }
 
+# ---------------------------------------------------------------- sonarqube --
+# SonarQube Community 26.9.0.129388 -- the version the assessment fixes. The
+# server lives in tools/sonarqube/compose.yaml, deliberately apart from the
+# application stack: it is a development tool, and an assessor running
+# `docker compose up` should not be made to pull 2.6 GB for it.
+SONAR_COMPOSE=(docker compose -f tools/sonarqube/compose.yaml)
+SONAR_PORT=9310
+SONAR_URL="http://localhost:${SONAR_PORT}"
+SONAR_TOKEN_FILE="tools/sonarqube/.token"
+
+cmd_sonar() {
+    require_docker; running_or_die
+
+    step "SonarQube server"
+    if [ -z "$("${SONAR_COMPOSE[@]}" ps -q --status running sonarqube 2>/dev/null)" ]; then
+        "${SONAR_COMPOSE[@]}" up -d >/dev/null
+    fi
+    # The web port answers long before analysis is possible, so poll the status
+    # endpoint rather than the port.
+    local i=0
+    until curl -sf "$SONAR_URL/api/system/status" 2>/dev/null | grep -q '"status":"UP"'; do
+        i=$((i + 1))
+        [ "$i" -gt 60 ] && die "SonarQube did not become ready. Try: ${SONAR_COMPOSE[*]} logs"
+        sleep 5
+    done
+    ok "SonarQube is up at $SONAR_URL"
+
+    step "Authentication token"
+    if [ ! -s "$SONAR_TOKEN_FILE" ]; then
+        local pw="${SONAR_ADMIN_PASSWORD:-StockpileSonar1!}"
+        # First boot still has admin/admin; SonarQube refuses to work until it
+        # is changed, so change it before asking for a token.
+        curl -s -u admin:admin -X POST "$SONAR_URL/api/users/change_password" \
+            -d "login=admin&previousPassword=admin&password=$pw" >/dev/null 2>&1 || true
+        curl -s -u "admin:$pw" -X POST "$SONAR_URL/api/user_tokens/generate" \
+            -d "name=stockpile-$(date +%s)" 2>/dev/null \
+            | sed -n 's/.*"token":"\([^"]*\)".*/\1/p' > "$SONAR_TOKEN_FILE"
+        [ -s "$SONAR_TOKEN_FILE" ] || die "Could not obtain a token. Is the admin password still '$pw'?"
+        ok "token created and saved to $SONAR_TOKEN_FILE (git-ignored)"
+    else
+        ok "reusing $SONAR_TOKEN_FILE"
+    fi
+
+    step "Coverage report"
+    "${COMPOSE[@]}" exec -T app composer test:coverage >/dev/null || die "tests failed; not scanning a red build"
+    ok "build/coverage/clover.xml regenerated"
+
+    step "Analysis"
+    # The project is mounted at /var/www/html, the SAME path the app container
+    # uses. clover.xml records absolute paths from that container; mount it
+    # anywhere else and Sonar silently imports zero coverage.
+    docker run --rm --network sonarqube_default \
+        -e SONAR_HOST_URL=http://sonarqube:9000 \
+        -e SONAR_TOKEN="$(cat "$SONAR_TOKEN_FILE")" \
+        -v "$PWD:/var/www/html" -w /var/www/html \
+        sonarsource/sonar-scanner-cli -Dsonar.projectBaseDir=/var/www/html 2>&1 \
+        | grep -E "ANALYSIS SUCCESSFUL|EXECUTION|ERROR" || true
+
+    step "Quality Gate"
+    # The scanner returns as soon as the report is uploaded; the Compute Engine
+    # processes it afterwards, so the gate is not readable immediately.
+    # These endpoints are NOT anonymous: without credentials they answer 403 and
+    # the gate reads back empty, which looks exactly like a failure. The scanner
+    # token doubles as the username, with no password -- SonarQube's convention.
+    local auth=("-u" "$(cat "$SONAR_TOKEN_FILE"):")
+    local status="" j=0
+    until [ "$status" = "SUCCESS" ]; do
+        j=$((j + 1)); [ "$j" -gt 45 ] && break
+        status=$(curl -s "${auth[@]}" "$SONAR_URL/api/ce/component?component=stockpile" \
+            | grep -o '"status":"[A-Z_]*"' | head -1 | cut -d'"' -f4)
+        sleep 4
+    done
+    local gate
+    gate=$(curl -s "${auth[@]}" "$SONAR_URL/api/qualitygates/project_status?projectKey=stockpile" \
+        | grep -o '"status":"[A-Z_]*"' | head -1 | cut -d'"' -f4)
+    if [ "$gate" = "OK" ]; then ok "Quality Gate: OK"; else warn "Quality Gate: ${gate:-unknown}"; fi
+    printf '\n  Dashboard  %s/dashboard?id=stockpile\n' "$SONAR_URL"
+    printf '  Sign in    admin / %s\n' "${SONAR_ADMIN_PASSWORD:-StockpileSonar1!}"
+}
+
+cmd_sonar_stop() {
+    require_docker
+    step "Stopping SonarQube"
+    "${SONAR_COMPOSE[@]}" down
+    ok "stopped (analysis history kept in its volumes)"
+}
+
 cmd_shell() {
     require_docker; running_or_die
     "${COMPOSE[@]}" exec app bash
@@ -376,6 +463,11 @@ ${BOLD}Checking it${RESET}
   ${BOLD}check${RESET}        Everything: PHPUnit, PHPStan (level 6), PHP_CodeSniffer (PSR-12),
                and the stock-ledger invariant — that product_stocks still equals
                SUM(stock_ledger) for every product and warehouse.
+  ${BOLD}sonar${RESET}        Full SonarQube run: start the server (Community 26.9.0.129388),
+               regenerate coverage, analyse, and print the Quality Gate. The
+               first run pulls ~2.6 GB and takes a few minutes; later runs are
+               quick. The server is a separate stack, not part of the app.
+  ${BOLD}sonar-stop${RESET}   Stop that server. Analysis history survives in its volumes.
 
 ${BOLD}Getting inside${RESET}
 
@@ -417,6 +509,8 @@ case "${1:-help}" in
     shell|bash|sh) cmd_shell ;;
     mysql|db)      cmd_mysql ;;
     job)           cmd_job ;;
+    sonar)         cmd_sonar ;;
+    sonar-stop)    cmd_sonar_stop ;;
     help|-h|--help) cmd_help ;;
     *)             printf '%sUnknown command: %s%s\n\n' "$RED" "$1" "$RESET" >&2; cmd_help; exit 2 ;;
 esac

@@ -1,0 +1,48 @@
+# SonarQube Community Edition, pinned to the version the assessment fixes.
+#
+# DELIBERATELY SEPARATE from the project's compose.yaml. That file is the one an
+# assessor runs to start the application, and it must contain the application and
+# its database -- nothing else. A code-quality server is a development tool, not
+# part of the system being graded, and bolting it onto the graded stack would
+# make `docker compose up` pull 2.6 GB and claim 2 GB of RAM for something the
+# application never talks to.
+#
+#   docker compose -f tools/sonarqube/compose.yaml up -d
+#   docker compose -f tools/sonarqube/compose.yaml down        # keeps the volumes
+#
+# The embedded H2 database is fine here: this is a local, throwaway analysis
+# server for one project, not a shared installation.
+services:
+  sonarqube:
+    image: sonarqube:26.9.0.129388-community
+    ports:
+      # 9310, not 9000: the default collides with whatever else is listening on
+      # the developer's machine, and on macOS an IPv6-only listener on ::1 wins
+      # the race for "localhost" even when Docker holds *:9000 -- which silently
+      # serves a different application instead of failing loudly.
+      - "9310:9000"
+    environment:
+      # The bundled Elasticsearch refuses to start under the low mmap limits of
+      # some hosts; this is the documented escape hatch for single-node local use.
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      # Named volumes, so an analysis survives `down` and the history/Quality Gate
+      # result stays available to show during the presentation.
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    healthcheck:
+      # The web server answers long before analysis is possible; this endpoint is
+      # the only thing that reports genuine readiness.
+      # curl, not wget: this image ships no wget, and a healthcheck that always
+      # fails is worse than none -- it reports unhealthy while the server is fine.
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/api/system/status | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
