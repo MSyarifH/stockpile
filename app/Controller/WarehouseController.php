@@ -18,6 +18,9 @@ use App\Support\View;
 
 final class WarehouseController
 {
+    /** Every write action redirects back to the list (POST/Redirect/GET). */
+    private const INDEX = '/warehouses';
+
     public function __construct(
         private readonly WarehouseService $warehouses,
         private readonly Session $session,
@@ -26,7 +29,7 @@ final class WarehouseController
     ) {
     }
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $this->session->requireUser();
 
@@ -36,7 +39,7 @@ final class WarehouseController
         ]));
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->session->requireUser();
 
@@ -70,7 +73,7 @@ final class WarehouseController
         }
 
         $this->session->flash('success', 'Warehouse created. Stock rows added for every product.');
-        return Response::redirect('/warehouses');
+        return Response::redirect(self::INDEX);
     }
 
     public function edit(Request $request, string $id): Response
@@ -114,7 +117,7 @@ final class WarehouseController
         }
 
         $this->session->flash('success', 'Warehouse updated.');
-        return Response::redirect('/warehouses');
+        return Response::redirect(self::INDEX);
     }
 
     public function toggleActive(Request $request, string $id): Response
@@ -126,7 +129,7 @@ final class WarehouseController
         $this->warehouses->setActive($actor, (int) $id, $activate);
 
         $this->session->flash('success', $activate ? 'Warehouse activated.' : 'Warehouse deactivated.');
-        return Response::redirect('/warehouses');
+        return Response::redirect(self::INDEX);
     }
 
     /** @param array<string,string> $errors */

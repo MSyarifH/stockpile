@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Entity\AuthenticatedUser;
-use RuntimeException;
+use App\Support\Exception\TemplateNotFoundException;
 
 /**
  * Minimal template renderer over plain PHP files.
@@ -33,7 +33,7 @@ final class View
     {
         $file = $this->templatePath . '/' . str_replace('.', '/', $template) . '.php';
         if (!is_file($file)) {
-            throw new RuntimeException(sprintf('Template "%s" was not found.', $template));
+            throw new TemplateNotFoundException($template);
         }
 
         $data = array_merge($this->shared, $data);

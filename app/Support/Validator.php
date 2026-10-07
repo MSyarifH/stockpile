@@ -78,107 +78,104 @@ final class Validator
         return $this->errors === [];
     }
 
-    /** @param list<string> $rules */
+    /**
+     * @param list<string> $rules
+     *
+     * Split into three small pieces rather than one switch. The previous single
+     * method mixed three jobs -- parsing the rule, deciding whether the value
+     * passes, and coercing its type -- which is why its cognitive complexity
+     * reached 29. Each rule now contributes one short arm to a match instead of
+     * a branch nested inside a loop inside a switch.
+     */
     private function applyRules(string $field, mixed $value, array $rules): void
     {
         $string = is_scalar($value) ? trim((string) $value) : '';
 
         foreach ($rules as $rule) {
             [$name, $parameter] = array_pad(explode(':', $rule, 2), 2, null);
+            $name = (string) $name;
 
-            switch ($name) {
-                case 'email':
-                    if (filter_var($string, FILTER_VALIDATE_EMAIL) === false) {
-                        $this->fail($field, 'must be a valid email address.');
-                        return;
-                    }
-                    break;
-
-                case 'int':
-                    if (filter_var($string, FILTER_VALIDATE_INT) === false) {
-                        $this->fail($field, 'must be a whole number.');
-                        return;
-                    }
-                    $value = (int) $string;
-                    break;
-
-                case 'decimal':
-                    if (!is_numeric($string)) {
-                        $this->fail($field, 'must be a number.');
-                        return;
-                    }
-                    $value = round((float) $string, 2);
-                    break;
-
-                // min_value and max_length are named for WHAT they compare.
-                // They were previously 'min' and 'max', which read as a matching
-                // pair but were not one: min compared the numeric value while
-                // max compared the string length. Every call site happened to
-                // mean the right thing, but 'int|max:100' would have limited the
-                // number of digits rather than the value — accepting 999999.
-                case 'min_value':
-                    if ((float) $value < (float) $parameter) {
-                        $this->fail($field, sprintf('must be at least %s.', $parameter));
-                        return;
-                    }
-                    break;
-
-                case 'max_value':
-                    if ((float) $value > (float) $parameter) {
-                        $this->fail($field, sprintf('must be at most %s.', $parameter));
-                        return;
-                    }
-                    break;
-
-                case 'max_length':
-                    if (mb_strlen($string) > (int) $parameter) {
-                        $this->fail($field, sprintf('must be at most %s characters.', $parameter));
-                        return;
-                    }
-                    break;
-
-                case 'in':
-                    $allowed = explode(',', (string) $parameter);
-                    if (!in_array($string, $allowed, true)) {
-                        $this->fail($field, 'is not one of the allowed values.');
-                        return;
-                    }
-                    break;
-
-                case 'date':
-                    $parsed = date_create_immutable($string);
-                    if ($parsed === false) {
-                        $this->fail($field, 'must be a valid date.');
-                        return;
-                    }
-                    break;
-
-                case 'boolean':
-                    $value = in_array($string, ['1', 'true', 'on', 'yes'], true);
-                    break;
-
-                // Handled in passes() before this method is reached; listed so
-                // they do not fall into the default branch below.
-                case 'required':
-                case 'optional':
-                    break;
-
-                default:
-                    // Without this branch a mistyped rule name was silently
-                    // ignored and the value accepted unconditionally, so
-                    // 'required|emial' validated anything at all. Rules are
-                    // written by developers, never supplied by a request, so
-                    // failing loudly here is safe and catches the typo at the
-                    // first execution instead of in production.
-                    throw new LogicException(sprintf(
-                        'Unknown validation rule "%s" for field "%s".',
-                        (string) $name,
-                        $field,
-                    ));
+            $failure = $this->violation($name, $parameter, $string, $value, $field);
+            if ($failure !== null) {
+                $this->fail($field, $failure);
+                return;
             }
+
+            // Coercion happens AFTER the check, so a later rule sees the typed
+            // value: 'int|min_value:1' compares numbers, not strings.
+            $value = $this->coerce($name, $string, $value);
         }
 
         $this->valid[$field] = is_string($value) ? trim($value) : $value;
+    }
+
+    /**
+     * The message for a rule the value breaks, or null when it passes.
+     *
+     * min_value and max_length are named for WHAT they compare. They were
+     * previously 'min' and 'max', which read as a matching pair but were not
+     * one: min compared the numeric value while max compared the string length.
+     * Every call site happened to mean the right thing, but 'int|max:100' would
+     * have limited the number of digits rather than the value -- accepting
+     * 999999.
+     */
+    private function violation(
+        string $name,
+        ?string $parameter,
+        string $string,
+        mixed $value,
+        string $field,
+    ): ?string {
+        return match ($name) {
+            'email' => filter_var($string, FILTER_VALIDATE_EMAIL) === false
+                ? 'must be a valid email address.'
+                : null,
+            'int' => filter_var($string, FILTER_VALIDATE_INT) === false
+                ? 'must be a whole number.'
+                : null,
+            'decimal' => !is_numeric($string)
+                ? 'must be a number.'
+                : null,
+            'min_value' => (float) $value < (float) $parameter
+                ? sprintf('must be at least %s.', $parameter)
+                : null,
+            'max_value' => (float) $value > (float) $parameter
+                ? sprintf('must be at most %s.', $parameter)
+                : null,
+            'max_length' => mb_strlen($string) > (int) $parameter
+                ? sprintf('must be at most %s characters.', $parameter)
+                : null,
+            'in' => !in_array($string, explode(',', (string) $parameter), true)
+                ? 'is not one of the allowed values.'
+                : null,
+            'date' => date_create_immutable($string) === false
+                ? 'must be a valid date.'
+                : null,
+            // Checked in passes() before this method is reached; listed so they
+            // do not fall into the default arm below.
+            'boolean', 'required', 'optional' => null,
+            // Without this arm a mistyped rule name was silently ignored and the
+            // value accepted unconditionally, so 'required|emial' validated
+            // anything at all. Rules are written by developers, never supplied
+            // by a request, so failing loudly here is safe and catches the typo
+            // on first execution instead of in production.
+            default => throw new LogicException(sprintf(
+                'Unknown validation rule "%s" for field "%s".',
+                $name,
+                $field,
+            )),
+        };
+    }
+
+    /** The typed value a rule produces; everything else passes straight through. */
+    private function coerce(string $name, string $string, mixed $value): mixed
+    {
+        return match ($name) {
+            'int' => (int) $string,
+            'decimal' => round((float) $string, 2),
+            'boolean' => in_array($string, ['1', 'true', 'on', 'yes'], true),
+            default => $value,
+        };
     }
 
     private function isBlank(mixed $value): bool

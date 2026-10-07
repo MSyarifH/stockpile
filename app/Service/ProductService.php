@@ -32,7 +32,7 @@ final class ProductService
     }
 
     /** @return list<Product> */
-    public function list(AuthenticatedUser $actor, bool $activeOnly = false): array
+    public function list(bool $activeOnly = false): array
     {
         return $this->products->all($activeOnly);
     }
@@ -42,7 +42,7 @@ final class ProductService
      *
      * @return Page<Product>
      */
-    public function search(AuthenticatedUser $actor, ProductFilter $filter, int $page): Page
+    public function search(ProductFilter $filter, int $page): Page
     {
         return $this->products->paginate($filter, $page);
     }

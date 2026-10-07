@@ -69,7 +69,7 @@ final class SalesOrderController
         ]));
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $actor = $this->session->requireUser();
 
@@ -78,7 +78,7 @@ final class SalesOrderController
             'csrfToken' => $this->csrf->token(),
             'customers' => $this->partners->list(PartnerType::Customer, true),
             'warehouses' => $this->warehouses->list(true),
-            'products' => $this->products->list($actor, true),
+            'products' => $this->products->list(true),
             'values' => ['customer_id' => '', 'warehouse_id' => '', 'order_date' => date('Y-m-d')],
             'errors' => [],
         ]));
@@ -103,7 +103,7 @@ final class SalesOrderController
                 'csrfToken' => $this->csrf->token(),
                 'customers' => $this->partners->list(PartnerType::Customer, true),
                 'warehouses' => $this->warehouses->list(true),
-                'products' => $this->products->list($actor, true),
+                'products' => $this->products->list(true),
                 'values' => [
                     'customer_id' => $request->string('customer_id'),
                     'warehouse_id' => $request->string('warehouse_id'),

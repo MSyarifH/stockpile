@@ -34,9 +34,17 @@ final class Request
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $path = parse_url($uri, PHP_URL_PATH);
 
+        // parse_url returns null or false on a malformed URI. The trailing slash
+        // is trimmed so /products and /products/ reach the same route, but "/"
+        // itself must survive that trim -- rtrim('/', '/') is the empty string.
+        $normalisedPath = is_string($path) ? rtrim($path, '/') : '';
+        if ($normalisedPath === '') {
+            $normalisedPath = '/';
+        }
+
         return new self(
             strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')),
-            is_string($path) ? rtrim($path, '/') ?: '/' : '/',
+            $normalisedPath,
             $_GET,
             $_POST,
             $_SERVER,

@@ -24,7 +24,7 @@ final class DashboardController
     ) {
     }
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $user = $this->session->user();
         if ($user === null) {

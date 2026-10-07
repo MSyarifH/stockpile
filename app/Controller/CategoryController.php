@@ -25,7 +25,7 @@ final class CategoryController
     ) {
     }
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $this->session->requireUser();
 
@@ -35,7 +35,7 @@ final class CategoryController
         ]));
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->session->requireUser();
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Support\CsvWriter;
+use App\Support\Exception\ExportException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -80,5 +81,20 @@ final class CsvWriterTest extends TestCase
         fclose($handle);
 
         return $rows;
+    }
+
+    /**
+     * The export's failure path. fopen on php://temp does not fail in any
+     * situation a test can create -- it would take an exhausted file-descriptor
+     * limit -- so what is pinned here is the exception's own contract: it names
+     * the stream that could not be opened. Without that, the log would say only
+     * "the export failed" and give nobody a place to start.
+     */
+    public function testTheExportFailureNamesTheStreamItCouldNotOpen(): void
+    {
+        $exception = ExportException::streamUnavailable('php://output');
+
+        self::assertStringContainsString('php://output', $exception->getMessage());
+        self::assertStringContainsString('CSV export', $exception->getMessage());
     }
 }

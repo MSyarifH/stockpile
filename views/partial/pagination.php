@@ -14,9 +14,9 @@ if ($page->totalPages() <= 1) {
 $current = $page->currentPage;
 ?>
 <nav class="pager" aria-label="Pagination">
-    <p class="pager__status" role="status">
+    <output class="pager__status">
         Showing <?= $page->from() ?>–<?= $page->to() ?> of <?= $page->total ?>
-    </p>
+    </output>
 
     <ul class="pager__list">
         <li>

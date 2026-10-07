@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use RuntimeException;
+use App\Support\Exception\ExportException;
 
 /**
  * Turns rows into CSV text. Nothing else.
@@ -27,7 +27,7 @@ final class CsvWriter
     {
         $handle = fopen('php://temp', 'r+');
         if ($handle === false) {
-            throw new RuntimeException('Could not open a buffer for the CSV export.');
+            throw ExportException::streamUnavailable('php://temp');
         }
 
         // Byte-order mark so Excel reads UTF-8 correctly; without it, accented
@@ -59,7 +59,7 @@ final class CsvWriter
     {
         $handle = fopen('php://output', 'w');
         if ($handle === false) {
-            throw new RuntimeException('Could not open php://output for the CSV export.');
+            throw ExportException::streamUnavailable('php://output');
         }
 
         fwrite($handle, "\xEF\xBB\xBF");

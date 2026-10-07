@@ -65,6 +65,12 @@ use App\Support\View;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
+/**
+ * The one path the router, the unauthenticated redirect and the failure handler
+ * all have to agree on. Spelled once so they cannot drift apart.
+ */
+const LOGIN_PATH = '/login';
+
 /** @var array{env:string,db:array{host:string,port:string,name:string,user:string,password:string},uploads:array<string,mixed>} $config */
 $config = require dirname(__DIR__) . '/config/config.php';
 
@@ -170,8 +176,8 @@ try {
     $router = new Router($session);
 
     $router->get('/', static fn (): Response => Response::redirect('/dashboard'), null);
-    $router->get('/login', $authController->showLogin(...), null);
-    $router->post('/login', $authController->login(...), null);
+    $router->get(LOGIN_PATH, $authController->showLogin(...), null);
+    $router->post(LOGIN_PATH, $authController->login(...), null);
     $router->post('/logout', $authController->logout(...), []);
 
     $router->get('/dashboard', $dashboardController->index(...), []);
@@ -268,7 +274,7 @@ try {
 
     $router->dispatch($request)->send();
 } catch (Throwable $exception) {
-    handleFailure($exception, $request, $view, $config['env']);
+    handleFailure($exception, $request, $view);
 }
 
 /**
@@ -278,7 +284,7 @@ try {
  * the login page rather than shown a bare 401, and no database message or stack
  * trace ever reaches the browser. Details go to the container log instead.
  */
-function handleFailure(Throwable $exception, Request $request, View $view, string $environment): void
+function handleFailure(Throwable $exception, Request $request, View $view): void
 {
     [$status, $message] = match (true) {
         $exception instanceof HttpException => [$exception->status(), $exception->getMessage()],
@@ -321,7 +327,7 @@ function handleFailure(Throwable $exception, Request $request, View $view, strin
     }
 
     if ($status === 401) {
-        Response::redirect('/login')->send();
+        Response::redirect(LOGIN_PATH)->send();
         return;
     }
 

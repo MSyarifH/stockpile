@@ -495,7 +495,7 @@ code {
     justify-content: space-between;
     margin-top: var(--space);
 }
-.pager__status { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+.pager__status { display: block; margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
 .pager__list { display: flex; flex-wrap: wrap; gap: 0.3rem; list-style: none; margin: 0; padding: 0; }
 .btn--disabled { opacity: 0.45; cursor: not-allowed; }
 

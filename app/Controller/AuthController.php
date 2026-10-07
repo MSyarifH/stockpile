@@ -28,7 +28,7 @@ final class AuthController
     ) {
     }
 
-    public function showLogin(Request $request): Response
+    public function showLogin(): Response
     {
         if ($this->session->isAuthenticated()) {
             return Response::redirect('/dashboard');

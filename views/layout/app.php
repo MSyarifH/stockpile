@@ -133,9 +133,9 @@ $renderLinks = static function (array $links) use ($e, $icon, $isCurrent): strin
             default => 'info',
         };
         ?>
-        <p class="alert alert--<?= $e($flash['type']) ?>" role="status">
+        <output class="alert alert--<?= $e($flash['type']) ?>">
             <?= $icon($flashIcon) ?><?= $e($flash['message']) ?>
-        </p>
+        </output>
     <?php endforeach; ?>
 
     <?= $content ?>

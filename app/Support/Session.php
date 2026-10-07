@@ -35,20 +35,30 @@ class Session
             // get redirected, and appear logged out. The flag therefore follows
             // the scheme actually in use, including behind a TLS-terminating
             // proxy, which is the only form of this that is both safe and honest.
-            'secure' => self::isHttps(),
+            'secure' => self::isHttps($_SERVER),
         ]);
         session_start();
     }
 
-    /** True when the current request reached us over TLS, directly or via a proxy. */
-    private static function isHttps(): bool
+    /**
+     * True when the current request reached us over TLS, directly or via a proxy.
+     *
+     * The server array is a parameter rather than read from $_SERVER inside,
+     * which makes this a pure function of its input. start() cannot be unit
+     * tested -- it calls session_start() -- but the rule that decides whether a
+     * login cookie is marked secure is security-relevant enough to deserve
+     * tests of its own, and this is what lets it have them.
+     *
+     * @param array<string,mixed> $server
+     */
+    public static function isHttps(array $server): bool
     {
-        $https = $_SERVER['HTTPS'] ?? '';
+        $https = $server['HTTPS'] ?? '';
         if ($https !== '' && strtolower((string) $https) !== 'off') {
             return true;
         }
 
-        return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+        return strtolower((string) ($server['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
     }
 
     /**

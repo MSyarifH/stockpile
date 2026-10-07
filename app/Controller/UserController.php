@@ -21,6 +21,9 @@ use App\Support\View;
  */
 final class UserController
 {
+    /** Every write action redirects back to the list (POST/Redirect/GET). */
+    private const INDEX = '/users';
+
     public function __construct(
         private readonly UserService $users,
         private readonly Session $session,
@@ -29,7 +32,7 @@ final class UserController
     ) {
     }
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
         $actor = $this->session->requireUser();
 
@@ -40,7 +43,7 @@ final class UserController
         ]));
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $actor = $this->session->requireUser();
 
@@ -80,7 +83,7 @@ final class UserController
         }
 
         $this->session->flash('success', 'User created.');
-        return Response::redirect('/users');
+        return Response::redirect(self::INDEX);
     }
 
     public function edit(Request $request, string $id): Response
@@ -132,7 +135,7 @@ final class UserController
         }
 
         $this->session->flash('success', 'User updated.');
-        return Response::redirect('/users');
+        return Response::redirect(self::INDEX);
     }
 
     public function toggleActive(Request $request, string $id): Response
@@ -144,7 +147,7 @@ final class UserController
         $this->users->setActive($actor, (int) $id, $activate);
 
         $this->session->flash('success', $activate ? 'User activated.' : 'User deactivated.');
-        return Response::redirect('/users');
+        return Response::redirect(self::INDEX);
     }
 
     /**

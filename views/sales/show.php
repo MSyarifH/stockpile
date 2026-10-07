@@ -26,17 +26,17 @@ $base = '/sales-orders/' . (int) $order->id;
 </div>
 
 <?php if ($status === SalesOrderStatus::PendingApproval && $isAdmin && $order->isOwnedBy($user)) : ?>
-    <p class="alert alert--error" role="status">
+    <output class="alert alert--error">
         You raised this order, so you cannot approve it. Another Admin must review it —
         segregation of duties means one person may never both raise and approve the same order.
-    </p>
+    </output>
 <?php endif; ?>
 
 <?php if ($order->hasLinesShortOnStock() && !$status->isFinal()) : ?>
-    <p class="alert alert--warn" role="status">
+    <output class="alert alert--warn">
         Some lines exceed the stock currently in <?= $e($order->warehouseName ?? 'the source warehouse') ?>.
         Stock is not reserved at approval, so goods issue will be refused unless it is replenished.
-    </p>
+    </output>
 <?php endif; ?>
 
 <div class="actions-bar">

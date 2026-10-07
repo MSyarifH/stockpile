@@ -29,7 +29,7 @@ final class ProfileController
     ) {
     }
 
-    public function show(Request $request): Response
+    public function show(): Response
     {
         $actor = $this->session->requireUser();
 

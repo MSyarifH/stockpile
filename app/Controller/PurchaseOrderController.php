@@ -27,6 +27,9 @@ use App\Support\View;
  */
 final class PurchaseOrderController
 {
+    /** Every write action redirects back to the order it changed (POST/Redirect/GET). */
+    private const SHOW = '/purchase-orders/';
+
     public function __construct(
         private readonly PurchaseOrderService $orders,
         private readonly ProductService $products,
@@ -77,7 +80,7 @@ final class PurchaseOrderController
         ]));
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $actor = $this->session->requireUser();
 
@@ -86,7 +89,7 @@ final class PurchaseOrderController
             'csrfToken' => $this->csrf->token(),
             'suppliers' => $this->partners->list(PartnerType::Supplier, true),
             'warehouses' => $this->warehouses->list(true),
-            'products' => $this->products->list($actor, true),
+            'products' => $this->products->list(true),
             'values' => ['supplier_id' => '', 'warehouse_id' => '', 'order_date' => date('Y-m-d')],
             'errors' => [],
         ]));
@@ -111,7 +114,7 @@ final class PurchaseOrderController
                 'csrfToken' => $this->csrf->token(),
                 'suppliers' => $this->partners->list(PartnerType::Supplier, true),
                 'warehouses' => $this->warehouses->list(true),
-                'products' => $this->products->list($actor, true),
+                'products' => $this->products->list(true),
                 'values' => [
                     'supplier_id' => $request->string('supplier_id'),
                     'warehouse_id' => $request->string('warehouse_id'),
@@ -122,7 +125,7 @@ final class PurchaseOrderController
         }
 
         $this->session->flash('success', 'Purchase order created as a draft.');
-        return Response::redirect('/purchase-orders/' . $id);
+        return Response::redirect(self::SHOW . $id);
     }
 
     public function place(Request $request, string $id): Response
@@ -133,7 +136,7 @@ final class PurchaseOrderController
         $this->orders->place($actor, (int) $id);
         $this->session->flash('success', 'Purchase order placed with the supplier.');
 
-        return Response::redirect('/purchase-orders/' . (int) $id);
+        return Response::redirect(self::SHOW . (int) $id);
     }
 
     public function cancel(Request $request, string $id): Response
@@ -144,7 +147,7 @@ final class PurchaseOrderController
         $this->orders->cancel($actor, (int) $id);
         $this->session->flash('success', 'Purchase order cancelled.');
 
-        return Response::redirect('/purchase-orders/' . (int) $id);
+        return Response::redirect(self::SHOW . (int) $id);
     }
 
     public function receive(Request $request, string $id): Response
@@ -167,11 +170,11 @@ final class PurchaseOrderController
             $this->orders->receiveGoods($actor, (int) $id, $quantities);
         } catch (ValidationException $e) {
             $this->session->flash('error', implode(' ', $e->errors()));
-            return Response::redirect('/purchase-orders/' . (int) $id);
+            return Response::redirect(self::SHOW . (int) $id);
         }
 
         $this->session->flash('success', 'Goods receipt recorded and stock updated.');
-        return Response::redirect('/purchase-orders/' . (int) $id);
+        return Response::redirect(self::SHOW . (int) $id);
     }
 
     /**

@@ -69,9 +69,8 @@ final class Router
 
             $this->guard($route['roles']);
 
-            /** @var Response $response */
-            $response = ($route['handler'])($request, ...array_values($parameters));
-            return $response;
+            /** @var Response */
+            return ($route['handler'])($request, ...array_values($parameters));
         }
 
         // A path that exists but was reached with the wrong verb is a 405, not a 404.

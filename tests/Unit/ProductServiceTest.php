@@ -153,4 +153,30 @@ final class ProductServiceTest extends TestCase
             self::assertNotSame('SKU-OLD', $product->sku, 'A deactivated product should not be reordered.');
         }
     }
+
+    /**
+     * list() and search() used to take an $actor they never looked at. The
+     * parameter is gone; these pin the behaviour so it cannot quietly come back
+     * as an authorisation check that was never there.
+     *
+     * Reading the catalogue is open to every role -- a Sales user picking
+     * products for an order needs it, and so does Warehouse Staff receiving
+     * goods. Only writing is restricted, which assertAdmin() covers elsewhere.
+     */
+    public function testListReturnsTheCatalogueWithoutRequiringAnActor(): void
+    {
+        $products = $this->service->list();
+
+        self::assertCount(1, $products);
+        self::assertSame('SKU-001', $products[0]->sku);
+    }
+
+    public function testListCanBeNarrowedToActiveProductsOnly(): void
+    {
+        $id = $this->repository->create($this->product(0, 'SKU-002', 'Retired Product'));
+        $this->repository->setActive($id, false);
+
+        self::assertCount(2, $this->service->list());
+        self::assertCount(1, $this->service->list(activeOnly: true));
+    }
 }

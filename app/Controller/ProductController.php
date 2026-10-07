@@ -49,7 +49,7 @@ final class ProductController
 
         return Response::html($this->view->renderInLayout('product.index', [
             'title' => 'Products',
-            'page' => $this->products->search($actor, $filter, $request->integer('page', 1)),
+            'page' => $this->products->search($filter, $request->integer('page', 1)),
             'categories' => $this->categories->list(),
             'filter' => $filter,
             // Carries the active filters into every pagination link, so they
@@ -71,7 +71,7 @@ final class ProductController
         ]));
     }
 
-    public function create(Request $request): Response
+    public function create(): Response
     {
         $this->session->requireUser();
 
