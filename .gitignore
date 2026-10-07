@@ -13,3 +13,6 @@
 # Coverage reports consumed by SonarQube; regenerated, never reviewed.
 /build/
 tools/sonarqube/.token
+
+# Presentation crib sheet. Local only -- never committed.
+/ACCOUNTS.txt
