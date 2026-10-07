@@ -134,8 +134,15 @@ docker compose exec app vendor/bin/phpunit tests/Unit/StockServiceTest.php
 docker compose exec app vendor/bin/phpunit --filter testRejectsIssueWhenStockInsufficient
 ```
 
+**180 tests, 379 assertions**, all passing: 162 unit and 18 integration, across 16 files.
+
 Unit tests use in-memory repository fakes and touch no database at all; integration tests run
 against the real MySQL container. They are separate PHPUnit suites.
+
+`tests/Integration/ControllerRenderingTest.php` is the newest and covers the layer that had
+none: it renders every page through the real `View` and the real templates, so a page that
+throws, or a template that reads a variable nobody passes, fails here rather than in front of
+a user. It is strictly read-only — it creates and deletes nothing.
 
 ## Static analysis
 
@@ -160,9 +167,14 @@ Dashboard at **http://localhost:9310** (`admin` / `StockpileSonar1!`). The serve
 own stack in `tools/sonarqube/` — deliberately not part of `compose.yaml`, so starting the
 application does not pull 2.6 GB of analysis server with it.
 
-Current state: Quality Gate **OK**, 0 bugs, 0 vulnerabilities, 0 security hotspots,
-Reliability/Security/Maintainability **A/A/A**, duplication 1.7%. Coverage is **30.8%**, which
-is low and is explained rather than excluded — see `docs/quality/static-analysis.md` §9.
+Current state: Quality Gate **OK** (all three conditions pass), **0** bugs, **0**
+vulnerabilities, **0** security hotspots, **0** code smells,
+Reliability/Security/Maintainability **A/A/A**, duplication 1.7%, overall coverage **56.9%**.
+
+Of 61 findings, 49 were fixed and 12 refused — each refusal carries its reasoning inside
+SonarQube itself, so the justification travels with the finding. The full account, including
+the stage where fixing the code turned the gate *red*, is in
+[`docs/quality/static-analysis.md`](docs/quality/static-analysis.md) §9.
 
 ## Scheduled job
 
@@ -250,11 +262,12 @@ in [`docs/quality/tech-debt.md`](docs/quality/tech-debt.md); known defects are i
 - Three requirement ambiguities are recorded as assumptions awaiting trainer confirmation
   (D1, D2, D3 in `docs/planning/decisions.md`).
 - Dashboard figures are aggregated on every request, with no caching (TD-06).
-- No automated test covers the HTTP layer end to end (TD-07); §4.3 puts end-to-end testing out
-  of scope, so the client-side script is verified by the browser harness linked above instead.
-  This is also why SonarQube measures line coverage at 30.8%: unit tests reach Services through
-  in-memory repositories, leaving Controllers and the MySQL repositories largely unexecuted.
-  Excluding them from coverage would raise the figure and hide the gap, so they are left in.
+- Controller *read* paths are covered by `ControllerRenderingTest`, but the **write** paths
+  (POST handlers, redirects, flash messages) still have no automated test, and neither does the
+  browser end to end (TD-07); §4.3 puts end-to-end testing out of scope, so the client-side
+  script is verified by the browser harness linked above instead. That gap is most of the
+  remaining 43% of uncovered lines. Excluding controllers from coverage would raise the figure
+  and hide the gap, so they are left in.
 
 ## Attribution
 

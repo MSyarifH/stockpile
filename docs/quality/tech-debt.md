@@ -126,21 +126,30 @@ answer yet.
 
 ## TD-07 · No test covers the HTTP layer end to end
 
-**What:** unit tests cover services with fakes, and integration tests cover
-MySQL through the repositories. Routing, CSRF and the failure handler are
-verified by hand with `curl`, and those checks are recorded in
-`docs/testing/` — but they are not automated.
+**Narrowed 2026-10-07.** `tests/Integration/ControllerRenderingTest.php` now
+renders every page through the real `View`, the real templates and the real
+repositories, for a signed-in Admin and for an anonymous visitor. That closed
+the largest part of this gap: a controller that throws, or a template that
+reads a variable nobody passes, is now caught by `composer test`.
 
-**Why it is like this:** §4.3 puts automated end-to-end tests out of scope.
+**What is still missing:** the **write** paths. POST handlers, CSRF rejection,
+redirect targets, flash messages and the central failure handler are still
+verified by hand with `curl`, and those checks are recorded in `docs/testing/`.
+Nothing automated exercises a full request through `public/index.php`, so the
+router's own matching and the failure handler remain untested.
 
-**Risk if left:** **medium.** A regression in routing or in the central failure
-handler would not be caught by `composer test`. This is the widest gap in the
-suite and it is worth stating plainly rather than implying the tests cover more
-than they do.
+**Why it is like this:** §4.3 puts automated end-to-end tests out of scope, so
+this was never going to be complete; the read-path coverage was added because
+SonarQube's coverage condition made the cost of the gap visible.
 
-**Ideal fix:** a small HTTP-level test that boots the front controller with a
-constructed `Request` and asserts the status code — feasible because `Request`
-does not depend on superglobals once constructed.
+**Risk if left:** **low-medium**, down from medium. A regression in routing or
+in the failure handler would still not be caught by `composer test`.
+
+**Ideal fix:** a test that boots the front controller with a constructed
+`Request` and asserts the status code — feasible because `Request` does not
+depend on superglobals once constructed. Asserting a redirect target would also
+need a header accessor on `Response`, which deliberately does not exist yet:
+adding one purely so a test can read it would be the test dictating the design.
 
 ---
 

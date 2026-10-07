@@ -217,6 +217,65 @@ exactly the kind of change that needs to be visible.
 unit tests, which requires PHP test cases. They are evidence that the frontend half of VAL-01 was
 executed rather than assumed. The server-side half is covered by TS-VAL-01-1 … 11 in §3 and by
 the PHPUnit suite.
+### 1.6 Re-run 2026-10-07 after the SonarQube work
+
+The suite was re-run at the end of the SonarQube clean-up, which added 42 tests
+and changed code in `Validator`, `Session`, `Request`, `View`, `CsvWriter` and
+nine controllers. Recorded here rather than by editing §1.1, so the growth of
+the suite stays visible.
+
+```
+$ docker compose exec app composer test
+OK (180 tests, 379 assertions)
+
+$ docker compose exec app vendor/bin/phpunit --testsuite unit
+OK (162 tests, 298 assertions)
+
+$ docker compose exec app vendor/bin/phpunit --testsuite integration
+OK (18 tests, 81 assertions)
+```
+
+Per file, 16 files:
+
+| File | Tests |
+|---|---|
+| `Unit/ValidatorTest.php` | 28 |
+| `Unit/SalesOrderServiceTest.php` | 19 |
+| `Unit/UserServiceTest.php` | 16 |
+| `Unit/PaginationTest.php` | 14 |
+| `Unit/PurchaseOrderServiceTest.php` | 14 |
+| `Unit/StockServiceTest.php` | 13 |
+| `Unit/ProductServiceTest.php` | 11 |
+| `Unit/RequestTest.php` | 10 |
+| `Unit/SessionTest.php` | 10 |
+| `Unit/ReportServiceTest.php` | 9 |
+| `Unit/AuthServiceTest.php` | 6 |
+| `Unit/CsvWriterTest.php` | 5 |
+| `Unit/UserControllerTest.php` | 4 |
+| `Unit/ViewTest.php` | 3 |
+| `Integration/ControllerRenderingTest.php` | 12 |
+| `Integration/StockMovementTest.php` | 6 |
+
+**What the new tests are for.** Not the coverage number — the layers that had
+none. `ControllerRenderingTest` renders every page through the real `View` and
+the real templates, which is the gap that let BUG-01's shape exist in the first
+place: a page returning 500 while a test counted its zero rows and passed.
+`SessionTest` pins the rule that decides whether the login cookie is marked
+`secure`, in both directions, because getting it wrong either leaks the session
+ID or silently logs everyone out.
+
+**One expectation was wrong and the code was right.** The first version of
+`testAnAnonymousRequestNeverReachesAPage` asserted that the dashboard throws
+for an anonymous visitor. It redirects to `/login` — an expired session is the
+ordinary case, and a bare 401 is a worse answer than the login form. The test
+was corrected to assert the redirect, and a second test was added for user
+administration, which *does* refuse outright. Recorded because the failure was
+mine, not the application's.
+
+**Unchanged by this run:** the four failures in §4 (BUG-01 … BUG-04) are
+untouched — none of the code they concern was modified.
+
+---
 
 ## 2. Database invariants
 

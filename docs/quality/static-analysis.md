@@ -338,79 +338,125 @@ error` with no file — that is the memory failure described in section 5.2, not
 finding.
 
 ---
-
 ## 9. SonarQube
 
-Added 2026-10-05, at commit `fef1b8f`+, because the assessment requires it in addition to the
-two tools above. **Community Edition 26.9.0.129388** with the default **Sonar way** Quality
-Gate — both pinned by the trainer.
+Added 2026-10-05 and completed 2026-10-07, because the assessment requires it in
+addition to the two tools above. **Community Edition 26.9.0.129388** with the
+default **Sonar way** Quality Gate — both pinned by the trainer.
 
 ```bash
 ./run.sh sonar     # server + coverage + analysis + gate, in one command
 ```
 
-See `tools/sonarqube/README.md` for how it is wired and why the server is a separate stack.
+See `tools/sonarqube/README.md` for how it is wired and why the server is a
+separate stack.
 
 ### 9.1 Final state
 
 | Metric | Value |
 |---|---|
-| Quality Gate | **OK** |
+| **Quality Gate** | **OK** — all three conditions pass |
+| Coverage on New Code | 82.1% (required ≥ 80%) |
+| Duplication on New Code | 1.2% (required ≤ 3%) |
+| Violations on New Code | 0 (required 0) |
 | Bugs | 0 |
 | Vulnerabilities | 0 |
 | Security Hotspots | 0 |
-| Code Smells | 39 |
-| Coverage | 30.8% |
+| Code Smells | 0 |
+| Coverage (overall) | 56.9% |
 | Duplicated lines | 1.7% |
-| Lines of code | 6,869 |
+| Lines of code | 6,886 |
 | Reliability / Security / Maintainability | **A / A / A** |
 
-### 9.2 The first run was not this
+Tests behind that coverage: **180** (162 unit, 18 integration), up from 138.
 
-The first analysis reported **12 bugs, 1 vulnerability, Reliability D** — and the Quality Gate
-still said OK, because a first analysis has no New Code baseline for Sonar way's conditions to
-measure. A green gate on an empty measurement is worth nothing, and is recorded here rather
-than quietly replaced with the final table.
+### 9.2 How it got there, including the part that looks bad
 
-Three findings were real and are fixed:
+The first analysis reported **12 bugs, 1 vulnerability, 39 code smells and
+Reliability D** — and the Quality Gate still said OK. It said OK because a
+first analysis has no New Code baseline, so Sonar way's conditions had nothing
+to measure. A green gate on an empty measurement is worth nothing, and it is
+recorded here rather than quietly replaced with the table above.
 
-1. **`public/assets/app.css` — `flex-basis` overridden by the `flex` shorthand** (the one
-   finding rated CRITICAL). `.nav` declared `flex-basis: 100%`, then `flex: 1 1 auto` four
-   lines later; the shorthand resets the basis, so the first declaration was dead and the
-   desktop media query was overriding something that never applied. The navbar looked correct
-   by coincidence. Merged into a single `flex: 1 1 100%`.
-2. **Six order-line inputs with an unassociated label.** The markup carried
-   `<label class="visually-hidden">Quantity</label>` with no `for` and no `id` — a label that
-   existed and did nothing, so a screen reader still announced an unnamed field. Replaced with
-   `aria-label`, *not* `<label for>`: `order-lines.js` clones these rows and a cloned `id` is a
-   duplicate `id`, which breaks the association it was meant to create. Server-rendered rows
-   (`views/purchase/show.php`) keep `<label for>`, which is correct there.
+The sequence is worth keeping because the middle of it is counter-intuitive:
+
+| Stage | Gate | Issues | Coverage (new code) |
+|---|---|---|---|
+| First analysis | OK (nothing measured) | 52 | — (6 new lines) |
+| Real defects fixed | **ERROR** | 12 | 55% |
+| All findings cleared | **ERROR** | 0 | 62% |
+| HTTP layer covered | **OK** | 0 | **82%** |
+
+Fixing the code turned the gate **red**. That is not a regression: once 235
+lines had changed, the coverage condition finally had something to measure, and
+it measured a real gap. The gate only went green again when that gap was
+actually closed.
+
+### 9.3 What was fixed, and what was refused
+
+Of 61 findings: **49 fixed**, **12 refused with the reason written into
+SonarQube itself** (10 false positive, 2 accepted). The comments are readable in
+the UI, so the justification travels with the finding rather than living only
+in this file.
+
+**Fixed — a sample of the ones that mattered:**
+
+1. **`flex-basis` overridden by the `flex` shorthand** (`public/assets/app.css`,
+   the only finding rated CRITICAL). `.nav` declared `flex-basis: 100%`, then
+   `flex: 1 1 auto` four lines later; the shorthand resets the basis, so the
+   first declaration was dead and the desktop media query was overriding
+   something that never applied. The navbar looked correct by coincidence.
+2. **Twelve order-line fields with an unassociated label.** The markup carried
+   `<label class="visually-hidden">Quantity</label>` with no `for` and no `id` —
+   a label that existed and did nothing, so a screen reader still announced an
+   unnamed field. Replaced with `aria-label`, *not* `<label for>`, because
+   `order-lines.js` clones these rows and a cloned `id` is a duplicate `id`.
 3. **Session cookie without a `secure` flag** — now set via `Session::isHttps()`.
+4. **`Validator::applyRules` had cognitive complexity 29**, because one method
+   parsed the rule, judged the value *and* coerced its type. Split into
+   `violation()` and `coerce()`; all 28 Validator tests passed unchanged, which
+   is the evidence that behaviour did not move.
+5. **Three dead parameters and three orphaned local variables.** One of those
+   locals was a trap: `$actor = $this->session->requireUser()` looks like an
+   unused assignment, but the *call* is the authorisation guard. Deleting the
+   line would have let an anonymous request reach the form.
 
-### 9.3 Three findings refused, and why
-
-Each is marked in SonarQube itself with the reasoning, so the justification travels with the
-finding rather than living only here.
+**Refused:**
 
 | Location | Rule | Status | Reason |
 |---|---|---|---|
-| `app/Support/View.php:68` | `php:S2003` | False positive | `require_once` keys on the resolved path. `View::render()` is the single renderer for every template, so the same template rendered twice in one request would return an empty string **with no error**. A latent trap rather than a live bug today — stated as such in the comment. |
-| `public/index.php:69` | `php:S2003` | False positive | `config/config.php` **returns an array**. `require_once` returns `true` on a second include, so `$config` would silently become a boolean. `require` is the correct construct for a value-returning include. |
-| `app/Support/Session.php:27` | `php:S2092` | Accepted | The flag **is** set, conditionally. A cookie marked secure is never sent over plain HTTP, so hard-coding `true` would break the `http://localhost:8080` the README instructs an assessor to use — they would log in and immediately appear logged out. |
+| 8 controller actions | `php:S1172` | False positive | The Router calls every handler as `($handler)($request, ...$routeParameters)`. These eight take a path parameter, so `$request` is positional — removing it would hand the Request object to `$id`. The thirteen actions whose routes carry no path parameter **have** had it removed. |
+| `app/Support/View.php` | `php:S2003` | False positive | `require_once` keys on the resolved path. `render()` is the single renderer for every template, so the same template rendered twice in one request would return an empty string **with no error**. |
+| `public/index.php` | `php:S2003` | False positive | `config/config.php` **returns an array**. `require_once` returns `true` on a second include, so `$config` would silently become a boolean. |
+| `app/Support/Session.php` | `php:S2092` | Accepted | The secure flag **is** set, conditionally. A cookie marked secure is never sent over plain HTTP, so hard-coding `true` would break the `http://localhost:8080` the README instructs an assessor to use. |
+| `app/Support/Router.php` | `php:S1142` | Accepted | All five returns are guard clauses. Collapsing them under a three-return limit means nesting the conditions — the shape guard clauses exist to avoid. |
 
-### 9.4 Coverage, stated plainly
+### 9.4 Coverage: what changed and what it means
 
-**30.8%**, and it is the weakest number in this report.
+Overall line coverage went from **30.4% to 56.9%**, and coverage on new code
+from 55% to **82.1%**.
 
-It follows directly from the architecture rather than from neglect: unit tests exercise
-`Service` classes through `InMemory*Repository`, which is exactly what lets the unit suite run
-with no database at all (§4.1). The cost is that `Controller` and `MySql*Repository` are
-executed only by the six integration tests.
+The number is not the point; the layer is. Until 2026-10-07 the HTTP layer had
+**no automated test at all** — controllers were verified by clicking. That is
+precisely how the stock filter shipped returning HTTP 500 while a test counted
+its zero rows and passed (`docs/testing/known-bugs.md`).
+`tests/Integration/ControllerRenderingTest.php` now renders every page through
+the real `View` and the real templates, so a page that throws, or a template
+that reads a variable nobody passes, fails in the suite rather than in front of
+a user.
 
-Adding `app/Controller/**` and `app/Repository/MySql*` to `sonar.coverage.exclusions` would
-raise the figure well above 80% in one line. It was not done. Excluding the untested code
-removes the evidence, not the gap — and an assessor reading `sonar-project.properties` would be
-entitled to read it as hiding the problem.
+**Why it is an integration test rather than a unit test.**
+`CategoryRepository`, `WarehouseRepository` and `BusinessPartnerRepository` are
+concrete PDO classes on purpose: ADR-001 puts a repository behind an interface
+only where a service *branches* on its data, and those three are plain CRUD.
+Inventing interfaces for them purely so a unit test could reach the controllers
+would be the speculative abstraction §0 penalises. The real repositories and the
+real database are the honest way to cover this layer.
 
-The real remedy is tests that enter through the HTTP layer, which is already recorded as
-**TD-07** in `docs/quality/tech-debt.md` and remains outstanding.
+**What was NOT done.** `app/Controller/**` and `app/Repository/MySql*` were
+never added to `sonar.coverage.exclusions`. Excluding them would have produced a
+passing number in one line by deleting the evidence instead of the gap.
+
+**What is still uncovered.** 43% of lines overall, chiefly the write paths of
+the controllers and the MySQL repositories' less-travelled branches. The
+remaining work is recorded as **TD-07** in `docs/quality/tech-debt.md`.

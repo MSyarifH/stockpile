@@ -735,6 +735,49 @@ library, having established that §4 permits a credited one.
      for "localhost" even while Docker holds `*:9000`. Moved to 9310 and verified the port was
      free on both stacks first.
 
+### AI-45 · Clearing SonarQube to zero, and the stage where fixing things made it worse
+- **Prompt summary:** "clear all of it, in stages" — after AI-44 left 39 code smells standing.
+- **Supersedes AI-44's closing figures.** That entry ends with "0 bugs ... coverage 30.8%" and
+  "what I did NOT do: raise coverage by excluding Controllers". The first half is now out of
+  date and the second half still holds. AI-44 is left as written, because what was true at the
+  time and how it changed is the point of this log.
+- **Final state, re-measured:** Quality Gate **OK** on all three conditions, 0 bugs, 0
+  vulnerabilities, 0 security hotspots, **0 code smells**, A/A/A, overall coverage **56.9%**
+  (from 30.4%), 180 tests (from 138).
+- **The part worth presenting, because it is counter-intuitive:** fixing the code turned the
+  gate **red**. The first analysis passed only because 6 new lines is too few for Sonar way's
+  coverage condition to be applied at all. Once 235 lines had changed, the condition finally
+  had something to measure and reported 55%. The gate went green again only when the gap was
+  actually closed — not when it was hidden.
+- **Of 61 findings: 49 fixed, 12 refused.** Every refusal carries its reasoning inside
+  SonarQube, not just in a document, so an assessor clicking the issue sees why.
+- **Output accepted:** the aria-label fix (not `<label for>`, because `order-lines.js` clones
+  rows and a cloned id is a duplicate id); splitting `Validator::applyRules` into `violation()`
+  and `coerce()`; writing the controller coverage as an **integration** test.
+- **Output rejected:** creating interfaces for `CategoryRepository`, `WarehouseRepository` and
+  `BusinessPartnerRepository` so a unit test could reach the controllers. That would have
+  contradicted ADR-001 — which puts a repository behind an interface only where a service
+  branches on its data — to serve a metric. Using the real repositories against the real
+  database covers the same lines without inventing abstraction §0 penalises.
+- **Two of my own mistakes, both caught by tooling rather than by reading:**
+  1. A regex meant to drop one orphaned `$actor` per file matched two, removing one that
+     `show()` genuinely uses. **PHPStan reported two undefined variables** and both were
+     restored before anything was committed. This is the clearest example in the project of
+     static analysis earning its place.
+  2. I nearly deleted `$actor = $this->session->requireUser();` outright as an unused
+     assignment. The *call* is the authorisation guard — it throws when there is no session —
+     so removing the line would have let an anonymous request reach the form. Only the
+     assignment went; `/purchase-orders/create` was re-checked and still answers 302 to
+     `/login` when signed out.
+- **A test corrected me, which is the point of writing them:** I asserted that an anonymous
+  request to the dashboard throws. It redirects to `/login`, because an expired session is the
+  ordinary case and a bare 401 page is a worse answer than the login form. Both behaviours are
+  now pinned — the dashboard redirects, user administration refuses outright.
+- **Verification:** `./run.sh check` after every stage (180 tests, PHPStan level 6 clean,
+  PSR-12 clean, stock-ledger invariant 0), plus a live smoke test of 21 routes across three
+  roles after the parameter removals, because dropping a positional argument is exactly the
+  kind of change a type checker cannot catch.
+
 ---
 
 ## Outstanding verification register
