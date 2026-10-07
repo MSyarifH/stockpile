@@ -82,7 +82,10 @@ final class PurchaseOrderController
 
     public function create(): Response
     {
-        $actor = $this->session->requireUser();
+        // The return value is no longer needed, but the CALL still is: it is the
+        // authorisation guard. requireUser() throws when there is no session, so
+        // deleting this line would let an anonymous request reach the form.
+        $this->session->requireUser();
 
         return Response::html($this->view->renderInLayout('purchase.form', [
             'title' => 'New purchase order',
